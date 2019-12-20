@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "mpi.h"
+#include "param.h"
 #include "dataCompression.h"
 
 float jacobi(int);
@@ -21,24 +22,28 @@ void sendp3();
 double fflop(int,int,int);
 double mflops(int,double,double);
 
-static float  p[MIMAX][MJMAX][MKMAX];
-static float  a[4][MIMAX][MJMAX][MKMAX],
-              b[3][MIMAX][MJMAX][MKMAX],
-              c[3][MIMAX][MJMAX][MKMAX];
 static float omega;
 static int npe,id;
 
 MPI_Datatype
-myCompress(void* data, int count, int blklen, int stride, int start)
+myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int startj, int startk)
 {
-  float value;
+  float real_value, predict_value1, predict_value2, predict_value3;
+  int num = 0;
 
   for(int i=0; i<count; i++)
   {
     for(int j=0; j<blklen; j++)
     {
-      if(i+j>2)
-      value = *(data+start+blklen+count*stride)
+      real_value = data[starti][startj][startk+blklen]
+    }
+    if(stride == MKMAX)
+    {
+      startj++;
+    }
+    else if(stride == MJMAX*MKMAX)
+    {
+      starti++;
     }
   }
 
