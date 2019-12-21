@@ -20,6 +20,7 @@ myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
   int array_float_len = 1, array_char_len = 1;
+  char compress_type;
   float* array_float = (float*)malloc(sizeof(float)*array_float_len);
   char* array_char = (char*)malloc(sizeof(char)*array_char_len);
 
@@ -29,22 +30,26 @@ myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int
     {
       real_value = data[starti][startj][startk+blklen];
 
-      if(before_value3 == -1) 
+      if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
       {
-        before_value3 = real_value;
         array_float[array_float_len-1] = real_value;
         array_float_len++;
         float* array_float_old = array_float;
         array_float = (float*)realloc(sizeof(float)*array_float_len);
         if(array_float_old != array_float) free(array_float_old);
-      }
-      else if(before_value2 == -1) 
-      {
-        before_value2 = real_value;
-      }
-      else if(before_value1 == -1) 
-      {
-        before_value1 = real_value;
+
+        if(before_value3 == -1) 
+        {
+          before_value3 = real_value; 
+        }
+        else if(before_value2 == -1) 
+        {
+          before_value2 = real_value;
+        }
+        else if(before_value1 == -1) 
+        {
+          before_value1 = real_value;
+        }        
       }
       else
       {
@@ -57,15 +62,18 @@ myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int
         diff3 = fabs(predict_value3-real_value);
 
         diff_min = diff1;
+        compress_type = 'a';
         selected_predict_value = predict_value1;
         if(diff2<diff_min)
         {
           diff_min = diff2;
+          compress_type = 'b';
           selected_predict_value = predict_value2;
         }
         if(diff3<diff_min)
         {
           diff_min = diff3;
+          compress_type = 'c';
           selected_predict_value = predict_value3;
         }        
 
@@ -73,10 +81,22 @@ myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int
         before_value2 = before_value1;
         if(diff_min<=absErrBound) 
         {
+          array_char[array_char_len-1] = compress_type;
+          array_char_len++;
+          char* array_char_old = array_char;
+          array_char = (char*)realloc(sizeof(char)*array_char_len);
+          if(array_char_old != array_char) free(array_char_old);
+
           before_value1 = selected_predict_value;
         }
         else 
         {
+          array_float[array_float_len-1] = real_value;
+          array_float_len++;
+          float* array_float_old = array_float;
+          array_float = (float*)realloc(sizeof(float)*array_float_len);
+          if(array_float_old != array_float) free(array_float_old);
+
           before_value1 = real_value;
         }
       }
