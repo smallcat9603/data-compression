@@ -25,6 +25,8 @@ myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int
   float* array_float_more = NULL;
   char* array_char = NULL; //(char*)malloc(sizeof(char));
   char* array_char_more = NULL;
+  int* array_char_displacement = NULL;
+  int* array_char_displacement_more = NULL;
 
   for(int i=0; i<count; i++)
   {
@@ -93,14 +95,18 @@ myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int
         {
           array_char_len++;
           array_char_more = (char*)realloc(array_char, sizeof(char)*array_char_len);
-          if (array_char_more != NULL) 
+          array_char_displacement_more = (int*)realloc(array_char_displacement, sizeof(int)*array_char_len);
+          if (array_char_more != NULL && array_char_displacement_more != NULL) 
           {
             array_char = array_char_more;
             array_char[array_char_len-1] = compress_type;
+            array_char_displacement = array_char_displacement_more;
+            array_char_displacement[array_char_len-1] = array_float_len + array_char_len;
           }
           else 
           {
             free(array_char);
+            free(array_char_displacement);
             printf("Error (re)allocating memory");
             exit(1);
           } 
