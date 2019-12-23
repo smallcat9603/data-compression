@@ -433,7 +433,7 @@ void
 sendp(int ndx,int ndy,int ndz)
 {
   if(ndz > 1)
-    sendp3(&cr);
+    sendp3();
 
   if(ndy > 1)
     sendp2();
@@ -505,6 +505,9 @@ sendp2()
             2,
             mpi_comm_cart,
             req+1);
+  //todo
+  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 2, 1))/2;
+  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 2, jmax-2))/2;            
   MPI_Isend(&p[0][1][0],
             1,
             ikvec,
@@ -546,6 +549,9 @@ sendp1()
             2,
             mpi_comm_cart,
             req+1);
+  //todo
+  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 1, 1))/2;
+  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 1, imax-2))/2;            
   MPI_Isend(&p[1][0][0],
             1,
             jkvec,
