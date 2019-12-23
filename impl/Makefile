@@ -1,4 +1,4 @@
-OBJS = himenoBMTxps.o
+OBJS = himenoBMTxps.o dataCompression.o
 
 CC = mpicc
 RM = /bin/rm
@@ -9,10 +9,10 @@ LDFLAGS = ${CFLAGS}
 
 all : ${PROG}
 
-${PROG} : ${OBJS} param.h
+${PROG} : ${OBJS} param.h dataCompression.h
 	${CC} -o $@ ${OBJS} ${LDFLAGS}
 
-.c.o : param.h
+.c.o : param.h dataCompression.h
 	${CC} -c ${CFLAGS} $<
 
 clean :

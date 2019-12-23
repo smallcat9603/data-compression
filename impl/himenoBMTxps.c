@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include "mpi.h"
 #include "param.h"
+#include "dataCompression.h"
 
 float jacobi(int);
 int initmax(int,int,int);
@@ -68,6 +69,8 @@ static int ndims=3,iop[3];
 static int npx[2],npy[2],npz[2];
 MPI_Comm     mpi_comm_cart;
 MPI_Datatype ijvec,ikvec,jkvec;
+
+static float cr; //compression rate
 
 int
 main(int argc,char *argv[])
@@ -161,6 +164,7 @@ main(int argc,char *argv[])
     printf("MFLOPS measured : %f\n",mflops(nn,cpu,flop));
     printf("Score based on Pentium III 600MHz : %f\n",
            mflops(nn,cpu,flop)/82.84);
+    printf("Compression rate: %f \n", cr);
   }
 
   MPI_Finalize();
@@ -429,14 +433,13 @@ void
 sendp(int ndx,int ndy,int ndz)
 {
   if(ndz > 1)
-    sendp3();
+    sendp3(&cr);
 
   if(ndy > 1)
     sendp2();
 
   if(ndx > 1)
     sendp1();
-
 }
 
 void
@@ -459,6 +462,9 @@ sendp3()
             2,
             mpi_comm_cart,
             req+1);
+  //todo
+  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 3, 1))/2;
+  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 3, kmax-2))/2;
   MPI_Isend(&p[0][0][1],
             1,
             ijvec,
