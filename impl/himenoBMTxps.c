@@ -473,7 +473,12 @@ sendp3()
   {
     cr += calcCompressionRatio_himeno_nolossy_performance(p, 3, 1);
     cr += calcCompressionRatio_himeno_nolossy_performance(p, 3, kmax-2); 
-  }     
+  } 
+  else if(CT == 3)    
+  {
+    cr += calcCompressionRatio_himeno_nolossy_area(p, 3, 1);
+    cr += calcCompressionRatio_himeno_nolossy_area(p, 3, kmax-2);     
+  }
   cr_num += 2;
   MPI_Isend(&p[0][0][1],
             1,
@@ -525,7 +530,12 @@ sendp2()
   {
     cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, 1);
     cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, jmax-2); 
-  }     
+  } 
+  else if(CT == 3)    
+  {
+    cr += calcCompressionRatio_himeno_nolossy_area(p, 2, 1);
+    cr += calcCompressionRatio_himeno_nolossy_area(p, 2, jmax-2);     
+  }      
   cr_num += 2;         
   MPI_Isend(&p[0][1][0],
             1,
@@ -578,7 +588,12 @@ sendp1()
   {
     cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, 1);
     cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, imax-2); 
-  }  
+  } 
+  else if(CT == 3)    
+  {
+    cr += calcCompressionRatio_himeno_nolossy_area(p, 1, 1);
+    cr += calcCompressionRatio_himeno_nolossy_area(p, 1, imax-2);     
+  }    
   cr_num += 2;               
   MPI_Isend(&p[1][0][0],
             1,

@@ -242,7 +242,7 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
   float compress_ratio;
   long origin_bits=0, compressed_bits=0;
   int A, B;
-  int cdb = 512, indication = 5, le = 285, re = 222, re1 = 2, re2 = 4, re3 = 32, llrb = 2, ex = 1;
+  int cdb = 512, cdb_num = 1, occupied_bits = 0, indication = 5, le = 285, re = 222, re1 = 2, re2 = 4, re3 = 32, llrb = 2, ex = 1;
 
   if(ijk == 1) 
   {
@@ -270,7 +270,7 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
       if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
       {
         origin_bits += sizeof(float)*8;
-        compressed_bits += sizeof(float)*8;       
+        occupied_bits += re3+llrb+ex;       
         
         if(before_value4 == -1) 
         {
@@ -306,7 +306,31 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
         {
           if(c[i] != 0) 
           {
-            compressed_bits += sizeof(float)*8 - i + 3 + 1;
+            int nonzero = sizeof(float)*8 - i;
+            int data_bits;
+            if(nonzero <= re1)
+            {
+              data_bits = re1+llrb+ex;
+            }
+            else if(nonzero <= re2)
+            {
+              data_bits = re2+llrb+ex;
+            }
+            else if(nonzero <= re3)
+            {
+              data_bits = re3+llrb+ex;
+            }
+            
+            if(occupied_bits + data_bits > cdb-indication)
+            {
+              cdb_num++;
+              occupied_bits = data_bits;
+            }
+            else
+            {
+              occupied_bits += data_bits;
+            }
+
             break;
           }
             
@@ -315,6 +339,7 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
       }
     }
   }
+  compressed_bits = cdb_num*cdb;
   compress_ratio = (float)compressed_bits/origin_bits;
   return compress_ratio;
 }
