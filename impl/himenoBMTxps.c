@@ -70,8 +70,8 @@ static int npx[2],npy[2],npz[2];
 MPI_Comm     mpi_comm_cart;
 MPI_Datatype ijvec,ikvec,jkvec;
 
-static float cr; //compression rate
-static int cr_num;
+static float cr = 0; //compression rate
+static int cr_num = 0;
 
 int
 main(int argc,char *argv[])

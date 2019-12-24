@@ -25,10 +25,26 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
   char* array_char_more = NULL;
   int* array_char_displacement = NULL;
   int* array_char_displacement_more = NULL;
+  int A, B;
 
-  for(int a=0; a<MIMAX; a++)
+  if(ijk == 1) 
   {
-    for(int b=0; b<MJMAX; b++)
+    A = MJMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 2) 
+  {
+    A = MIMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 3)
+  {
+    A = MIMAX;
+    B = MJMAX;
+  } 
+  for(int a=0; a<A; a++)
+  {
+    for(int b=0; b<B; b++)
     {
       if(ijk == 1) real_value = data[v][a][b]; // v is const
       else if(ijk == 2) real_value = data[a][v][b];
@@ -142,10 +158,26 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
   float diff4;
   float compress_ratio;
   long origin_bits=0, compressed_bits=0;
+  int A, B;
 
-  for(int a=0; a<MIMAX; a++)
+  if(ijk == 1) 
   {
-    for(int b=0; b<MJMAX; b++)
+    A = MJMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 2) 
+  {
+    A = MIMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 3)
+  {
+    A = MIMAX;
+    B = MJMAX;
+  } 
+  for(int a=0; a<A; a++)
+  {
+    for(int b=0; b<B; b++)
     {
       if(ijk == 1) real_value = data[v][a][b]; // v is const
       else if(ijk == 2) real_value = data[a][v][b];
