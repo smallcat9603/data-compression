@@ -12,6 +12,7 @@
 #include "param.h"
 #include "dataCompression.h"
 
+//myCompress
 float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
@@ -130,6 +131,172 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
         }
         else 
         {
+          array_float_len++;
+          array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
+          if (array_float_more != NULL) 
+          {
+            array_float = array_float_more;
+            array_float[array_float_len-1] = real_value;
+          }
+          else 
+          {
+            free(array_float);
+            printf("Error (re)allocating memory");
+            exit(1);
+          }             
+          before_value1 = real_value;
+        }
+      }
+    }
+  } 
+  compress_ratio = (float)(array_char_len*sizeof(char)+array_float_len*sizeof(float))/((array_char_len+array_float_len)*sizeof(float));
+  return compress_ratio;
+}
+
+float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
+{
+  float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  float diff1, diff2, diff3, diff_min, predict_diff, selected_predict_value;
+  int array_float_len = 0, array_char_len = 0;
+  int binary_bits = 0;
+  char compress_type;
+  float compress_ratio;
+  float* array_float = NULL; //(float*)malloc(sizeof(float));
+  float* array_float_more = NULL;
+  char* array_char = NULL; //(char*)malloc(sizeof(char));
+  char* array_char_more = NULL;
+  int* array_char_displacement = NULL;
+  int* array_char_displacement_more = NULL;
+  int A, B;
+
+  if(ijk == 1) 
+  {
+    A = MJMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 2) 
+  {
+    A = MIMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 3)
+  {
+    A = MIMAX;
+    B = MJMAX;
+  } 
+  for(int a=0; a<A; a++)
+  {
+    for(int b=0; b<B; b++)
+    {
+      if(ijk == 1) real_value = data[v][a][b]; // v is const
+      else if(ijk == 2) real_value = data[a][v][b];
+      else if(ijk == 3) real_value = data[a][b][v];
+
+      if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+      {
+        array_float_len++;
+        array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
+        if (array_float_more != NULL) 
+        {
+          array_float = array_float_more;
+          array_float[array_float_len-1] = real_value;
+        }
+        else 
+        {
+          free(array_float);
+          printf("Error (re)allocating memory");
+          exit(1);
+        }        
+        
+        if(before_value3 == -1) 
+        {
+          before_value3 = real_value; 
+        }
+        else if(before_value2 == -1) 
+        {
+          before_value2 = real_value;
+        }
+        else if(before_value1 == -1) 
+        {
+          before_value1 = real_value;
+        }        
+      }
+      else
+      {
+        predict_value1 = before_value1;
+        predict_value2 = 2*before_value1 - before_value2;
+        predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+        diff1 = fabs(predict_value1-real_value);
+        diff2 = fabs(predict_value2-real_value);
+        diff3 = fabs(predict_value3-real_value);
+
+        diff_min = diff1;
+        compress_type = 'a';
+        selected_predict_value = predict_value1;
+        if(diff2<diff_min)
+        {
+          diff_min = diff2;
+          compress_type = 'b';
+          selected_predict_value = predict_value2;
+        }
+        if(diff3<diff_min)
+        {
+          diff_min = diff3;
+          compress_type = 'c';
+          selected_predict_value = predict_value3;
+        }        
+
+        before_value3 = before_value2;
+        before_value2 = before_value1;
+        if(diff_min<=absErrBound) 
+        {
+          array_char_len++;
+          array_char_more = (char*)realloc(array_char, sizeof(char)*array_char_len);
+          array_char_displacement_more = (int*)realloc(array_char_displacement, sizeof(int)*array_char_len);
+          if (array_char_more != NULL && array_char_displacement_more != NULL) 
+          {
+            array_char = array_char_more;
+            array_char[array_char_len-1] = compress_type;
+            array_char_displacement = array_char_displacement_more;
+            array_char_displacement[array_char_len-1] = array_float_len + array_char_len;
+          }
+          else 
+          {
+            free(array_char);
+            free(array_char_displacement);
+            printf("Error (re)allocating memory");
+            exit(1);
+          } 
+          before_value1 = selected_predict_value;
+        }
+        else 
+        {
+          float max, min;
+          if(predict_value1 > predict_value2)
+          {
+            max = predict_value1;
+            min = predict_value2;
+          }
+          else
+          {
+            max = predict_value2;
+            min = predict_value1;
+          }
+          if(predict_value3 > max)
+          {
+            max = predict_value3;
+          }
+          else if(predict_value3 < min)
+          {
+            min = predict_value3;
+          }
+          
+          predict_diff = max-min;
+
+          char c[sizeof(float)*8];
+          getFloatBin(predict_diff/2, c);
+
           array_float_len++;
           array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
           if (array_float_more != NULL) 
