@@ -157,17 +157,10 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, predict_diff, selected_predict_value;
-  int array_float_len = 0, array_char_len = 0;
-  int binary_bits = 0;
   char compress_type;
   float compress_ratio;
-  float* array_float = NULL; //(float*)malloc(sizeof(float));
-  float* array_float_more = NULL;
-  char* array_char = NULL; //(char*)malloc(sizeof(char));
-  char* array_char_more = NULL;
-  int* array_char_displacement = NULL;
-  int* array_char_displacement_more = NULL;
   int A, B;
+  long origin_bits=0, compressed_bits=0;
 
   if(ijk == 1) 
   {
@@ -192,22 +185,11 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
       else if(ijk == 2) real_value = data[a][v][b];
       else if(ijk == 3) real_value = data[a][b][v];
 
+      origin_bits += sizeof(float)*8;     
+
       if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
-      {
-        array_float_len++;
-        array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
-        if (array_float_more != NULL) 
-        {
-          array_float = array_float_more;
-          array_float[array_float_len-1] = real_value;
-        }
-        else 
-        {
-          free(array_float);
-          printf("Error (re)allocating memory");
-          exit(1);
-        }        
-        
+      { 
+        compressed_bits += sizeof(float)*8; 
         if(before_value3 == -1) 
         {
           before_value3 = real_value; 
@@ -251,23 +233,7 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
         before_value2 = before_value1;
         if(diff_min<=absErrBound) 
         {
-          array_char_len++;
-          array_char_more = (char*)realloc(array_char, sizeof(char)*array_char_len);
-          array_char_displacement_more = (int*)realloc(array_char_displacement, sizeof(int)*array_char_len);
-          if (array_char_more != NULL && array_char_displacement_more != NULL) 
-          {
-            array_char = array_char_more;
-            array_char[array_char_len-1] = compress_type;
-            array_char_displacement = array_char_displacement_more;
-            array_char_displacement[array_char_len-1] = array_float_len + array_char_len;
-          }
-          else 
-          {
-            free(array_char);
-            free(array_char_displacement);
-            printf("Error (re)allocating memory");
-            exit(1);
-          } 
+          compressed_bits += sizeof(char)*8; 
           before_value1 = selected_predict_value;
         }
         else 
@@ -296,26 +262,33 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
 
           char c[sizeof(float)*8];
           getFloatBin(predict_diff/2, c);
+          int expo_value = 0;
+          int mantissa_bits_within_error_bound;
 
-          array_float_len++;
-          array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
-          if (array_float_more != NULL) 
+          for(int i=1;i<9;i++) //1-9 exponential part of float (1-12 in the case of double)
           {
-            array_float = array_float_more;
-            array_float[array_float_len-1] = real_value;
+            if(c[i] != 0) 
+            {
+              expo_value += pow(2, 8-i);
+            }  
           }
-          else 
+          expo_value -= 127;
+          mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
           {
-            free(array_float);
-            printf("Error (re)allocating memory");
-            exit(1);
-          }             
+            mantissa_bits_within_error_bound = 23;
+          }
+          else if(mantissa_bits_within_error_bound < 0)
+          {
+            mantissa_bits_within_error_bound = 0;
+          }
+          compressed_bits += 1+8+mantissa_bits_within_error_bound;  
           before_value1 = real_value;
         }
       }
     }
   } 
-  compress_ratio = (float)(array_char_len*sizeof(char)+array_float_len*sizeof(float))/((array_char_len+array_float_len)*sizeof(float));
+  compress_ratio = (float)compressed_bits/origin_bits;
   return compress_ratio;
 }
 
