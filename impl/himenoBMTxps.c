@@ -71,6 +71,7 @@ MPI_Comm     mpi_comm_cart;
 MPI_Datatype ijvec,ikvec,jkvec;
 
 static float cr; //compression rate
+static int cr_num;
 
 int
 main(int argc,char *argv[])
@@ -164,7 +165,7 @@ main(int argc,char *argv[])
     printf("MFLOPS measured : %f\n",mflops(nn,cpu,flop));
     printf("Score based on Pentium III 600MHz : %f\n",
            mflops(nn,cpu,flop)/82.84);
-    printf("Compression rate: %f \n", cr);
+    printf("Compression rate: %f \n", 1/(cr/cr_num));
   }
 
   MPI_Finalize();
@@ -463,8 +464,17 @@ sendp3()
             mpi_comm_cart,
             req+1);
   //todo
-  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 3, 1))/2;
-  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 3, kmax-2))/2;
+  if(CT == 1)
+  {
+    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 3, 1);
+    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 3, kmax-2);
+  }
+  else if(CT == 2)
+  {
+    cr += calcCompressionRatio_himeno_nolossy_performance(p, 3, 1);
+    cr += calcCompressionRatio_himeno_nolossy_performance(p, 3, kmax-2); 
+  }     
+  cr_num += 2;
   MPI_Isend(&p[0][0][1],
             1,
             ijvec,
@@ -506,8 +516,17 @@ sendp2()
             mpi_comm_cart,
             req+1);
   //todo
-  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 2, 1))/2;
-  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 2, jmax-2))/2;            
+  if (CT == 1)
+  {
+    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 2, 1);
+    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 2, jmax-2); 
+  }
+  else if(CT == 2)
+  {
+    cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, 1);
+    cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, jmax-2); 
+  }     
+  cr_num += 2;         
   MPI_Isend(&p[0][1][0],
             1,
             ikvec,
@@ -550,8 +569,17 @@ sendp1()
             mpi_comm_cart,
             req+1);
   //todo
-  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 1, 1))/2;
-  cr = (cr + calcCompressionRatio_himeno_ij_ik_jk(p, 1, imax-2))/2;            
+  if (CT == 1)
+  {
+    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 1, 1);
+    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 1, imax-2); 
+  }
+  else if(CT == 2)
+  {
+    cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, 1);
+    cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, imax-2); 
+  }  
+  cr_num += 2;               
   MPI_Isend(&p[1][0][0],
             1,
             jkvec,
