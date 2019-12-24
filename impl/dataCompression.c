@@ -235,6 +235,90 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
   return compress_ratio;
 }
 
+float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
+{
+  float real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
+  float diff4;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+  int A, B;
+  int cdb = 512, indication = 5, le = 285, re = 222, re1 = 2, re2 = 4, re3 = 32, llrb = 2, ex = 1;
+
+  if(ijk == 1) 
+  {
+    A = MJMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 2) 
+  {
+    A = MIMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 3)
+  {
+    A = MIMAX;
+    B = MJMAX;
+  } 
+  for(int a=0; a<A; a++)
+  {
+    for(int b=0; b<B; b++)
+    {
+      if(ijk == 1) real_value = data[v][a][b]; // v is const
+      else if(ijk == 2) real_value = data[a][v][b];
+      else if(ijk == 3) real_value = data[a][b][v];
+
+      if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+      {
+        origin_bits += sizeof(float)*8;
+        compressed_bits += sizeof(float)*8;       
+        
+        if(before_value4 == -1) 
+        {
+          before_value4 = real_value; 
+        }
+        else if(before_value3 == -1) 
+        {
+          before_value3 = real_value; 
+        }
+        else if(before_value2 == -1) 
+        {
+          before_value2 = real_value;
+        }
+        else if(before_value1 == -1) 
+        {
+          before_value1 = real_value;
+        }        
+      }
+      else
+      {
+        predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
+
+        diff4 = predict_value4-real_value;     
+
+        before_value4 = before_value3;
+        before_value3 = before_value2;
+        before_value2 = before_value1;
+
+        origin_bits += sizeof(float)*8;
+        char c[sizeof(float)*8];
+        getFloatBin(diff4, c);
+        for(int i=1;i<sizeof(float)*8;i++)
+        {
+          if(c[i] != 0) 
+          {
+            compressed_bits += sizeof(float)*8 - i + 3 + 1;
+            break;
+          }
+            
+        }
+        before_value1 = real_value;
+      }
+    }
+  }
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;
+}
+
 void getFloatBin(float num,char bin[])
 {
     int t = 1;//用来按位与操作
