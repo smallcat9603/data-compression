@@ -6,6 +6,7 @@
 #define relBoundRatio       0.01
 #define pw_relBoundRatio    0.01    
 #define CT                  4 //compress type
+#define byte_or_bit         1 //1 byte, 2 bit
 
 float calcCompressionRatio_himeno_ij_ik_jk(float[MIMAX][MJMAX][MKMAX], int, int);
 // MPI_Datatype myCompress_himeno(void*, int, int, int, int, int, int);

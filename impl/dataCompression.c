@@ -149,7 +149,14 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
       }
     }
   } 
-  compress_ratio = (float)(array_char_len*sizeof(char)+array_float_len*sizeof(float))/((array_char_len+array_float_len)*sizeof(float));
+  if(byte_or_bit == 1)
+  {
+    compress_ratio = (float)(array_char_len*sizeof(char)+array_float_len*sizeof(float))/((array_char_len+array_float_len)*sizeof(float));
+  }
+  else if(byte_or_bit == 2)
+  {
+    compress_ratio = (float)(array_char_len*2+array_float_len*sizeof(float)*8)/((array_char_len+array_float_len)*sizeof(float)*8);
+  }
   return compress_ratio;
 }
 
@@ -233,7 +240,14 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
         before_value2 = before_value1;
         if(diff_min<=absErrBound) 
         {
-          compressed_bits += sizeof(char)*8; 
+          if(byte_or_bit == 1)
+          {
+            compressed_bits += sizeof(char)*8; 
+          }
+          else if(byte_or_bit == 2)
+          {
+            compressed_bits += 2; 
+          }
           before_value1 = selected_predict_value;
         }
         else 
@@ -282,7 +296,16 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
           {
             mantissa_bits_within_error_bound = 0;
           }
-          compressed_bits += 1+8+mantissa_bits_within_error_bound;  
+          if(byte_or_bit == 1)
+          {
+            if(mantissa_bits_within_error_bound%8 != 0) compressed_bits += 1+8+(mantissa_bits_within_error_bound%8+1)*8;  
+            else compressed_bits += 1+8+mantissa_bits_within_error_bound;
+          }
+          else if(byte_or_bit == 2)
+          {
+            compressed_bits += 1+8+mantissa_bits_within_error_bound;  
+          }
+          
           before_value1 = real_value;
         }
       }
@@ -323,9 +346,10 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
       else if(ijk == 2) real_value = data[a][v][b];
       else if(ijk == 3) real_value = data[a][b][v];
 
+      origin_bits += sizeof(float)*8;
+
       if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
       {
-        origin_bits += sizeof(float)*8;
         compressed_bits += sizeof(float)*8;       
         
         if(before_value4 == -1) 
@@ -355,17 +379,23 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
         before_value3 = before_value2;
         before_value2 = before_value1;
 
-        origin_bits += sizeof(float)*8;
         char c[sizeof(float)*8];
         getFloatBin(diff4, c);
         for(int i=1;i<sizeof(float)*8;i++)
         {
           if(c[i] != 0) 
           {
-            compressed_bits += sizeof(float)*8 - i + 3 + 1;
+            if(byte_or_bit == 1)
+            {
+              if((sizeof(float)*8 - i + 3 + 1)%8 != 0) compressed_bits += ((sizeof(float)*8 - i + 3 + 1)%8+1)*8;  
+              else compressed_bits += sizeof(float)*8 - i + 3 + 1;
+            }
+            else if(byte_or_bit == 2)
+            {
+              compressed_bits += sizeof(float)*8 - i + 3 + 1;
+            }
             break;
-          }
-            
+          } 
         }
         before_value1 = real_value;
       }
@@ -407,9 +437,10 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
       else if(ijk == 2) real_value = data[a][v][b];
       else if(ijk == 3) real_value = data[a][b][v];
 
+      origin_bits += sizeof(float)*8;
+
       if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
       {
-        origin_bits += sizeof(float)*8;
         occupied_bits += re3+llrb+ex;       
         
         if(before_value4 == -1) 
@@ -439,7 +470,6 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
         before_value3 = before_value2;
         before_value2 = before_value1;
 
-        origin_bits += sizeof(float)*8;
         char c[sizeof(float)*8];
         getFloatBin(diff4, c);
         for(int i=1;i<sizeof(float)*8;i++)
