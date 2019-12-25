@@ -298,7 +298,7 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
           }
           if(byte_or_bit == 1)
           {
-            if(mantissa_bits_within_error_bound%8 != 0) compressed_bits += 1+8+(mantissa_bits_within_error_bound%8+1)*8;  
+            if(mantissa_bits_within_error_bound%8 != 0) compressed_bits += 1+8+(mantissa_bits_within_error_bound/8+1)*8;  
             else compressed_bits += 1+8+mantissa_bits_within_error_bound;
           }
           else if(byte_or_bit == 2)
@@ -387,7 +387,7 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
           {
             if(byte_or_bit == 1)
             {
-              if((sizeof(float)*8 - i + 3 + 1)%8 != 0) compressed_bits += ((sizeof(float)*8 - i + 3 + 1)%8+1)*8;  
+              if((sizeof(float)*8 - i + 3 + 1)%8 != 0) compressed_bits += ((sizeof(float)*8 - i + 3 + 1)/8+1)*8;  
               else compressed_bits += sizeof(float)*8 - i + 3 + 1;
             }
             else if(byte_or_bit == 2)
