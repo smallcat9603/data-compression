@@ -526,6 +526,21 @@ void getFloatBin(float num,char bin[])
     }
 }
 
+float* readFileFloat(char* file)
+{
+  FILE *fp = fopen(file, "r");
+  float *a = NULL;
+  for (int i=0; !feof(fp); i++) 
+  {
+    a = (float *)(a?realloc(a,sizeof(float)*(i+1)):malloc(sizeof(float)));
+    fscanf(fp, "%f", a+i);
+    // printf("%f\t",a[i]);
+  }
+  fclose(fp);
+  // free(a);
+  return a;
+}
+
 // MPI_Datatype
 // myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int startj, int startk)
 // {

@@ -6,6 +6,8 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "param.h"
+#include "dataCompression.h"
 
 struct vector
 {
@@ -30,6 +32,8 @@ int main(int argc, char** argv) {
     fprintf(stderr, "World size must be two for %s\n", argv[0]);
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
+
+  float* data = readFileFloat("testfloat_8_8_128.txt");
 
   struct vector msg; 
   int num_p=4, num_c=8;

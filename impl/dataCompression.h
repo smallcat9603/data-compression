@@ -14,3 +14,4 @@ float calcCompressionRatio_himeno_sz(float[MIMAX][MJMAX][MKMAX], int, int);
 float calcCompressionRatio_himeno_nolossy_performance(float[MIMAX][MJMAX][MKMAX], int, int);
 float calcCompressionRatio_himeno_nolossy_area(float[MIMAX][MJMAX][MKMAX], int, int);
 void getFloatBin(float, char[]);
+float* readFileFloat(char[]);
