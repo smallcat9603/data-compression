@@ -13,6 +13,124 @@
 #include "dataCompression.h"
 
 //myCompress
+int myCompress(float data[], float* array_float, char* array_char, int* array_char_displacement)
+{
+  float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  float diff1, diff2, diff3, diff_min, selected_predict_value;
+  int array_float_len = 0, array_char_len = 0;
+  char compress_type;
+  // float compress_ratio;
+  // float* array_float = NULL; //(float*)malloc(sizeof(float));
+  float* array_float_more = NULL;
+  // char* array_char = NULL; //(char*)malloc(sizeof(char));
+  char* array_char_more = NULL;
+  // int* array_char_displacement = NULL;
+  int* array_char_displacement_more = NULL;
+
+  for(int n=0; n<data_num; n++)
+  {
+    real_value = data[n];
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      array_float_len++;
+      array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
+      if (array_float_more != NULL) 
+      {
+        array_float = array_float_more;
+        array_float[array_float_len-1] = real_value;
+      }
+      else 
+      {
+        free(array_float);
+        printf("Error (re)allocating memory");
+        exit(1);
+      }        
+      
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a';
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b';
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c';
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+      if(diff_min<=absErrBound) 
+      {
+        array_char_len++;
+        array_char_more = (char*)realloc(array_char, sizeof(char)*array_char_len);
+        array_char_displacement_more = (int*)realloc(array_char_displacement, sizeof(int)*array_char_len);
+        if (array_char_more != NULL && array_char_displacement_more != NULL) 
+        {
+          array_char = array_char_more;
+          array_char[array_char_len-1] = compress_type;
+          array_char_displacement = array_char_displacement_more;
+          array_char_displacement[array_char_len-1] = array_float_len + array_char_len;
+        }
+        else 
+        {
+          free(array_char);
+          free(array_char_displacement);
+          printf("Error (re)allocating memory");
+          exit(1);
+        } 
+      }
+      else 
+      {
+        array_float_len++;
+        array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
+        if (array_float_more != NULL) 
+        {
+          array_float = array_float_more;
+          array_float[array_float_len-1] = real_value;
+        }
+        else 
+        {
+          free(array_float);
+          printf("Error (re)allocating memory");
+          exit(1);
+        }             
+      }
+    }
+  } 
+  return array_float_len;
+}
+
+//myCompress
 float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
@@ -524,21 +642,6 @@ void getFloatBin(float num,char bin[])
     //这里没有将bin存成字符，而是数字1 0
         bin[i] = (*f)&(t<<31-i)?1:0;
     }
-}
-
-float* readFileFloat(char* file)
-{
-  FILE *fp = fopen(file, "r");
-  float *a = NULL;
-  for (int i=0; !feof(fp); i++) 
-  {
-    a = (float *)(a?realloc(a,sizeof(float)*(i+1)):malloc(sizeof(float)));
-    fscanf(fp, "%f", a+i);
-    // printf("%f\t",a[i]);
-  }
-  fclose(fp);
-  // free(a);
-  return a;
 }
 
 // MPI_Datatype

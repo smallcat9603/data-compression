@@ -33,7 +33,27 @@ int main(int argc, char** argv) {
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
 
-  float* data = readFileFloat("testfloat_8_8_128.txt");
+  // read data file
+  FILE *fp = fopen("testfloat_8_8_128.txt", "r");
+  float *data = NULL; //data array
+  int n; //data number = n-1
+  for (n=0; !feof(fp); n++) 
+  {
+    data = (float *)(data?realloc(data,sizeof(float)*(n+1)):malloc(sizeof(float)));
+    fscanf(fp, "%f", data+n);
+    // printf("%f\t", data[n]);
+  }
+  fclose(fp);
+  // free(data);
+
+  // my compress
+  float* array_float = NULL;
+  char* array_char = NULL;
+  int* array_char_displacement = NULL;
+  int array_float_len = myCompress(data, array_float, array_char, array_char_displacement);
+  printf("%d \n", array_float_len);
+  printf("%f \n", array_float[0]);  
+  printf("%c \n", array_char[0]);
 
   struct vector msg; 
   int num_p=4, num_c=8;
