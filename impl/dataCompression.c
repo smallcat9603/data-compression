@@ -13,7 +13,7 @@
 #include "dataCompression.h"
 
 //myCompress
-int myCompress(float data[], float* array_float, char* array_char, int* array_char_displacement)
+int myCompress(float data[], float** array_float, char** array_char, int** array_char_displacement)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
@@ -34,15 +34,15 @@ int myCompress(float data[], float* array_float, char* array_char, int* array_ch
     if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
     {
       array_float_len++;
-      array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
+      array_float_more = (float*)realloc(*array_float, sizeof(float)*array_float_len);
       if (array_float_more != NULL) 
       {
-        array_float = array_float_more;
-        array_float[array_float_len-1] = real_value;
+        *array_float = array_float_more;
+        (*array_float)[array_float_len-1] = real_value;
       }
       else 
       {
-        free(array_float);
+        free(*array_float);
         printf("Error (re)allocating memory");
         exit(1);
       }        
@@ -92,19 +92,19 @@ int myCompress(float data[], float* array_float, char* array_char, int* array_ch
       if(diff_min<=absErrBound) 
       {
         array_char_len++;
-        array_char_more = (char*)realloc(array_char, sizeof(char)*array_char_len);
-        array_char_displacement_more = (int*)realloc(array_char_displacement, sizeof(int)*array_char_len);
+        array_char_more = (char*)realloc(*array_char, sizeof(char)*array_char_len);
+        array_char_displacement_more = (int*)realloc(*array_char_displacement, sizeof(int)*array_char_len);
         if (array_char_more != NULL && array_char_displacement_more != NULL) 
         {
-          array_char = array_char_more;
-          array_char[array_char_len-1] = compress_type;
-          array_char_displacement = array_char_displacement_more;
-          array_char_displacement[array_char_len-1] = array_float_len + array_char_len;
+          *array_char = array_char_more;
+          (*array_char)[array_char_len-1] = compress_type;
+          *array_char_displacement = array_char_displacement_more;
+          (*array_char_displacement)[array_char_len-1] = array_float_len + array_char_len;
         }
         else 
         {
-          free(array_char);
-          free(array_char_displacement);
+          free(*array_char);
+          free(*array_char_displacement);
           printf("Error (re)allocating memory");
           exit(1);
         } 
@@ -112,21 +112,21 @@ int myCompress(float data[], float* array_float, char* array_char, int* array_ch
       else 
       {
         array_float_len++;
-        array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
+        array_float_more = (float*)realloc(*array_float, sizeof(float)*array_float_len);
         if (array_float_more != NULL) 
         {
-          array_float = array_float_more;
-          array_float[array_float_len-1] = real_value;
+          *array_float = array_float_more;
+          (*array_float)[array_float_len-1] = real_value;
         }
         else 
         {
-          free(array_float);
+          free(*array_float);
           printf("Error (re)allocating memory");
           exit(1);
         }             
       }
     }
-  } 
+  }
   return array_float_len;
 }
 

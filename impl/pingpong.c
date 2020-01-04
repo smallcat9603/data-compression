@@ -50,15 +50,22 @@ int main(int argc, char** argv) {
   float* array_float = NULL;
   char* array_char = NULL;
   int* array_char_displacement = NULL;
-  int array_float_len = myCompress(data, array_float, array_char, array_char_displacement);
-  printf("%d \n", array_float_len);
-  printf("%f \n", array_float[0]);  
-  printf("%c \n", array_char[0]);
+  int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement);
 
   struct vector msg; 
-  int num_p=4, num_c=8;
-  msg.p_data = (float*) malloc(sizeof(float)*num_p);
-  msg.c_data = (char*) malloc(sizeof(char)*num_c);
+  int num_p=array_float_len, num_c=data_num-array_float_len;
+  // num_p = 1000;
+  // num_c = 3000;
+  // msg.p_data = (float*) malloc(sizeof(float)*num_p);
+  // for (int i = 0; i < num_p; i++) {
+  //   msg.p_data[i] = array_float[i];
+  // }
+  // msg.c_data = (char*) malloc(sizeof(char)*num_c);
+  // for (int i = 0; i < num_c; i++) {
+  //   msg.c_data[i] = array_char[i];
+  // }
+  msg.p_data = array_float;
+  msg.c_data = array_char;
 
   int ping_pong_count = 0;
   int partner_rank = (world_rank + 1) % 2;
@@ -68,14 +75,8 @@ int main(int argc, char** argv) {
       ping_pong_count++;
       MPI_Send(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD);
       printf("%d sent and incremented ping_pong_count %d to %d\n", world_rank, ping_pong_count, partner_rank);
-      for (int i = 0; i < num_p; i++) {
-        msg.p_data[i] = i;
-      }
       MPI_Send(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD);
       printf("%d sent msg.p_data to %d\n", world_rank, partner_rank);
-      for (int i = 0; i < num_c; i++) {
-        msg.c_data[i] = 'a';
-      }
       MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
       printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
     } else {
