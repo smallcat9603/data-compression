@@ -1,7 +1,7 @@
 /*
  *
  */
-#define absErrBound         0.0001 //2^{-12}
+#define absErrBound         0.0001 //default 0.0001, 2^{-12}
 #define absErrBound_binary  12 //equal to above
 #define relBoundRatio       0.01
 #define pw_relBoundRatio    0.01    
