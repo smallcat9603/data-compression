@@ -17,7 +17,9 @@ struct vector
 
 int main(int argc, char** argv) {
 
-  const int PING_PONG_LIMIT = 10;
+  double start_time, end_time;
+
+  const int PING_PONG_LIMIT = 100;
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -54,8 +56,6 @@ int main(int argc, char** argv) {
 
   struct vector msg; 
   int num_p=array_float_len, num_c=data_num-array_float_len;
-  // num_p = 1000;
-  // num_c = 3000;
   // msg.p_data = (float*) malloc(sizeof(float)*num_p);
   // for (int i = 0; i < num_p; i++) {
   //   msg.p_data[i] = array_float[i];
@@ -69,24 +69,31 @@ int main(int argc, char** argv) {
 
   int ping_pong_count = 0;
   int partner_rank = (world_rank + 1) % 2;
+  start_time = MPI_Wtime();
   while (ping_pong_count < PING_PONG_LIMIT) {
     if (world_rank == ping_pong_count % 2) {
       // Increment the ping pong count before you send it
       ping_pong_count++;
       MPI_Send(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD);
       printf("%d sent and incremented ping_pong_count %d to %d\n", world_rank, ping_pong_count, partner_rank);
-      MPI_Send(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD);
-      printf("%d sent msg.p_data to %d\n", world_rank, partner_rank);
-      MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
-      printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
+      // MPI_Send(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD);
+      // printf("%d sent msg.p_data to %d\n", world_rank, partner_rank);
+      // MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
+      // printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
+      MPI_Send(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD);
+      printf("%d sent data to %d\n", world_rank, partner_rank);
     } else {
       MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       printf("%d received ping_pong_count %d from %d\n", world_rank, ping_pong_count, partner_rank);
-      MPI_Recv(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      printf("%d received msg.p_data from %d\n", world_rank, partner_rank);
-      MPI_Recv(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
+      // MPI_Recv(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      // printf("%d received msg.p_data from %d\n", world_rank, partner_rank);
+      // MPI_Recv(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      // printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
+      MPI_Recv(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("%d received data from %d\n", world_rank, partner_rank);
     }
   }
+  end_time = MPI_Wtime();
+  printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
   MPI_Finalize();
 }
