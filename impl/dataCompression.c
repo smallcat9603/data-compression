@@ -13,13 +13,46 @@
 #include "dataCompression.h"
 
 //myCompress
+float* myDecompress(float array_float[], char array_char[], int array_char_displacement[])
+{
+  float* data = (float*) malloc(sizeof(float)*data_num);
+  int array_float_p = 0, array_char_p = 0, array_char_displacement_p = 0;
+  for(int i=0; i<data_num; i++)
+  {
+    if(array_char_displacement[array_char_displacement_p] - 1 == i)
+    {
+      if(array_char[array_char_p] == 'a')
+      {
+        data[i] = data[i-1];
+      }
+      else if(array_char[array_char_p] == 'b')
+      {
+        data[i] = 2*data[i-1] - data[i-2];
+      }
+      else if(array_char[array_char_p] == 'c')
+      {
+        data[i] = 3*data[i-1] - 3*data[i-2] + data[i-3];
+      }
+      array_char_p++;
+      array_char_displacement_p++;
+    }
+    else
+    {
+      data[i] = array_float[array_float_p];
+      array_float_p++;
+    }
+  }
+  return data;
+}
+
+//myCompress
 int myCompress(float data[], float** array_float, char** array_char, int** array_char_displacement)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
   int array_float_len = 0, array_char_len = 0;
   char compress_type;
-  // float compress_ratio;
+  float compress_ratio;
   // float* array_float = NULL; //(float*)malloc(sizeof(float));
   float* array_float_more = NULL;
   // char* array_char = NULL; //(char*)malloc(sizeof(char));
@@ -127,6 +160,15 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
       }
     }
   }
+  if(byte_or_bit == 1)
+  {
+    compress_ratio = (float)(array_char_len*sizeof(char)+array_float_len*sizeof(float))/((array_char_len+array_float_len)*sizeof(float));
+  }
+  else if(byte_or_bit == 2)
+  {
+    compress_ratio = (float)(array_char_len*2+array_float_len*sizeof(float)*8)/((array_char_len+array_float_len)*sizeof(float)*8);
+  }  
+  printf("Compression rate: %f \n", 1/compress_ratio);
   return array_float_len;
 }
 

@@ -6,6 +6,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "param.h"
 #include "dataCompression.h"
 
@@ -19,7 +20,7 @@ int main(int argc, char** argv) {
 
   double start_time, end_time;
 
-  const int PING_PONG_LIMIT = 1000;
+  const int PING_PONG_LIMIT = 10;
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -91,6 +92,17 @@ int main(int argc, char** argv) {
       printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
       // MPI_Recv(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       // printf("%d received data from %d\n", world_rank, partner_rank);
+      if(ping_pong_count == PING_PONG_LIMIT)
+      {
+        float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement);
+        float gosa = 0;
+        for(int i=0; i<data_num; i++)
+        {
+          gosa += fabs(decompressed_data[i]-data[i]);
+        }
+        gosa = gosa/data_num;
+        printf("gosa = %f \n", gosa);
+      }
     }
   }
   end_time = MPI_Wtime();
