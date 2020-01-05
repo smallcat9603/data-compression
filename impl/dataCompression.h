@@ -1,8 +1,8 @@
 /*
  *
  */
-#define absErrBound         0.0001 //default 0.0001, 2^{-12}
-#define absErrBound_binary  12 //equal to above
+#define absErrBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
+#define absErrBound_binary  20 //equal to above
 #define relBoundRatio       0.01
 #define pw_relBoundRatio    0.01    
 #define CT                  4 //compress type

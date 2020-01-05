@@ -122,6 +122,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
       before_value3 = before_value2;
       before_value2 = before_value1;
       before_value1 = real_value;
+      
       if(diff_min<=absErrBound) 
       {
         array_char_len++;
@@ -268,6 +269,8 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
 
         before_value3 = before_value2;
         before_value2 = before_value1;
+        before_value1 = real_value;
+
         if(diff_min<=absErrBound) 
         {
           array_char_len++;
@@ -287,7 +290,6 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
             printf("Error (re)allocating memory");
             exit(1);
           } 
-          before_value1 = selected_predict_value;
         }
         else 
         {
@@ -304,7 +306,6 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
             printf("Error (re)allocating memory");
             exit(1);
           }             
-          before_value1 = real_value;
         }
       }
     }
@@ -398,6 +399,8 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
 
         before_value3 = before_value2;
         before_value2 = before_value1;
+        before_value1 = real_value;
+
         if(diff_min<=absErrBound) 
         {
           if(byte_or_bit == 1)
@@ -408,7 +411,6 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
           {
             compressed_bits += 2; 
           }
-          before_value1 = selected_predict_value;
         }
         else 
         {
@@ -465,8 +467,6 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
           {
             compressed_bits += 1+8+mantissa_bits_within_error_bound;  
           }
-          
-          before_value1 = real_value;
         }
       }
     }
@@ -538,6 +538,7 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
         before_value4 = before_value3;
         before_value3 = before_value2;
         before_value2 = before_value1;
+        before_value1 = real_value;
 
         char c[sizeof(float)*8];
         getFloatBin(diff4, c);
@@ -557,7 +558,6 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
             break;
           } 
         }
-        before_value1 = real_value;
       }
     }
   }
@@ -629,6 +629,7 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
         before_value4 = before_value3;
         before_value3 = before_value2;
         before_value2 = before_value1;
+        before_value1 = real_value;
 
         char c[sizeof(float)*8];
         getFloatBin(diff4, c);
@@ -662,10 +663,8 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
             }
 
             break;
-          }
-            
+          }  
         }
-        before_value1 = real_value;
       }
     }
   }
