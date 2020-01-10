@@ -12,6 +12,40 @@
 #include "param.h"
 #include "dataCompression.h"
 
+float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int len)
+{
+  int A, B;
+  float array_1d[len]; 
+  int array_1d_len = 0;
+
+  if(ijk == 1) 
+  {
+    A = MJMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 2) 
+  {
+    A = MIMAX;
+    B = MKMAX;
+  }
+  else if(ijk == 3)
+  {
+    A = MIMAX;
+    B = MJMAX;
+  } 
+  for(int a=0; a<A; a++)
+  {
+    for(int b=0; b<B; b++)
+    {
+      if(ijk == 1) array_1d[array_1d_len] = data[v][a][b]; // v is const
+      else if(ijk == 2) array_1d[array_1d_len] = data[a][v][b];
+      else if(ijk == 3) array_1d[array_1d_len] = data[a][b][v];
+      array_1d_len++;
+    }
+  } 
+  return array_1d;  
+}
+
 //myDecompress for ping-pong
 float* myDecompress(float array_float[], char array_char[], int array_char_displacement[])
 {
