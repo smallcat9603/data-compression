@@ -12,7 +12,7 @@
 #include "param.h"
 #include "dataCompression.h"
 
-//myCompress
+//myDecompress for ping-pong
 float* myDecompress(float array_float[], char array_char[], int array_char_displacement[])
 {
   float* data = (float*) malloc(sizeof(float)*data_num);
@@ -45,7 +45,7 @@ float* myDecompress(float array_float[], char array_char[], int array_char_displ
   return data;
 }
 
-//myCompress
+//myCompress for ping-pong
 int myCompress(float data[], float** array_float, char** array_char, int** array_char_displacement)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
@@ -173,7 +173,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
   return array_float_len;
 }
 
-//myCompress
+//myCompress for himeno
 float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
