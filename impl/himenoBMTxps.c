@@ -70,6 +70,7 @@ static int npx[2],npy[2],npz[2];
 MPI_Comm     mpi_comm_cart;
 MPI_Datatype ijvec,ikvec,jkvec;
 
+//todo
 static float cr = 0; //compression rate
 static int cr_num = 0;
 
@@ -165,6 +166,7 @@ main(int argc,char *argv[])
     printf("MFLOPS measured : %f\n",mflops(nn,cpu,flop));
     printf("Score based on Pentium III 600MHz : %f\n",
            mflops(nn,cpu,flop)/82.84);
+    //todo
     printf("Compression rate: %f \n", 1/(cr/cr_num));
   }
 
