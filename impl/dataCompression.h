@@ -18,4 +18,4 @@ void getFloatBin(float, char[]);
 float* readFileFloat(char[]);
 int myCompress(float[], float**, char**, int**);
 float* myDecompress(float[], char[], int[]);
-float* transform_3d_array_to_1d_array(float[MIMAX][MJMAX][MKMAX], int, int, int);
+float* transform_3d_array_to_1d_array(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int, int);

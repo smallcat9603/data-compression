@@ -475,7 +475,7 @@ sendp3()
     float* array_float = NULL;
     char* array_char = NULL;
     int* array_char_displacement = NULL;
-    float* data = transform_3d_array_to_1d_array(p, 3, 1, imax*jmax);
+    float* data = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax, imax*jmax);
     int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement);    
   }
   else if(CT == 2)
