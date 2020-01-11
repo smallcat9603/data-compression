@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   float* array_float = NULL;
   char* array_char = NULL;
   int* array_char_displacement = NULL;
-  int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement);
+  int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
 
   struct vector msg; 
   int num_p=array_float_len, num_c=data_num-array_float_len;

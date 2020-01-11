@@ -448,15 +448,17 @@ sendp(int ndx,int ndy,int ndz)
 void
 sendp3()
 {
-  MPI_Status   st[4];
-  MPI_Request  req[4];
+  // MPI_Status   st[4];
+  // MPI_Request  req[4];
+  MPI_Status   st[12];
+  MPI_Request  req[12];
 
   //todo
   float* array_float = NULL;
   char* array_char = NULL;
   int* array_char_displacement = NULL;
   float* data = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax, imax*jmax);
-  int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement); 
+  int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, imax*jmax); 
   int array_char_len = imax*jmax - array_float_len;   
   MPI_Irecv(array_float,
             array_float_len,
@@ -471,23 +473,60 @@ sendp3()
             npz[1],
             2,
             mpi_comm_cart,
-            req);     
+            req+1);     
   MPI_Irecv(array_char_displacement,
             array_char_len,
             MPI_INT,
             npz[1],
             3,
             mpi_comm_cart,
-            req); 
+            req+2); 
   float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, imax*jmax);
   int pointer = 0;
   for(int a=0; a<imax; a++)
   {
     for(int b=0; b<jmax; b++)
     {
-      data[a][b][kmax-1] = decompressed_data[pointer++];
+      p[a][b][kmax-1] = decompressed_data[pointer++];
     }
   } 
+  //todo
+  float* array_float_2 = NULL;
+  char* array_char_2 = NULL;
+  int* array_char_displacement_2 = NULL;
+  float* data_2 = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax, imax*jmax);
+  int array_float_len_2 = myCompress(data_2, &array_float_2, &array_char_2, &array_char_displacement_2, imax*jmax); 
+  int array_char_len_2 = imax*jmax - array_float_len_2;   
+  MPI_Irecv(array_float_2,
+            array_float_len_2,
+            MPI_FLOAT,
+            npz[1],
+            4,
+            mpi_comm_cart,
+            req+3);
+  MPI_Irecv(array_char_2,
+            array_char_len_2,
+            MPI_CHAR,
+            npz[1],
+            5,
+            mpi_comm_cart,
+            req+4);     
+  MPI_Irecv(array_char_displacement_2,
+            array_char_len_2,
+            MPI_INT,
+            npz[1],
+            6,
+            mpi_comm_cart,
+            req+5); 
+  float* decompressed_data_2 = myDecompress(array_float_2, array_char_2, array_char_displacement_2, imax*jmax);
+  int pointer_2 = 0;
+  for(int a=0; a<imax; a++)
+  {
+    for(int b=0; b<jmax; b++)
+    {
+      p[a][b][0] = decompressed_data[pointer_2++];
+    }
+  }
 
   // MPI_Irecv(&p[0][0][kmax-1],
   //           1,
@@ -496,13 +535,14 @@ sendp3()
   //           1,
   //           mpi_comm_cart,
   //           req);
-  MPI_Irecv(&p[0][0][0],
-            1,
-            ijvec,
-            npz[0],
-            2,
-            mpi_comm_cart,
-            req+1);
+  // MPI_Irecv(&p[0][0][0],
+  //           1,
+  //           ijvec,
+  //           npz[0],
+  //           2,
+  //           mpi_comm_cart,
+  //           req+1);
+
   //todo
   if(CT == 1)
   {
@@ -532,21 +572,45 @@ sendp3()
             npz[0],
             1,
             mpi_comm_cart,
-            req+2);
+            req+6);
   MPI_Isend(array_char,
             array_char_len,
             MPI_CHAR,
             npz[0],
             2,
             mpi_comm_cart,
-            req+2);   
+            req+7);   
   MPI_Isend(array_char_displacement,
             array_char_len,
             MPI_INT,
             npz[0],
             3,
             mpi_comm_cart,
-            req+2);                      
+            req+8);   
+  MPI_Isend(array_float_2,
+            array_float_len_2,
+            MPI_FLOAT,
+            npz[0],
+            4,
+            mpi_comm_cart,
+            req+9);
+  MPI_Isend(array_char_2,
+            array_char_len_2,
+            MPI_CHAR,
+            npz[0],
+            5,
+            mpi_comm_cart,
+            req+10);   
+  MPI_Isend(array_char_displacement_2,
+            array_char_len_2,
+            MPI_INT,
+            npz[0],
+            6,
+            mpi_comm_cart,
+            req+11);                                
+  MPI_Waitall(12,
+              req,
+              st);
 
   // MPI_Isend(&p[0][0][1],
   //           1,
@@ -555,17 +619,16 @@ sendp3()
   //           1,
   //           mpi_comm_cart,
   //           req+2);
-  MPI_Isend(&p[0][0][kmax-2],
-            1,
-            ijvec,
-            npz[1],
-            2,
-            mpi_comm_cart,
-            req+3);
-
-  MPI_Waitall(4,
-              req,
-              st);
+  // MPI_Isend(&p[0][0][kmax-2],
+  //           1,
+  //           ijvec,
+  //           npz[1],
+  //           2,
+  //           mpi_comm_cart,
+  //           req+3);
+  // MPI_Waitall(4,
+  //             req,
+  //             st);
 }
 
 void

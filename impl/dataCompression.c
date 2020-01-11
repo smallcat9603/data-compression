@@ -79,7 +79,7 @@ float* myDecompress(float array_float[], char array_char[], int array_char_displ
 }
 
 //myCompress for ping-pong & himeno
-int myCompress(float data[], float** array_float, char** array_char, int** array_char_displacement)
+int myCompress(float data[], float** array_float, char** array_char, int** array_char_displacement, int num)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
@@ -93,7 +93,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
   // int* array_char_displacement = NULL;
   int* array_char_displacement_more = NULL;
 
-  for(int n=0; n<data_num; n++)
+  for(int n=0; n<num; n++)
   {
     real_value = data[n];
 
