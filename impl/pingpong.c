@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
       // printf("%d received data from %d\n", world_rank, partner_rank);
       if(ping_pong_count == PING_PONG_LIMIT)
       {
-        float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement);
+        float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, data_num);
         float gosa = 0;
         for(int i=0; i<data_num; i++)
         {

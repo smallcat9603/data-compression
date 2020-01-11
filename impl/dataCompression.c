@@ -45,12 +45,12 @@ float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, 
   return array_1d;  
 }
 
-//myDecompress for ping-pong
-float* myDecompress(float array_float[], char array_char[], int array_char_displacement[])
+//myDecompress for ping-pong & himeno
+float* myDecompress(float array_float[], char array_char[], int array_char_displacement[], int num)
 {
-  float* data = (float*) malloc(sizeof(float)*data_num);
+  float* data = (float*) malloc(sizeof(float)*num);
   int array_float_p = 0, array_char_p = 0, array_char_displacement_p = 0;
-  for(int i=0; i<data_num; i++)
+  for(int i=0; i<num; i++)
   {
     if(array_char_displacement[array_char_displacement_p] - 1 == i)
     {
@@ -78,7 +78,7 @@ float* myDecompress(float array_float[], char array_char[], int array_char_displ
   return data;
 }
 
-//myCompress for ping-pong
+//myCompress for ping-pong & himeno
 int myCompress(float data[], float** array_float, char** array_char, int** array_char_displacement)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;

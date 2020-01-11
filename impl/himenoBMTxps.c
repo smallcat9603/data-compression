@@ -479,7 +479,7 @@ sendp3()
             3,
             mpi_comm_cart,
             req); 
-  float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement);
+  float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, imax*jmax);
   int pointer = 0;
   for(int a=0; a<imax; a++)
   {
