@@ -12,11 +12,6 @@
 #include "param.h"
 #include "dataCompression.h"
 
-void transform_1d_array_to_3d_array(float data[], float** p, int ijk, int v, int imax, int jmax, int kmax, int len)
-{
-
-}
-
 float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax, int len)
 {
   int A, B;
@@ -42,10 +37,9 @@ float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, 
   {
     for(int b=0; b<B; b++)
     {
-      if(ijk == 1) array_1d[array_1d_len] = data[v][a][b]; // v is const
-      else if(ijk == 2) array_1d[array_1d_len] = data[a][v][b];
-      else if(ijk == 3) array_1d[array_1d_len] = data[a][b][v];
-      array_1d_len++;
+      if(ijk == 1) array_1d[array_1d_len++] = data[v][a][b]; // v is const
+      else if(ijk == 2) array_1d[array_1d_len++] = data[a][v][b];
+      else if(ijk == 3) array_1d[array_1d_len++] = data[a][b][v];
     }
   } 
   return array_1d;  

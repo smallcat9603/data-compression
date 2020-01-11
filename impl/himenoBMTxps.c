@@ -451,13 +451,51 @@ sendp3()
   MPI_Status   st[4];
   MPI_Request  req[4];
 
-  MPI_Irecv(&p[0][0][kmax-1],
-            1,
-            ijvec,
+  //todo
+  float* array_float = NULL;
+  char* array_char = NULL;
+  int* array_char_displacement = NULL;
+  float* data = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax, imax*jmax);
+  int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement); 
+  int array_char_len = imax*jmax - array_float_len;   
+  MPI_Irecv(array_float,
+            array_float_len,
+            MPI_FLOAT,
             npz[1],
             1,
             mpi_comm_cart,
             req);
+  MPI_Irecv(array_char,
+            array_char_len,
+            MPI_CHAR,
+            npz[1],
+            2,
+            mpi_comm_cart,
+            req);     
+  MPI_Irecv(array_char_displacement,
+            array_char_len,
+            MPI_INT,
+            npz[1],
+            3,
+            mpi_comm_cart,
+            req); 
+  float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement);
+  int pointer = 0;
+  for(int a=0; a<imax; a++)
+  {
+    for(int b=0; b<jmax; b++)
+    {
+      data[a][b][kmax-1] = decompressed_data[pointer++];
+    }
+  } 
+
+  // MPI_Irecv(&p[0][0][kmax-1],
+  //           1,
+  //           ijvec,
+  //           npz[1],
+  //           1,
+  //           mpi_comm_cart,
+  //           req);
   MPI_Irecv(&p[0][0][0],
             1,
             ijvec,
@@ -470,13 +508,6 @@ sendp3()
   {
     cr += calcCompressionRatio_himeno_ij_ik_jk(p, 3, 1);
     cr += calcCompressionRatio_himeno_ij_ik_jk(p, 3, kmax-2);
-
-    // my compress
-    float* array_float = NULL;
-    char* array_char = NULL;
-    int* array_char_displacement = NULL;
-    float* data = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax, imax*jmax);
-    int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement);    
   }
   else if(CT == 2)
   {
@@ -494,13 +525,36 @@ sendp3()
     cr += calcCompressionRatio_himeno_sz(p, 3, kmax-2);     
   }
   cr_num += 2;
-  MPI_Isend(&p[0][0][1],
-            1,
-            ijvec,
+  // my compress
+  MPI_Isend(array_float,
+            array_float_len,
+            MPI_FLOAT,
             npz[0],
             1,
             mpi_comm_cart,
             req+2);
+  MPI_Isend(array_char,
+            array_char_len,
+            MPI_CHAR,
+            npz[0],
+            2,
+            mpi_comm_cart,
+            req+2);   
+  MPI_Isend(array_char_displacement,
+            array_char_len,
+            MPI_INT,
+            npz[0],
+            3,
+            mpi_comm_cart,
+            req+2);                      
+
+  // MPI_Isend(&p[0][0][1],
+  //           1,
+  //           ijvec,
+  //           npz[0],
+  //           1,
+  //           mpi_comm_cart,
+  //           req+2);
   MPI_Isend(&p[0][0][kmax-2],
             1,
             ijvec,
