@@ -15,7 +15,8 @@
 float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax, int len)
 {
   int A, B;
-  float array_1d[len]; 
+  //float array_1d[len]; 
+  float* array_1d = (float*) malloc(sizeof(float)*len);
   int array_1d_len = 0;
 
   if(ijk == 1) 
@@ -194,15 +195,15 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
       }
     }
   }
-  if(byte_or_bit == 1)
-  {
-    compress_ratio = (float)(array_char_len*sizeof(char)+array_float_len*sizeof(float))/((array_char_len+array_float_len)*sizeof(float));
-  }
-  else if(byte_or_bit == 2)
-  {
-    compress_ratio = (float)(array_char_len*2+array_float_len*sizeof(float)*8)/((array_char_len+array_float_len)*sizeof(float)*8);
-  }  
-  printf("Compression rate: %f \n", 1/compress_ratio);
+  // if(byte_or_bit == 1)
+  // {
+  //   compress_ratio = (float)(array_char_len*sizeof(char)+array_float_len*sizeof(float))/((array_char_len+array_float_len)*sizeof(float));
+  // }
+  // else if(byte_or_bit == 2)
+  // {
+  //   compress_ratio = (float)(array_char_len*2+array_float_len*sizeof(float)*8)/((array_char_len+array_float_len)*sizeof(float)*8);
+  // }  
+  // printf("Compression rate: %f \n", 1/compress_ratio);
   return array_float_len;
 }
 
