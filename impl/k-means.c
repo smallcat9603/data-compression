@@ -264,6 +264,7 @@ int main(int argc, char *argv[])
 	int count = 0;
 	while(count < MAX_ITERATIONS)
 	{
+		//todo
 		// broadcast k-means arrays
 		MPI_Bcast(k_means_x, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 		MPI_Bcast(k_means_y, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
