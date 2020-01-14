@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 
   double start_time, end_time;
 
-  const int PING_PONG_LIMIT = 10;
+  const int PING_PONG_LIMIT = 10000;
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -76,23 +76,36 @@ int main(int argc, char** argv) {
       // Increment the ping pong count before you send it
       ping_pong_count++;
       MPI_Send(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD);
-      printf("%d sent and incremented ping_pong_count %d to %d\n", world_rank, ping_pong_count, partner_rank);
-      MPI_Send(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD);
-      printf("%d sent msg.p_data to %d\n", world_rank, partner_rank);
-      MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
-      printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
-      // MPI_Send(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD);
-      // printf("%d sent data to %d\n", world_rank, partner_rank);
-    } else {
+      //printf("%d sent and incremented ping_pong_count %d to %d\n", world_rank, ping_pong_count, partner_rank);
+      if(CT == 0)
+      {
+        MPI_Send(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD);
+        //printf("%d sent data to %d\n", world_rank, partner_rank);
+      }      
+      if(CT == 1)
+      {
+        MPI_Send(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD);
+        //printf("%d sent msg.p_data to %d\n", world_rank, partner_rank);
+        MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
+        //printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
+      }   
+    }
+    else {
       MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      printf("%d received ping_pong_count %d from %d\n", world_rank, ping_pong_count, partner_rank);
-      MPI_Recv(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      printf("%d received msg.p_data from %d\n", world_rank, partner_rank);
-      MPI_Recv(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
-      // MPI_Recv(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      // printf("%d received data from %d\n", world_rank, partner_rank);
-      if(ping_pong_count == PING_PONG_LIMIT)
+      //printf("%d received ping_pong_count %d from %d\n", world_rank, ping_pong_count, partner_rank);
+      if(CT == 0)
+      {
+        MPI_Recv(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        //printf("%d received data from %d\n", world_rank, partner_rank);
+      }      
+      if(CT == 1)
+      {
+        MPI_Recv(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        //printf("%d received msg.p_data from %d\n", world_rank, partner_rank);
+        MPI_Recv(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        //printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
+      }
+      if(ping_pong_count == PING_PONG_LIMIT && CT == 1)
       {
         float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, data_num);
         float gosa = 0;
@@ -106,6 +119,20 @@ int main(int argc, char** argv) {
     }
   }
   end_time = MPI_Wtime();
-  printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
+
+  if(world_rank == 0)
+  {
+    printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
+
+    if (CT == 1)
+    {
+      float compress_ratio;
+      compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
+      printf("Compression rate (byte): %f \n", 1/compress_ratio); 
+      compress_ratio = (float)(num_c*2+num_p*sizeof(float)*8)/((num_c+num_p)*sizeof(float)*8);
+      printf("Compression rate (bit): %f \n", 1/compress_ratio); 
+    } 
+  }
+
   MPI_Finalize();
 }

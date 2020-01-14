@@ -86,7 +86,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
   float diff1, diff2, diff3, diff_min, selected_predict_value;
   int array_float_len = 0, array_char_len = 0;
   char compress_type;
-  float compress_ratio;
+  //float compress_ratio;
   // float* array_float = NULL; //(float*)malloc(sizeof(float));
   float* array_float_more = NULL;
   // char* array_char = NULL; //(char*)malloc(sizeof(char));
