@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
   int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
 
   struct vector msg; 
-  int num_p=array_float_len, num_c=data_num-array_float_len;
+  int num_p = array_float_len, num_c = data_num-array_float_len;
   // msg.p_data = (float*) malloc(sizeof(float)*num_p);
   // for (int i = 0; i < num_p; i++) {
   //   msg.p_data[i] = array_float[i];

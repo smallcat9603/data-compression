@@ -1,4 +1,5 @@
 /*  This is an implementation of the k-means clustering algorithm (aka Lloyd's algorithm) using MPI (message passing interface). */
+//Original version: https://github.com/dzdao/k-means-clustering-mpi
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -13,6 +14,13 @@
 int numOfClusters = 0;
 int numOfElements = 0;
 int num_of_processes = 0;
+
+//todo
+struct vector
+{
+  double* p_data; //precise data
+  char* c_data; //compressed data
+};
 
 /* This function goes through that data points and assigns them to a cluster */
 void assign2Cluster(double k_x[], double k_y[], double recv_x[], double recv_y[], int assign[])
@@ -264,7 +272,18 @@ int main(int argc, char *argv[])
 	int count = 0;
 	while(count < MAX_ITERATIONS)
 	{
-		//todo
+		//mycommpress
+  		double* array_double = NULL;
+  		char* array_char = NULL;
+  		int* array_char_displacement = NULL;
+  		int array_double_len = myCompress(k_means_x, &array_double, &array_char, &array_char_displacement, data_num);
+		struct vector msg; 
+		int num_p = array_double_len, num_c = numOfClusters - array_double_len;
+		msg.p_data = array_double;
+		msg.c_data = array_char;
+		MPI_Bcast(msg.p_data, num_p, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(msg.c_data, num_c, MPI_CHAR, 0, MPI_COMM_WORLD);
+
 		// broadcast k-means arrays
 		MPI_Bcast(k_means_x, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 		MPI_Bcast(k_means_y, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);

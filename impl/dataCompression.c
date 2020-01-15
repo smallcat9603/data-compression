@@ -46,7 +46,155 @@ float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, 
   return array_1d;  
 }
 
-//myDecompress for ping-pong & himeno
+//myDecompress for k-means (double)
+double* myDecompress_double(double array_double[], char array_char[], int array_char_displacement[], int num)
+{
+  double* data = (double*) malloc(sizeof(double)*num);
+  int array_double_p = 0, array_char_p = 0, array_char_displacement_p = 0;
+  for(int i=0; i<num; i++)
+  {
+    if(array_char_displacement[array_char_displacement_p] - 1 == i)
+    {
+      if(array_char[array_char_p] == 'a')
+      {
+        data[i] = data[i-1];
+      }
+      else if(array_char[array_char_p] == 'b')
+      {
+        data[i] = 2*data[i-1] - data[i-2];
+      }
+      else if(array_char[array_char_p] == 'c')
+      {
+        data[i] = 3*data[i-1] - 3*data[i-2] + data[i-3];
+      }
+      array_char_p++;
+      array_char_displacement_p++;
+    }
+    else
+    {
+      data[i] = array_double[array_double_p];
+      array_double_p++;
+    }
+  }
+  return data;
+}
+
+//myCompress for k-means (double)
+int myCompress_double(double data[], double** array_double, char** array_char, int** array_char_displacement, int num)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  double diff1, diff2, diff3, diff_min, selected_predict_value;
+  int array_double_len = 0, array_char_len = 0;
+  char compress_type;
+  double* array_double_more = NULL;
+  char* array_char_more = NULL;
+  int* array_char_displacement_more = NULL;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      array_double_len++;
+      array_double_more = (double*)realloc(*array_double, sizeof(double)*array_double_len);
+      if (array_double_more != NULL) 
+      {
+        *array_double = array_double_more;
+        (*array_double)[array_double_len-1] = real_value;
+      }
+      else 
+      {
+        free(*array_double);
+        printf("Error (re)allocating memory");
+        exit(1);
+      }        
+      
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a';
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b';
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c';
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+      
+      if(diff_min<=absErrBound) 
+      {
+        array_char_len++;
+        array_char_more = (char*)realloc(*array_char, sizeof(char)*array_char_len);
+        array_char_displacement_more = (int*)realloc(*array_char_displacement, sizeof(int)*array_char_len);
+        if (array_char_more != NULL && array_char_displacement_more != NULL) 
+        {
+          *array_char = array_char_more;
+          (*array_char)[array_char_len-1] = compress_type;
+          *array_char_displacement = array_char_displacement_more;
+          (*array_char_displacement)[array_char_len-1] = array_double_len + array_char_len;
+        }
+        else 
+        {
+          free(*array_char);
+          free(*array_char_displacement);
+          printf("Error (re)allocating memory");
+          exit(1);
+        } 
+      }
+      else 
+      {
+        array_double_len++;
+        array_double_more = (double*)realloc(*array_double, sizeof(double)*array_double_len);
+        if (array_double_more != NULL) 
+        {
+          *array_double = array_double_more;
+          (*array_double)[array_double_len-1] = real_value;
+        }
+        else 
+        {
+          free(*array_double);
+          printf("Error (re)allocating memory");
+          exit(1);
+        }             
+      }
+    }
+  }
+  return array_double_len;
+}
+
+//myDecompress for ping-pong & himeno (float)
 float* myDecompress(float array_float[], char array_char[], int array_char_displacement[], int num)
 {
   float* data = (float*) malloc(sizeof(float)*num);
@@ -79,7 +227,7 @@ float* myDecompress(float array_float[], char array_char[], int array_char_displ
   return data;
 }
 
-//myCompress for ping-pong & himeno
+//myCompress for ping-pong & himeno (float)
 int myCompress(float data[], float** array_float, char** array_char, int** array_char_displacement, int num)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
