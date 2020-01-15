@@ -8,6 +8,7 @@
 #include<math.h>
 #include<errno.h>
 #include<mpi.h>
+#include "dataCompression.h"
 
 #define MAX_ITERATIONS 1000
 
