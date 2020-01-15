@@ -144,7 +144,8 @@ int main(int argc, char *argv[])
 
 		printf("Reading input data from file...\n\n");
 
-		FILE* fp = fopen("input.txt", "r");
+		//FILE* fp = fopen("input.txt", "r");
+		FILE* fp = fopen("testfloat_8_8_128.txt", "r");
 
 		if(!fp)
 		{
@@ -270,23 +271,61 @@ int main(int argc, char *argv[])
 		recv_y, (numOfElements/num_of_processes) + 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	int count = 0;
+	double gosa = 0;
 	while(count < MAX_ITERATIONS)
 	{
-		//mycommpress
-  		double* array_double = NULL;
-  		char* array_char = NULL;
-  		int* array_char_displacement = NULL;
-  		int array_double_len = myCompress(k_means_x, &array_double, &array_char, &array_char_displacement, data_num);
-		struct vector msg; 
-		int num_p = array_double_len, num_c = numOfClusters - array_double_len;
-		msg.p_data = array_double;
-		msg.c_data = array_char;
-		MPI_Bcast(msg.p_data, num_p, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		MPI_Bcast(msg.c_data, num_c, MPI_CHAR, 0, MPI_COMM_WORLD);
+		if(CT == 1)
+		{
+			//mycommpress
+			double* array_double_x = NULL;
+			char* array_char_x = NULL;
+			int* array_char_displacement_x = NULL;
+			int array_double_len_x = myCompress_double(k_means_x, &array_double_x, &array_char_x, &array_char_displacement_x, numOfClusters);
+			struct vector msg_x; 
+			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
+			msg_x.p_data = array_double_x;
+			msg_x.c_data = array_char_x;
+			MPI_Bcast(msg_x.p_data, num_p_x, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			MPI_Bcast(msg_x.c_data, num_c_x, MPI_CHAR, 0, MPI_COMM_WORLD);
+			
+			double* array_double_y = NULL;
+			char* array_char_y = NULL;
+			int* array_char_displacement_y = NULL;
+			int array_double_len_y = myCompress_double(k_means_y, &array_double_y, &array_char_y, &array_char_displacement_y, numOfClusters);
+			struct vector msg_y; 
+			int num_p_y = array_double_len_y, num_c_y = numOfClusters - array_double_len_y;
+			msg_y.p_data = array_double_y;
+			msg_y.c_data = array_char_y;
+			MPI_Bcast(msg_y.p_data, num_p_y, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			MPI_Bcast(msg_y.c_data, num_c_y, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-		// broadcast k-means arrays
-		MPI_Bcast(k_means_x, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		MPI_Bcast(k_means_y, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			double* decompressed_data_x = myDecompress_double(array_double_x, array_char_x, array_char_displacement_x, numOfClusters);
+			double gosa = 0;
+			for(int i=0; i<numOfClusters; i++)
+			{
+				gosa += fabs(decompressed_data_x[i]-k_means_x[i]);
+			}
+
+			double* decompressed_data_y = myDecompress_double(array_double_y, array_char_y, array_char_displacement_y, numOfClusters);
+			double gosa = 0;
+			for(int i=0; i<numOfClusters; i++)
+			{
+				gosa += fabs(decompressed_data_y[i]-k_means_y[i]);
+			}
+			
+			if(count == MAX_ITERATIONS - 1)
+			{
+				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
+				printf("gosa = %f \n", gosa);
+			}
+		}		
+
+		if(CT == 0)
+		{
+			// broadcast k-means arrays
+			MPI_Bcast(k_means_x, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			MPI_Bcast(k_means_y, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		}
 
 		// scatter k-cluster assignments array
 		MPI_Scatter(k_assignment, (numOfElements/num_of_processes) + 1, MPI_INT,

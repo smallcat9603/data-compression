@@ -5,7 +5,7 @@
 #define absErrBound_binary  20 //SZ, equal to above
 #define relBoundRatio       0.01
 #define pw_relBoundRatio    0.01    
-#define CT                  1 //compress type for pingpong & himeno, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz
+#define CT                  0 //compress type for pingpong & himeno, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz
 #define byte_or_bit         1 //1 byte, 2 bit
 #define data_num            8192 //pingpong
 
@@ -18,4 +18,6 @@ void getFloatBin(float, char[]);
 float* readFileFloat(char[]);
 int myCompress(float[], float**, char**, int**, int);
 float* myDecompress(float[], char[], int[], int);
+int myCompress_double(double[], double**, char**, int**, int);
+double* myDecompress_double(double[], char[], int[], int);
 float* transform_3d_array_to_1d_array(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int, int);
