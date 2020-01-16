@@ -8,6 +8,7 @@
 #include<math.h>
 #include<errno.h>
 #include<mpi.h>
+#include "param.h"
 #include "dataCompression.h"
 
 #define MAX_ITERATIONS 1000
@@ -145,8 +146,7 @@ int main(int argc, char *argv[])
 
 		printf("Reading input data from file...\n\n");
 
-		//FILE* fp = fopen("input.txt", "r");
-		FILE* fp = fopen("testfloat_8_8_128.txt", "r");
+		FILE* fp = fopen(filename, "r");
 
 		if(!fp)
 		{
@@ -165,6 +165,9 @@ int main(int argc, char *argv[])
 				numOfElements++;
 			}
 		}
+
+		//x, y
+		numOfElements = numOfElements/2;
 
 		printf("There are a total number of %d elements in the file.\n", numOfElements);
 
@@ -286,6 +289,8 @@ int main(int argc, char *argv[])
 			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
 			msg_x.p_data = array_double_x;
 			msg_x.c_data = array_char_x;
+			printf("%lf \n", msg_x.p_data[50]);
+			printf("%d \n", array_double_len_x);
 			MPI_Bcast(msg_x.p_data, num_p_x, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 			MPI_Bcast(msg_x.c_data, num_c_x, MPI_CHAR, 0, MPI_COMM_WORLD);
 			
@@ -300,15 +305,17 @@ int main(int argc, char *argv[])
 			MPI_Bcast(msg_y.p_data, num_p_y, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 			MPI_Bcast(msg_y.c_data, num_c_y, MPI_CHAR, 0, MPI_COMM_WORLD);
 
+			printf("%d \n", num_p_x);
+			printf("%d \n", num_c_x);
+			printf("%d \n", num_p_y);
+			printf("%d \n", num_c_y);
 			double* decompressed_data_x = myDecompress_double(array_double_x, array_char_x, array_char_displacement_x, numOfClusters);
-			double gosa = 0;
 			for(int i=0; i<numOfClusters; i++)
 			{
 				gosa += fabs(decompressed_data_x[i]-k_means_x[i]);
 			}
 
 			double* decompressed_data_y = myDecompress_double(array_double_y, array_char_y, array_char_displacement_y, numOfClusters);
-			double gosa = 0;
 			for(int i=0; i<numOfClusters; i++)
 			{
 				gosa += fabs(decompressed_data_y[i]-k_means_y[i]);
