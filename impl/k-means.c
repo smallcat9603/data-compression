@@ -370,7 +370,6 @@ int main(int argc, char *argv[])
 			if(count == MAX_ITERATIONS - 1)
 			{
 				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
-				printf("gosa = %f \n", gosa);
 			}
 		}		
 
@@ -405,8 +404,6 @@ int main(int argc, char *argv[])
 
 	if(world_rank == 0)
 	{
-		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
-
 		printf("--------------------------------------------------\n");
 		printf("FINAL RESULTS:\n");
 		for(int i = 0; i < numOfClusters; i++)
@@ -414,6 +411,9 @@ int main(int argc, char *argv[])
 			printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
 		}
 		printf("--------------------------------------------------\n");
+
+		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
+		printf("gosa = %f \n", gosa);
 	}
 
 	// deallocate memory and clean up
