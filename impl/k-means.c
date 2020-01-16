@@ -22,6 +22,7 @@ struct vector
 {
   double* p_data; //precise data
   char* c_data; //compressed data
+  int* disp; //displacement of compressed data
 };
 
 /* This function goes through that data points and assigns them to a cluster */
@@ -276,49 +277,94 @@ int main(int argc, char *argv[])
 
 	int count = 0;
 	double gosa = 0;
+	double start_time, end_time;
+	start_time = MPI_Wtime();
 	while(count < MAX_ITERATIONS)
 	{
 		if(CT == 1)
 		{
-			//mycommpress
-			double* array_double_x = NULL;
-			char* array_char_x = NULL;
-			int* array_char_displacement_x = NULL;
-			int array_double_len_x = myCompress_double(k_means_x, &array_double_x, &array_char_x, &array_char_displacement_x, numOfClusters);
-			struct vector msg_x; 
-			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
-			msg_x.p_data = array_double_x;
-			msg_x.c_data = array_char_x;
-			printf("%lf \n", msg_x.p_data[50]);
-			printf("%d \n", array_double_len_x);
-			MPI_Bcast(msg_x.p_data, num_p_x, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-			MPI_Bcast(msg_x.c_data, num_c_x, MPI_CHAR, 0, MPI_COMM_WORLD);
-			
-			double* array_double_y = NULL;
-			char* array_char_y = NULL;
-			int* array_char_displacement_y = NULL;
-			int array_double_len_y = myCompress_double(k_means_y, &array_double_y, &array_char_y, &array_char_displacement_y, numOfClusters);
-			struct vector msg_y; 
-			int num_p_y = array_double_len_y, num_c_y = numOfClusters - array_double_len_y;
-			msg_y.p_data = array_double_y;
-			msg_y.c_data = array_char_y;
-			MPI_Bcast(msg_y.p_data, num_p_y, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-			MPI_Bcast(msg_y.c_data, num_c_y, MPI_CHAR, 0, MPI_COMM_WORLD);
+			int array_double_len_x, array_double_len_y;
+			struct vector msg_x, msg_y; 
 
-			printf("%d \n", num_p_x);
-			printf("%d \n", num_c_x);
-			printf("%d \n", num_p_y);
-			printf("%d \n", num_c_y);
-			double* decompressed_data_x = myDecompress_double(array_double_x, array_char_x, array_char_displacement_x, numOfClusters);
-			for(int i=0; i<numOfClusters; i++)
+			if(world_rank == 0)
 			{
-				gosa += fabs(decompressed_data_x[i]-k_means_x[i]);
+				//mycommpress
+				double* array_double_x = NULL;
+				char* array_char_x = NULL;
+				int* array_char_displacement_x = NULL;
+				array_double_len_x = myCompress_double(k_means_x, &array_double_x, &array_char_x, &array_char_displacement_x, numOfClusters);
+				msg_x.p_data = array_double_x;
+				msg_x.c_data = array_char_x;
+				msg_x.disp = array_char_displacement_x;
 			}
 
-			double* decompressed_data_y = myDecompress_double(array_double_y, array_char_y, array_char_displacement_y, numOfClusters);
+			MPI_Bcast(&array_double_len_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
+			// printf("%lf \n", msg_x.p_data[0]);
+			// printf("%lf \n", msg_x.p_data[50]);
+			// printf("%c \n", msg_x.c_data[0]);
+			// printf("%c \n", msg_x.c_data[1]);
+			if(world_rank != 0)
+			{
+				msg_x.p_data = (double*) malloc(sizeof(double)*num_p_x);
+				msg_x.c_data = (char*) malloc(sizeof(char)*num_c_x);
+				msg_x.disp = (int*) malloc(sizeof(int)*num_c_x);
+			}
+			MPI_Bcast(msg_x.p_data, num_p_x, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			MPI_Bcast(msg_x.c_data, num_c_x, MPI_CHAR, 0, MPI_COMM_WORLD);
+			MPI_Bcast(msg_x.disp, num_c_x, MPI_INT, 0, MPI_COMM_WORLD);
+			
+			if(world_rank == 0)
+			{
+				double* array_double_y = NULL;
+				char* array_char_y = NULL;
+				int* array_char_displacement_y = NULL;
+				array_double_len_y = myCompress_double(k_means_y, &array_double_y, &array_char_y, &array_char_displacement_y, numOfClusters);
+				msg_y.p_data = array_double_y;
+				msg_y.c_data = array_char_y;
+				msg_y.disp = array_char_displacement_y;
+			}
+
+			MPI_Bcast(&array_double_len_y, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			int num_p_y = array_double_len_y, num_c_y = numOfClusters - array_double_len_y;
+			// printf("%d \n", num_p_x);
+			// printf("%d \n", num_c_x);
+			// printf("%d \n", num_p_y);
+			// printf("%d \n", num_c_y);	
+			if(world_rank != 0)
+			{
+				msg_y.p_data = (double*) malloc(sizeof(double)*num_p_y);
+				msg_y.c_data = (char*) malloc(sizeof(char)*num_c_y);
+				msg_y.disp = (int*) malloc(sizeof(int)*num_c_y);
+			}					
+			MPI_Bcast(msg_y.p_data, num_p_y, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			MPI_Bcast(msg_y.c_data, num_c_y, MPI_CHAR, 0, MPI_COMM_WORLD);
+			MPI_Bcast(msg_y.disp, num_c_y, MPI_INT, 0, MPI_COMM_WORLD);
+
+			double* decompressed_data_x = myDecompress_double(msg_x.p_data, msg_x.c_data, msg_x.disp, numOfClusters);
 			for(int i=0; i<numOfClusters; i++)
 			{
-				gosa += fabs(decompressed_data_y[i]-k_means_y[i]);
+				if(world_rank == 0)
+				{
+					gosa += fabs(decompressed_data_x[i]-k_means_x[i]);
+				}
+				else
+				{
+					k_means_x[i] = decompressed_data_x[i];
+				}
+			}
+
+			double* decompressed_data_y = myDecompress_double(msg_y.p_data, msg_y.c_data, msg_y.disp, numOfClusters);
+			for(int i=0; i<numOfClusters; i++)
+			{
+				if(world_rank == 0)
+				{
+					gosa += fabs(decompressed_data_y[i]-k_means_y[i]);
+				}
+				else
+				{
+					k_means_y[i] = decompressed_data_y[i];
+				}				
 			}
 			
 			if(count == MAX_ITERATIONS - 1)
@@ -355,9 +401,12 @@ int main(int argc, char *argv[])
 
 		count++;
 	}
+	end_time = MPI_Wtime();
 
 	if(world_rank == 0)
 	{
+		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
+
 		printf("--------------------------------------------------\n");
 		printf("FINAL RESULTS:\n");
 		for(int i = 0; i < numOfClusters; i++)
