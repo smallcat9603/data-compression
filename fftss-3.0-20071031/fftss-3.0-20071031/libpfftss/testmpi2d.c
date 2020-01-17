@@ -80,6 +80,7 @@ int main(int argc, char **argv)
     printf("%le: sould be %le.\n", v[0], should_be);
     printf("%lf sec, %lf Mflops.\n", t, (double)nx * (double)ny 
 	   * (double)(lognx + logny) * 5.0 / t * 0.000001);
+    printf("over \n");
   }
 
   MPI_Finalize();
