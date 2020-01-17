@@ -44,7 +44,7 @@
 #define HAVE_MEMORY_H 1
 
 /* Support MPI2 functions */
-/* #undef HAVE_MPI2 */
+#define HAVE_MPI2 1
 
 /* Define to 1 if you have the <pmmintrin.h> header file. */
 #define HAVE_PMMINTRIN_H 1

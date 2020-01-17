@@ -76,10 +76,10 @@ AR="ar"
 AR_FLAGS="cru"
 
 # A C compiler.
-LTCC="gcc"
+LTCC="mpicc"
 
 # A language-specific compiler.
-CC="gcc"
+CC="mpicc"
 
 # Is the compiler the GNU C compiler?
 with_gcc=yes
@@ -6905,7 +6905,7 @@ AR="ar"
 AR_FLAGS="cru"
 
 # A C compiler.
-LTCC="gcc"
+LTCC="mpicc"
 
 # A language-specific compiler.
 CC="g++"
@@ -7201,7 +7201,7 @@ AR="ar"
 AR_FLAGS="cru"
 
 # A C compiler.
-LTCC="gcc"
+LTCC="mpicc"
 
 # A language-specific compiler.
 CC="f77"
