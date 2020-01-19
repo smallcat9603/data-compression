@@ -278,6 +278,7 @@ int main(int argc, char *argv[])
 	int count = 0;
 	double gosa = 0;
 	double start_time, end_time;
+	float compress_ratio = 0;
 	start_time = MPI_Wtime();
 	while(count < MAX_ITERATIONS)
 	{
@@ -300,10 +301,8 @@ int main(int argc, char *argv[])
 
 			MPI_Bcast(&array_double_len_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
-			// printf("%lf \n", msg_x.p_data[0]);
-			// printf("%lf \n", msg_x.p_data[50]);
-			// printf("%c \n", msg_x.c_data[0]);
-			// printf("%c \n", msg_x.c_data[1]);
+			compress_ratio += (double)(num_c_x*sizeof(char)+num_p_x*sizeof(double))/((num_c_x+num_p_x)*sizeof(double));
+			
 			if(world_rank != 0)
 			{
 				msg_x.p_data = (double*) malloc(sizeof(double)*num_p_x);
@@ -327,10 +326,8 @@ int main(int argc, char *argv[])
 
 			MPI_Bcast(&array_double_len_y, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			int num_p_y = array_double_len_y, num_c_y = numOfClusters - array_double_len_y;
-			// printf("%d \n", num_p_x);
-			// printf("%d \n", num_c_x);
-			// printf("%d \n", num_p_y);
-			// printf("%d \n", num_c_y);	
+			compress_ratio += (double)(num_c_y*sizeof(char)+num_p_y*sizeof(double))/((num_c_y+num_p_y)*sizeof(double));
+
 			if(world_rank != 0)
 			{
 				msg_y.p_data = (double*) malloc(sizeof(double)*num_p_y);
@@ -414,6 +411,7 @@ int main(int argc, char *argv[])
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 		printf("gosa = %f \n", gosa);
+		printf("compress ratio = %f \n", 1/(compress_ratio/(2*MAX_ITERATIONS)));
 	}
 
 	// deallocate memory and clean up
