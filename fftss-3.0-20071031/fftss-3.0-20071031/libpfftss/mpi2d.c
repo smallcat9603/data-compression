@@ -47,7 +47,7 @@
 //todo
 #include <stdlib.h>
 #include <math.h>
-#define absErrBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
+#define absErrBound         0.01 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 #define CT                  1 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz
 int myCompress_double(double[], double**, char**, int**, int);
 double* myDecompress_double(double[], char[], int[], int);
@@ -157,7 +157,7 @@ static void alltoalls0c(pfftss_plan p)
 
   bsize = p->plx * p->ly * 2;
 
-  //todo
+  float compress_ratio = 0;
   int array_double_len_recv[p->npe - 1];
 
   MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
@@ -190,7 +190,6 @@ static void alltoalls0c(pfftss_plan p)
     int d;
     d = (p->id + i) % p->npe;  
     int num_p = array_double_len_recv[i - 1], num_c = bsize - array_double_len_recv[i - 1];
-    printf("r%d %d\n", num_p, num_c); 
     array_double_recv[i - 1] = (double*) malloc(sizeof(double)*num_p);
     array_char_recv[i - 1] = (char*) malloc(sizeof(char)*num_c);
     array_char_displacement_recv[i - 1] = (int*) malloc(sizeof(int)*num_c);
@@ -216,7 +215,7 @@ static void alltoalls0c(pfftss_plan p)
     int* array_char_displacement = NULL;
     int array_double_len = myCompress_double(send_data, &array_double, &array_char, &array_char_displacement, bsize);
     int num_p = array_double_len, num_c = bsize - array_double_len;
-    printf("s%d %d\n", num_p, num_c);
+    compress_ratio += (float)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double)); 
     MPI_Isend(array_double, num_p, MPI_DOUBLE, d, 1, p->comm, &mr2[(i - 1) * 3]); 
     MPI_Isend(array_char, num_c, MPI_CHAR, d, 2, p->comm, &mr2[(i - 1) * 3 + 1]); 
     MPI_Isend(array_char_displacement, num_c, MPI_INT, d, 3, p->comm, &mr2[(i - 1) * 3 + 2]); 
@@ -270,21 +269,22 @@ static void alltoalls0c(pfftss_plan p)
     p->rb[bsize * p->id + i] = p->sb[bsize * p->id + i];
 
   MPI_Waitall((p->npe - 1) * 3, mr1, ms1);
-  printf("he2");
-  MPI_Waitall((p->npe - 1) * 3, mr2, ms2);
-  printf("he3");   
+  MPI_Waitall((p->npe - 1) * 3, mr2, ms2);  
 
   for (i = 1; i < p->npe; i++) {
     int d;
     d = (p->id + i) % p->npe;
     double* decompressed_data = myDecompress_double(array_double_recv[i - 1], array_char_recv[i - 1], array_char_displacement_recv[i - 1], bsize);
-    printf("hehe0 \n");
     int first_index = bsize * d;
-    printf("%d\n", first_index);
     for(int j = 0; j < bsize; j++)
     {
       p->rb[first_index++] = decompressed_data[j];
     }
+  }
+
+  if(p->id == 0) 
+  {
+    printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
   }
 }
 
@@ -420,6 +420,7 @@ static void alltoalls1c(pfftss_plan p)
 
   bsize = p->plx * p->ly * 2;
 
+  float compress_ratio = 0;
   int array_double_len_recv[p->npe - 1];
 
   MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
@@ -477,6 +478,7 @@ static void alltoalls1c(pfftss_plan p)
     int* array_char_displacement = NULL;
     int array_double_len = myCompress_double(send_data, &array_double, &array_char, &array_char_displacement, bsize);
     int num_p = array_double_len, num_c = bsize - array_double_len;
+    compress_ratio += (float)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double)); 
     MPI_Isend(array_double, num_p, MPI_DOUBLE, d, 1, p->comm, &mr2[(i - 1) * 3]); 
     MPI_Isend(array_char, num_c, MPI_CHAR, d, 2, p->comm, &mr2[(i - 1) * 3 + 1]); 
     MPI_Isend(array_char_displacement, num_c, MPI_INT, d, 3, p->comm, &mr2[(i - 1) * 3 + 2]); 
@@ -501,6 +503,11 @@ static void alltoalls1c(pfftss_plan p)
       p->sb[first_index++] = decompressed_data[j];
     }
   }
+
+  if(p->id == 0) 
+  {
+    printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
+  }  
 }
 
 #ifdef HAVE_MPI2
