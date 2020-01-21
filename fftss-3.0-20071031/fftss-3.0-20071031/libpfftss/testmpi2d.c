@@ -77,7 +77,7 @@ int main(int argc, char **argv)
   pfftss_destroy_plan(p);
 
   if (id == 0) {
-    printf("%le: sould be %le.\n", v[0], should_be);
+    printf("%le: should be %le.\n", v[0], should_be);
     printf("%lf sec, %lf Mflops.\n", t, (double)nx * (double)ny 
 	   * (double)(lognx + logny) * 5.0 / t * 0.000001);
   }
