@@ -704,11 +704,21 @@ void pfftss_execute_pdft_2d_s(pfftss_plan p, double *inout)
 {
   trans_x(p, inout);
   pack0(p, inout);
-  if(CT == 0) alltoalls0(p);
-  if(CT == 1) alltoalls0c(p);
+  alltoalls0(p);
   trans_y(p);
-  if(CT == 0) alltoalls1(p);
-  if(CT == 1) alltoalls1c(p);
+  alltoalls1(p);
+  unpack1(p, inout);
+
+  return;
+}
+
+void pfftss_execute_pdft_2d_sc(pfftss_plan p, double *inout)
+{
+  trans_x(p, inout);
+  pack0(p, inout);
+  alltoalls0c(p);
+  trans_y(p);
+  alltoalls1c(p);
   unpack1(p, inout);
 
   return;
@@ -936,15 +946,28 @@ pfftss_plan_dft_2d(long nx, long ny, long py, long oy, long ly,
 		   sizeof(double), MPI_INFO_NULL, comm, &(p->rwin));
 #endif
 
-    // p->fp = pfftss_execute_pdft_2d_a;
-    // t0 = test_run(p, pfftss_execute_pdft_2d_a);
-    // t1 = test_run(p, pfftss_execute_pdft_2d_a);
-    // if (t1 < t0) { t0 = t1; }
-    p->fp = pfftss_execute_pdft_2d_s; //add
-    t1 = test_run(p, pfftss_execute_pdft_2d_s);
-    // if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_s; t0 = t1; }
-    // t1 = test_run(p, pfftss_execute_pdft_2d_s);
-    // if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_s; t0 = t1; }
+    if(CT == 0)
+    {
+      p->fp = pfftss_execute_pdft_2d_s;
+      test_run(p, pfftss_execute_pdft_2d_s);      
+    }
+    if(CT == 1)
+    {
+      p->fp = pfftss_execute_pdft_2d_sc;
+      test_run(p, pfftss_execute_pdft_2d_sc);    
+    }
+    else
+    {
+      p->fp = pfftss_execute_pdft_2d_a;
+      t0 = test_run(p, pfftss_execute_pdft_2d_a);
+      t1 = test_run(p, pfftss_execute_pdft_2d_a);
+      if (t1 < t0) { t0 = t1; }
+      t1 = test_run(p, pfftss_execute_pdft_2d_s);
+      if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_s; t0 = t1; }
+      t1 = test_run(p, pfftss_execute_pdft_2d_s);
+      if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_s; t0 = t1; }    
+    }
+    
 
 #ifdef HAVE_MPI2
     t1 = test_run(p, pfftss_execute_pdft_2d_p);
@@ -991,14 +1014,14 @@ pfftss_plan_dft_2d(long nx, long ny, long py, long oy, long ly,
 		   MPI_INFO_NULL, comm, &(p->rwin));
 #endif
     
-    // p->fp = pfftss_execute_pdft_2d_va;
-    // t0 = test_run(p, pfftss_execute_pdft_2d_va);
-    // t1 = test_run(p, pfftss_execute_pdft_2d_va);
-    // if (t1 < t0) { t0 = t1; }
-    // t1 = test_run(p, pfftss_execute_pdft_2d_vs);
-    // if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_vs; t0 = t1; }
-    // t1 = test_run(p, pfftss_execute_pdft_2d_vs);
-    // if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_vs; t0 = t1; }
+    p->fp = pfftss_execute_pdft_2d_va;
+    t0 = test_run(p, pfftss_execute_pdft_2d_va);
+    t1 = test_run(p, pfftss_execute_pdft_2d_va);
+    if (t1 < t0) { t0 = t1; }
+    t1 = test_run(p, pfftss_execute_pdft_2d_vs);
+    if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_vs; t0 = t1; }
+    t1 = test_run(p, pfftss_execute_pdft_2d_vs);
+    if (t1 < t0) { p->fp = pfftss_execute_pdft_2d_vs; t0 = t1; }
 
 #ifdef HAVE_MPI2
     t1 = test_run(p, pfftss_execute_pdft_2d_vp);
