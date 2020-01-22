@@ -158,7 +158,12 @@ static void alltoalls0c(pfftss_plan p)
   bsize = p->plx * p->ly * 2;
 
   float compress_ratio = 0;
+  int array_double_len_send[p->npe - 1];
   int array_double_len_recv[p->npe - 1];
+
+  double* array_double_send[p->npe - 1];
+  char* array_char_send[p->npe - 1];
+  int* array_char_displacement_send[p->npe - 1];
 
   MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
   MPI_Status* ms0 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
@@ -172,10 +177,11 @@ static void alltoalls0c(pfftss_plan p)
     {
       send_data[j] = p->sb[first_index++];
     }
-    double* array_double = NULL;
-    char* array_char = NULL;
-    int* array_char_displacement = NULL;
-    int array_double_len = myCompress_double(send_data, &array_double, &array_char, &array_char_displacement, bsize);
+    array_double_send[i - 1] = NULL;
+    array_char_send[i - 1] = NULL;
+    array_char_displacement_send[i - 1] = NULL;
+    int array_double_len = myCompress_double(send_data, &array_double_send[i - 1], &array_char_send[i - 1], &array_char_displacement_send[i - 1], bsize);
+    array_double_len_send[i - 1] = array_double_len;
     MPI_Isend(&array_double_len, 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2 + 1]); 
   }
   MPI_Waitall((p->npe - 1) * 2, mr0, ms0);
@@ -204,63 +210,12 @@ static void alltoalls0c(pfftss_plan p)
     int d;
     d = (p->id + i) % p->npe;
     //mycompress
-    double send_data[bsize];
-    int first_index = bsize * d;
-    for(int j = 0; j < bsize; j++)
-    {
-      send_data[j] = p->sb[first_index++];
-    }
-    double* array_double = NULL;
-    char* array_char = NULL;
-    int* array_char_displacement = NULL;
-    int array_double_len = myCompress_double(send_data, &array_double, &array_char, &array_char_displacement, bsize);
-    int num_p = array_double_len, num_c = bsize - array_double_len;
+    int num_p = array_double_len_send[i - 1], num_c = bsize - array_double_len_send[i - 1];
     compress_ratio += (float)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double)); 
-    MPI_Isend(array_double, num_p, MPI_DOUBLE, d, 1, p->comm, &mr2[(i - 1) * 3]); 
-    MPI_Isend(array_char, num_c, MPI_CHAR, d, 2, p->comm, &mr2[(i - 1) * 3 + 1]); 
-    MPI_Isend(array_char_displacement, num_c, MPI_INT, d, 3, p->comm, &mr2[(i - 1) * 3 + 2]); 
+    MPI_Isend(array_double_send[i - 1], num_p, MPI_DOUBLE, d, 1, p->comm, &mr2[(i - 1) * 3]); 
+    MPI_Isend(array_char_send[i - 1], num_c, MPI_CHAR, d, 2, p->comm, &mr2[(i - 1) * 3 + 1]); 
+    MPI_Isend(array_char_displacement_send[i - 1], num_c, MPI_INT, d, 3, p->comm, &mr2[(i - 1) * 3 + 2]); 
   }
-
-  // below is wrong
-  // for (i = 1; i < p->npe; i++) {
-  //   int d;
-  //   d = (p->id + i) % p->npe;
-  //   //mydecompress
-  //   MPI_Irecv(&array_double_len_recv[i - 1], 1, MPI_INT, d, 0, p->comm, &(p->rreq[(i - 1) * 4]));
-  //   int num_p = array_double_len_recv[i - 1], num_c = bsize - array_double_len_recv[i - 1];
-  //   double* array_double = (double*) malloc(sizeof(double)*num_p);
-  //   char* array_char = (char*) malloc(sizeof(char)*num_c);
-  //   int* array_char_displacement = (int*) malloc(sizeof(int)*num_c);
-  //   MPI_Irecv(array_double, num_p, MPI_DOUBLE, d, 1, p->comm, &(p->rreq[(i - 1) * 4 + 1]));
-  //   MPI_Irecv(array_char, num_c, MPI_CHAR, d, 2, p->comm, &(p->rreq[(i - 1) * 4 + 2]));
-  //   MPI_Irecv(array_char_displacement, num_c, MPI_INT, d, 3, p->comm, &(p->rreq[(i - 1) * 4 + 3]));
-  //   double* decompressed_data = myDecompress_double(array_double, array_char, array_char_displacement, bsize);
-  //   int first_index = bsize * d;
-  //   for(int j = 0; j < bsize; j++)
-  //   {
-  //     p->rb[first_index++] = decompressed_data[j];
-  //   } 
-  // }
-  // for (i = 1; i < p->npe; i++) {
-  //   int d;
-  //   d = (p->id + i) % p->npe;
-  //   //mycompress
-  //   double send_data[bsize];
-  //   int first_index = bsize * d;
-  //   for(int j = 0; j < bsize; j++)
-  //   {
-  //     send_data[j] = p->sb[first_index++];
-  //   }
-  //   double* array_double = NULL;
-  //   char* array_char = NULL;
-  //   int* array_char_displacement = NULL;
-  //   int array_double_len = myCompress_double(send_data, &array_double, &array_char, &array_char_displacement, bsize);
-  //   MPI_Isend(&array_double_len, 1, MPI_INT, d, 0, p->comm, &(p->sreq[(i - 1) * 4])); 
-  //   int num_p = array_double_len, num_c = bsize - array_double_len;
-  //   MPI_Isend(array_double, num_p, MPI_DOUBLE, d, 1, p->comm, &(p->sreq[(i - 1) * 4 + 1])); 
-  //   MPI_Isend(array_char, num_c, MPI_CHAR, d, 2, p->comm, &(p->sreq[(i - 1) * 4 + 2])); 
-  //   MPI_Isend(array_char_displacement, num_c, MPI_INT, d, 3, p->comm, &(p->sreq[(i - 1) * 4 + 3])); 
-  // }
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -271,6 +226,7 @@ static void alltoalls0c(pfftss_plan p)
   MPI_Waitall((p->npe - 1) * 3, mr1, ms1);
   MPI_Waitall((p->npe - 1) * 3, mr2, ms2);  
 
+  //mydecompress
   for (i = 1; i < p->npe; i++) {
     int d;
     d = (p->id + i) % p->npe;
