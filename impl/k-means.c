@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
 		int random;
 		for(int i = 0; i < numOfClusters; i++) {
 			random = rand() % numOfElements;
+			// random = numOfElements - 1;
 			k_means_x[i] = data_x_points[random];
 			k_means_y[i] = data_y_points[random];
 		}
@@ -301,7 +302,7 @@ int main(int argc, char *argv[])
 
 			MPI_Bcast(&array_double_len_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
-			compress_ratio += (double)(num_c_x*sizeof(char)+num_p_x*sizeof(double))/((num_c_x+num_p_x)*sizeof(double));
+			compress_ratio += (float)(num_c_x*sizeof(char)+num_p_x*sizeof(double))/((num_c_x+num_p_x)*sizeof(double));
 			
 			if(world_rank != 0)
 			{
@@ -326,7 +327,7 @@ int main(int argc, char *argv[])
 
 			MPI_Bcast(&array_double_len_y, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			int num_p_y = array_double_len_y, num_c_y = numOfClusters - array_double_len_y;
-			compress_ratio += (double)(num_c_y*sizeof(char)+num_p_y*sizeof(double))/((num_c_y+num_p_y)*sizeof(double));
+			compress_ratio += (float)(num_c_y*sizeof(char)+num_p_y*sizeof(double))/((num_c_y+num_p_y)*sizeof(double));
 
 			if(world_rank != 0)
 			{
@@ -408,6 +409,12 @@ int main(int argc, char *argv[])
 			printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
 		}
 		printf("--------------------------------------------------\n");
+
+		// for(int i = 0; i < numOfElements; i++)
+		// {
+		// 	printf("%d, ", k_assignment[i]);
+		// }
+		// printf("\n--------------------------------------------------\n");		
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 		printf("gosa = %f \n", gosa);
