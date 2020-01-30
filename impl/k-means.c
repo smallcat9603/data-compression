@@ -301,6 +301,7 @@ int main(int argc, char *argv[])
 			}
 
 			MPI_Bcast(&array_double_len_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			//printf("%d: %d \n", world_rank, array_double_len_x);
 			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
 			compress_ratio += (float)(num_c_x*sizeof(char)+num_p_x*sizeof(double))/((num_c_x+num_p_x)*sizeof(double));
 			
