@@ -369,6 +369,14 @@ int main(int argc, char *argv[])
 			{
 				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
 			}
+
+			//todo
+			free(msg_x.p_data);
+			free(msg_x.c_data);
+			free(msg_x.disp);
+			free(msg_y.p_data);
+			free(msg_y.c_data);
+			free(msg_y.disp);
 		}		
 
 		if(CT == 0)

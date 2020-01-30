@@ -8,7 +8,7 @@
 #define CT                  0 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz
 #define byte_or_bit         1 //1 byte, 2 bit
 #define data_num            8192 //pingpong
-#define filename            "testdouble_8_8_128.txt" //k-means, "input.txt", "testdouble_8_8_128.txt", "testdouble_8_8_8_128.txt"
+#define filename            "input.txt" //k-means, "input.txt", "testdouble_8_8_128.txt", "testdouble_8_8_8_128.txt"
 
 float calcCompressionRatio_himeno_ij_ik_jk(float[MIMAX][MJMAX][MKMAX], int, int);
 // MPI_Datatype myCompress_himeno(void*, int, int, int, int, int, int);
