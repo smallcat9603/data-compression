@@ -288,6 +288,7 @@ int main(int argc, char *argv[])
 			int array_double_len_x, array_double_len_y;
 			struct vector msg_x, msg_y; 
 
+			//x
 			if(world_rank == 0)
 			{
 				//mycommpress
@@ -304,17 +305,31 @@ int main(int argc, char *argv[])
 			//printf("%d: %d \n", world_rank, array_double_len_x);
 			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
 			compress_ratio += (float)(num_c_x*sizeof(char)+num_p_x*sizeof(double))/((num_c_x+num_p_x)*sizeof(double));
-			
+		
 			if(world_rank != 0)
 			{
 				msg_x.p_data = (double*) malloc(sizeof(double)*num_p_x);
-				msg_x.c_data = (char*) malloc(sizeof(char)*num_c_x);
-				msg_x.disp = (int*) malloc(sizeof(int)*num_c_x);
+				if(num_c_x > 0)
+				{
+					msg_x.c_data = (char*) malloc(sizeof(char)*num_c_x);
+					msg_x.disp = (int*) malloc(sizeof(int)*num_c_x);					
+				}
 			}
 			MPI_Bcast(msg_x.p_data, num_p_x, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-			MPI_Bcast(msg_x.c_data, num_c_x, MPI_CHAR, 0, MPI_COMM_WORLD);
-			MPI_Bcast(msg_x.disp, num_c_x, MPI_INT, 0, MPI_COMM_WORLD);
+			if(num_c_x == 0)
+			{
+				msg_x.c_data = (char*) malloc(sizeof(char)*1);
+				msg_x.disp = (int*) malloc(sizeof(int)*1);
+				msg_x.c_data[0] = 'z';
+				msg_x.disp[0] = -1;
+			}	
+			else
+			{
+				MPI_Bcast(msg_x.c_data, num_c_x, MPI_CHAR, 0, MPI_COMM_WORLD);
+				MPI_Bcast(msg_x.disp, num_c_x, MPI_INT, 0, MPI_COMM_WORLD);	
+			}
 			
+			//y
 			if(world_rank == 0)
 			{
 				double* array_double_y = NULL;
@@ -333,12 +348,25 @@ int main(int argc, char *argv[])
 			if(world_rank != 0)
 			{
 				msg_y.p_data = (double*) malloc(sizeof(double)*num_p_y);
-				msg_y.c_data = (char*) malloc(sizeof(char)*num_c_y);
-				msg_y.disp = (int*) malloc(sizeof(int)*num_c_y);
+				if(num_c_y > 0)
+				{
+					msg_y.c_data = (char*) malloc(sizeof(char)*num_c_y);
+					msg_y.disp = (int*) malloc(sizeof(int)*num_c_y);
+				}
 			}					
 			MPI_Bcast(msg_y.p_data, num_p_y, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-			MPI_Bcast(msg_y.c_data, num_c_y, MPI_CHAR, 0, MPI_COMM_WORLD);
-			MPI_Bcast(msg_y.disp, num_c_y, MPI_INT, 0, MPI_COMM_WORLD);
+			if(num_c_y == 0)
+			{
+				msg_y.c_data = (char*) malloc(sizeof(char)*1);
+				msg_y.disp = (int*) malloc(sizeof(int)*1);
+				msg_y.c_data[0] = 'z';
+				msg_y.disp[0] = -1;
+			}	
+			else
+			{			
+				MPI_Bcast(msg_y.c_data, num_c_y, MPI_CHAR, 0, MPI_COMM_WORLD);
+				MPI_Bcast(msg_y.disp, num_c_y, MPI_INT, 0, MPI_COMM_WORLD);
+			}
 
 			double* decompressed_data_x = myDecompress_double(msg_x.p_data, msg_x.c_data, msg_x.disp, numOfClusters);
 			for(int i=0; i<numOfClusters; i++)
