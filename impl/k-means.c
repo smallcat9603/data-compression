@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
 	// get rank
 	int world_rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	//printf("my rank: %d \n", world_rank);
 
 	// send buffers
 	double *k_means_x = NULL;		// k means corresponding x values
@@ -123,14 +124,14 @@ int main(int argc, char *argv[])
 
 		num_of_processes = atoi(argv[1]);
 
-		char buffer[2];
-		printf("How many clusters would you like to analyze for? ");
-		scanf("%s", buffer);
-		printf("\n");
+		// char buffer[2];
+		// printf("How many clusters would you like to analyze for? ");
+		// scanf("%s", buffer);
+		// printf("\n");
 
-		numOfClusters = atoi(buffer);
+		// numOfClusters = atoi(buffer);
+		numOfClusters = clusters;
 		printf("Ok %d clusters it is.\n", numOfClusters);
-
 
 		// broadcast the number of clusters to all nodes
 		MPI_Bcast(&numOfClusters, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -212,8 +213,8 @@ int main(int argc, char *argv[])
 		srand((unsigned) time(&t));
 		int random;
 		for(int i = 0; i < numOfClusters; i++) {
-			random = rand() % numOfElements;
-			// random = numOfElements - 1;
+			//random = rand() % numOfElements;
+			random = numOfElements/numOfClusters * i;
 			k_means_x[i] = data_x_points[random];
 			k_means_y[i] = data_y_points[random];
 		}
@@ -302,7 +303,6 @@ int main(int argc, char *argv[])
 			}
 
 			MPI_Bcast(&array_double_len_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
-			//printf("%d: %d \n", world_rank, array_double_len_x);
 			int num_p_x = array_double_len_x, num_c_x = numOfClusters - array_double_len_x;
 			compress_ratio += (float)(num_c_x*sizeof(char)+num_p_x*sizeof(double))/((num_c_x+num_p_x)*sizeof(double));
 		
@@ -447,11 +447,11 @@ int main(int argc, char *argv[])
 		}
 		printf("--------------------------------------------------\n");
 
-		// for(int i = 0; i < numOfElements; i++)
-		// {
-		// 	printf("%d, ", k_assignment[i]);
-		// }
-		// printf("\n--------------------------------------------------\n");		
+		for(int i = 0; i < numOfElements; i++)
+		{
+			printf("%d, ", k_assignment[i]);
+		}
+		printf("\n--------------------------------------------------\n");		
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 		printf("gosa = %f \n", gosa);
