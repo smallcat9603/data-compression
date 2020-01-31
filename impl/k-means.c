@@ -36,8 +36,8 @@ void assign2Cluster(double k_x[], double k_y[], double recv_x[], double recv_y[]
 	{
 		for(int j = 0; j < numOfClusters; j++)
 		{
-			x = abs(recv_x[i] - k_x[j]);
-			y = abs(recv_y[i] - k_y[j]);
+			x = fabs(recv_x[i] - k_x[j]);
+			y = fabs(recv_y[i] - k_y[j]);
 			temp_dist = sqrt((x*x) + (y*y));
 
 			// new minimum distance found
