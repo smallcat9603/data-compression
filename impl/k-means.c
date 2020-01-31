@@ -16,6 +16,7 @@
 int numOfClusters = 0;
 int numOfElements = 0;
 int num_of_processes = 0;
+// numOfElements%num_of_processes should be 0 for MPI_Scatter
 
 //todo
 struct vector
@@ -32,9 +33,15 @@ void assign2Cluster(double k_x[], double k_y[], double recv_x[], double recv_y[]
 	double x=0, y=0, temp_dist=0;
 	int k_min_index = 0;
 
-	for(int i = 0; i < (numOfElements/num_of_processes) + 1; i++)
+	for(int i = 0; i < (numOfElements/num_of_processes)/* + 1*/; i++)
 	{
-		for(int j = 0; j < numOfClusters; j++)
+		//fix bug
+		x = fabs(recv_x[i] - k_x[0]);
+		y = fabs(recv_y[i] - k_y[0]);
+		min_dist = sqrt((x*x) + (y*y));
+		k_min_index = 0;
+
+		for(int j = 1; j < numOfClusters; j++)
 		{
 			x = fabs(recv_x[i] - k_x[j]);
 			y = fabs(recv_y[i] - k_y[j]);
@@ -226,9 +233,9 @@ int main(int argc, char *argv[])
 		}
 
 		// allocate memory for receive buffers
-		recv_x = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes) + 1));
-		recv_y = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes) + 1));
-		recv_assign = (int *)malloc(sizeof(int) * ((numOfElements/num_of_processes) + 1));
+		recv_x = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes)/* + 1*/));
+		recv_y = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes)/* + 1*/));
+		recv_assign = (int *)malloc(sizeof(int) * ((numOfElements/num_of_processes)/* + 1*/));
 
 		if(recv_x == NULL || recv_y == NULL || recv_assign == NULL)
 		{
@@ -258,9 +265,9 @@ int main(int argc, char *argv[])
 		}
 
 		// allocate memory for receive buffers
-		recv_x = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes) + 1));
-		recv_y = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes) + 1));
-		recv_assign = (int *)malloc(sizeof(int) * ((numOfElements/num_of_processes) + 1));
+		recv_x = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes)/* + 1*/));
+		recv_y = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes)/* + 1*/));
+		recv_assign = (int *)malloc(sizeof(int) * ((numOfElements/num_of_processes)/* + 1*/));
 
 		if(recv_x == NULL || recv_y == NULL || recv_assign == NULL)
 		{
@@ -271,11 +278,11 @@ int main(int argc, char *argv[])
 
 	/* Distribute the work among all nodes. The data points itself will stay constant and
 	   not change for the duration of the algorithm. */
-	MPI_Scatter(data_x_points, (numOfElements/num_of_processes) + 1, MPI_DOUBLE,
-		recv_x, (numOfElements/num_of_processes) + 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Scatter(data_x_points, (numOfElements/num_of_processes)/* + 1*/, MPI_DOUBLE,
+		recv_x, (numOfElements/num_of_processes)/* + 1*/, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-	MPI_Scatter(data_y_points, (numOfElements/num_of_processes) + 1, MPI_DOUBLE,
-		recv_y, (numOfElements/num_of_processes) + 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Scatter(data_y_points, (numOfElements/num_of_processes)/* + 1*/, MPI_DOUBLE,
+		recv_y, (numOfElements/num_of_processes)/* + 1*/, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	int count = 0;
 	double gosa = 0;
@@ -416,15 +423,15 @@ int main(int argc, char *argv[])
 		}
 
 		// scatter k-cluster assignments array
-		MPI_Scatter(k_assignment, (numOfElements/num_of_processes) + 1, MPI_INT,
-			recv_assign, (numOfElements/num_of_processes) + 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Scatter(k_assignment, (numOfElements/num_of_processes)/* + 1*/, MPI_INT,
+			recv_assign, (numOfElements/num_of_processes)/* + 1*/, MPI_INT, 0, MPI_COMM_WORLD);
 
 		// assign the data points to a cluster
 		assign2Cluster(k_means_x, k_means_y, recv_x, recv_y, recv_assign);
 
 		// gather back k-cluster assignments
-		MPI_Gather(recv_assign, (numOfElements/num_of_processes)+1, MPI_INT,
-			k_assignment, (numOfElements/num_of_processes)+1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Gather(recv_assign, (numOfElements/num_of_processes)/* + 1*/, MPI_INT,
+			k_assignment, (numOfElements/num_of_processes)/* + 1*/, MPI_INT, 0, MPI_COMM_WORLD);
 
 		// let the root process recalculate k means
 		if(world_rank == 0)
