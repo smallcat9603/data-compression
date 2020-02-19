@@ -155,6 +155,12 @@ static void alltoalls0c(pfftss_plan p)
   long i;
   int bsize;
 
+  double time_compress = 0;
+  double start_time;
+  double end_time;
+  double start_time0 = fftss_get_wtime();;
+  double end_time0;
+
   bsize = p->plx * p->ly * 2;
 
   float compress_ratio = 0;
@@ -167,6 +173,7 @@ static void alltoalls0c(pfftss_plan p)
 
   MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
   MPI_Status* ms0 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  start_time = fftss_get_wtime();
   for (i = 1; i < p->npe; i++) {
     int d;
     d = (p->id + i) % p->npe;
@@ -185,6 +192,8 @@ static void alltoalls0c(pfftss_plan p)
     MPI_Isend(&array_double_len, 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2 + 1]); 
   }
   MPI_Waitall((p->npe - 1) * 2, mr0, ms0);
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
 
   double* array_double_recv[p->npe - 1]; 
   char* array_char_recv[p->npe - 1]; 
@@ -227,6 +236,7 @@ static void alltoalls0c(pfftss_plan p)
   MPI_Waitall((p->npe - 1) * 3, mr2, ms2);  
 
   //mydecompress
+  start_time = fftss_get_wtime();
   for (i = 1; i < p->npe; i++) {
     int d;
     d = (p->id + i) % p->npe;
@@ -237,10 +247,14 @@ static void alltoalls0c(pfftss_plan p)
       p->rb[first_index++] = decompressed_data[j];
     }
   }
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+  end_time0 = fftss_get_wtime();
 
   if(p->id == 0) 
   {
     printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress time, total time  = %f, %f \n", time_compress, end_time0 - start_time0);
   }
 }
 
@@ -374,6 +388,12 @@ static void alltoalls1c(pfftss_plan p)
   long i;
   int bsize;
 
+  double time_compress = 0;
+  double start_time;
+  double end_time;
+  double start_time0 = fftss_get_wtime();
+  double end_time0;
+
   bsize = p->plx * p->ly * 2;
 
   float compress_ratio = 0;
@@ -386,6 +406,7 @@ static void alltoalls1c(pfftss_plan p)
 
   MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
   MPI_Status* ms0 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  start_time = fftss_get_wtime();
   for (i = 1; i < p->npe; i++) {
     int d;
     d = (p->id + i) % p->npe;
@@ -404,6 +425,8 @@ static void alltoalls1c(pfftss_plan p)
     MPI_Isend(&array_double_len, 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2 + 1]); 
   }
   MPI_Waitall((p->npe - 1) * 2, mr0, ms0);
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
 
   double* array_double_recv[p->npe - 1]; 
   char* array_char_recv[p->npe - 1]; 
@@ -445,6 +468,7 @@ static void alltoalls1c(pfftss_plan p)
   MPI_Waitall((p->npe - 1) * 3, mr1, ms1);
   MPI_Waitall((p->npe - 1) * 3, mr2, ms2); 
 
+  start_time = fftss_get_wtime();
   for (i = 1; i < p->npe; i++) {
     int d;
     d = (p->id + i) % p->npe;
@@ -455,10 +479,14 @@ static void alltoalls1c(pfftss_plan p)
       p->sb[first_index++] = decompressed_data[j];
     }
   }
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+  end_time0 = fftss_get_wtime();
 
   if(p->id == 0) 
   {
     printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress time, total time  = %f, %f \n", time_compress, end_time0 - start_time0);
   }  
 }
 
