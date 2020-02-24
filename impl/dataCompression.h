@@ -9,8 +9,8 @@
 #define byte_or_bit         1 //1 byte, 2 bit
 #define data_num            8192 //pingpong
 #define filename            "testdouble_8_8_128" //k-means, "input", "testdouble_8_8_128", "testdouble_8_8_8_128"
-#define suffix              ".txt"
-#define output_suffix       "_output.txt"
+#define suffix              ".txt" //k-means
+#define output_suffix       "_output.txt" //k-means
 #define clusters            100 //k-means
 
 float calcCompressionRatio_himeno_ij_ik_jk(float[MIMAX][MJMAX][MKMAX], int, int);
