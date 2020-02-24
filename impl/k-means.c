@@ -8,6 +8,7 @@
 #include<math.h>
 #include<errno.h>
 #include<mpi.h>
+#include<string.h>
 #include "param.h"
 #include "dataCompression.h"
 
@@ -155,7 +156,8 @@ int main(int argc, char *argv[])
 
 		printf("Reading input data from file...\n\n");
 
-		FILE* fp = fopen(filename, "r");
+		char* filename_suffix = filename suffix;
+		FILE* fp = fopen(filename_suffix, "r");
 
 		if(!fp)
 		{
@@ -453,12 +455,20 @@ int main(int argc, char *argv[])
 			printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
 		}
 		printf("--------------------------------------------------\n");
-
+		
+		char* output_filename = filename output_suffix;
+		FILE* fp = fopen(output_filename, "w");
 		for(int i = 0; i < numOfElements; i++)
 		{
-			printf("%d, ", k_assignment[i]);
+			fprintf(fp, "%d\n", k_assignment[i]);
 		}
-		printf("\n--------------------------------------------------\n");		
+		fclose(fp);
+
+		// for(int i = 0; i < numOfElements; i++)
+		// {
+		// 	printf("%d, ", k_assignment[i]);
+		// }
+		// printf("\n--------------------------------------------------\n");
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 		printf("gosa = %f \n", gosa);
