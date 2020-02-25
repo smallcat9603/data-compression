@@ -450,25 +450,35 @@ int main(int argc, char *argv[])
 	{
 		printf("--------------------------------------------------\n");
 		printf("FINAL RESULTS:\n");
-		for(int i = 0; i < numOfClusters; i++)
-		{
-			printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
-		}
-		printf("--------------------------------------------------\n");
-		
-		char* output_filename = filename output_suffix;
-		FILE* fp = fopen(output_filename, "w");
-		for(int i = 0; i < numOfElements; i++)
-		{
-			fprintf(fp, "%d\n", k_assignment[i]);
-		}
-		fclose(fp);
+		// for(int i = 0; i < numOfClusters; i++)
+		// {
+		// 	printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
+		// }
+		// printf("--------------------------------------------------\n");
 
 		// for(int i = 0; i < numOfElements; i++)
 		// {
 		// 	printf("%d, ", k_assignment[i]);
 		// }
 		// printf("\n--------------------------------------------------\n");
+
+		//char* output_filename = filename output_suffix;
+		char output_filename[32];
+		sprintf(output_filename, "%s%s%g%s", filename, output_suffix, absErrBound, suffix);
+		FILE* fp = fopen(output_filename, "w");
+		for(int i = 0; i < numOfElements; i++)
+		{
+			fprintf(fp, "%d\n", k_assignment[i]);
+		}
+		for(int i = 0; i < numOfClusters; i++)
+		{
+			printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
+			fprintf(fp, "%lf\n", k_means_x[i]);
+			fprintf(fp, "%lf\n", k_means_y[i]);
+
+		}
+		printf("--------------------------------------------------\n");
+		fclose(fp);		
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 		printf("gosa = %f \n", gosa);
