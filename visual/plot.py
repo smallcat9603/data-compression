@@ -6,7 +6,7 @@ RG = nx.Graph()
 # RG = nx.grid_graph(dim=[4,4,4], periodic=True)
 base = "input" # "input", "testdouble_8_8_128"
 filename = base + ".txt"
-filename_output = base + "_output_1.txt"
+filename_output = base + "_output_0.000001.txt"
 data = pd.read_csv(filename, header=None)
 data_output = pd.read_csv(filename_output, header=None)
 # RG.add_node(1)
