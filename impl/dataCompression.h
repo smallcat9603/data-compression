@@ -29,3 +29,7 @@ void floattostr(float*, char*);
 void doubletostr(double*, char*);
 float strtofloat(char*);
 double strtodbl(char*);
+void writetobinary_float(const char*, float*, int);
+void writetobinary_double(const char*, double*, int);
+float* readfrombinary_float(const char*, int);
+double* readfrombinary_double(const char*, int);

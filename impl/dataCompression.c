@@ -911,4 +911,80 @@ double strtodbl(char * str){
 	dbl +=(str[63]-'0');
 	double* db = (double*)&dbl;
 	return *db;
-}         
+}     
+
+void writetobinary_float(const char *file, float* data, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "wb");
+    //fopen_s(&fp, file, "wb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        return;
+    }
+
+    fwrite(data, sizeof(float), count, fp);
+    fclose(fp);
+    printf("%sに保存しました。\n", file);
+}
+
+void writetobinary_double(const char *file, double* data, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "wb");
+    //fopen_s(&fp, file, "wb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        return;
+    }
+    
+    fwrite(data, sizeof(double), count, fp);
+    fclose(fp);
+    printf("%sに保存しました。\n", file);
+}
+
+float* readfrombinary_float(const char *file, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "rb");
+    //fopen_s(&fp, file, "rb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        exit(0);
+    }
+ 
+    //float arr[count];
+    float *arr = malloc(sizeof(float) * count);
+ 
+    fread(arr, sizeof(float), count, fp);
+    fclose(fp);
+
+    return arr;
+}
+
+double* readfrombinary_double(const char *file, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "rb");
+    //fopen_s(&fp, file, "rb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        exit(0);
+    }
+ 
+    //double arr[count];
+    double *arr = malloc(sizeof(double) * count);
+ 
+    fread(arr, sizeof(double), count, fp);
+    fclose(fp);
+
+    return arr;
+}
