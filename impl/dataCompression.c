@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include "mpi.h"
 #include "param.h"
 #include "dataCompression.h"
@@ -867,131 +869,46 @@ void getFloatBin(float num,char bin[])
     }
 }
 
-// MPI_Datatype
-// myCompress_himeno(void* data, int count, int blklen, int stride, int starti, int startj, int startk)
-// {
-//   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
-//   float diff1, diff2, diff3, diff_min, selected_predict_value;
-//   int array_float_len = 0, array_char_len = 0;
-//   char compress_type;
-//   float* array_float = NULL; //(float*)malloc(sizeof(float));
-//   float* array_float_more = NULL;
-//   char* array_char = NULL; //(char*)malloc(sizeof(char));
-//   char* array_char_more = NULL;
-//   int* array_char_displacement = NULL;
-//   int* array_char_displacement_more = NULL;
+//str should have at least 33 byte.
+void floattostr(float* a, char* str){
+	unsigned int c;
+	c= ((unsigned int*)a)[0]; 
+	for(int i=0;i<32;i++){
+		str[31-i]=(char)(c&1)+'0';
+		c>>=1;
+	}
+	str[32] = '\0';
+}
 
-//   for(int i=0; i<count; i++)
-//   {
-//     for(int j=0; j<blklen; j++)
-//     {
-//       real_value = data[starti][startj][startk+blklen];
+//str should have at least 65 byte.
+void doubletostr(double* a, char* str){
+	long long c;
+	c= ((long long*)a)[0]; 
+	for(int i=0;i<64;i++){
+		str[63-i]=(char)(c&1)+'0';
+		c>>=1;
+	}
+	str[64] = '\0';
+}
 
-//       if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
-//       {
-//         array_float_len++;
-//         array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
-//         if (array_float_more != NULL) 
-//         {
-//           array_float = array_float_more;
-//           array_float[array_float_len-1] = real_value;
-//         }
-//         else 
-//         {
-//           free(array_float);
-//           printf("Error (re)allocating memory");
-//           exit(1);
-//         }        
-        
-//         if(before_value3 == -1) 
-//         {
-//           before_value3 = real_value; 
-//         }
-//         else if(before_value2 == -1) 
-//         {
-//           before_value2 = real_value;
-//         }
-//         else if(before_value1 == -1) 
-//         {
-//           before_value1 = real_value;
-//         }        
-//       }
-//       else
-//       {
-//         predict_value1 = before_value1;
-//         predict_value2 = 2*before_value1 - before_value2;
-//         predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+float strtofloat(char * str){
+	unsigned int flt = 0;
+	for(int i=0;i<31;i++){
+		flt += (str[i]-'0');
+		flt <<= 1;
+	}
+	flt += (str[31]-'0');
+	float * ret = (float*)&flt;
+	return *ret;
+}
 
-//         diff1 = fabs(predict_value1-real_value);
-//         diff2 = fabs(predict_value2-real_value);
-//         diff3 = fabs(predict_value3-real_value);
-
-//         diff_min = diff1;
-//         compress_type = 'a';
-//         selected_predict_value = predict_value1;
-//         if(diff2<diff_min)
-//         {
-//           diff_min = diff2;
-//           compress_type = 'b';
-//           selected_predict_value = predict_value2;
-//         }
-//         if(diff3<diff_min)
-//         {
-//           diff_min = diff3;
-//           compress_type = 'c';
-//           selected_predict_value = predict_value3;
-//         }        
-
-//         before_value3 = before_value2;
-//         before_value2 = before_value1;
-//         if(diff_min<=absErrBound) 
-//         {
-//           array_char_len++;
-//           array_char_more = (char*)realloc(array_char, sizeof(char)*array_char_len);
-//           array_char_displacement_more = (int*)realloc(array_char_displacement, sizeof(int)*array_char_len);
-//           if (array_char_more != NULL && array_char_displacement_more != NULL) 
-//           {
-//             array_char = array_char_more;
-//             array_char[array_char_len-1] = compress_type;
-//             array_char_displacement = array_char_displacement_more;
-//             array_char_displacement[array_char_len-1] = array_float_len + array_char_len;
-//           }
-//           else 
-//           {
-//             free(array_char);
-//             free(array_char_displacement);
-//             printf("Error (re)allocating memory");
-//             exit(1);
-//           } 
-//           before_value1 = selected_predict_value;
-//         }
-//         else 
-//         {
-//           array_float_len++;
-//           array_float_more = (float*)realloc(array_float, sizeof(float)*array_float_len);
-//           if (array_float_more != NULL) 
-//           {
-//             array_float = array_float_more;
-//             array_float[array_float_len-1] = real_value;
-//           }
-//           else 
-//           {
-//             free(array_float);
-//             printf("Error (re)allocating memory");
-//             exit(1);
-//           }             
-//           before_value1 = real_value;
-//         }
-//       }
-//     }
-//     if(stride == MKMAX)
-//     {
-//       startj++;
-//     }
-//     else if(stride == MJMAX*MKMAX)
-//     {
-//       starti++;
-//     }
-//   }
-// }
-            
+double strtodbl(char * str){
+	long long dbl = 0;
+	for(int i=0;i<63;i++){
+		dbl += (str[i]-'0');
+		dbl <<= 1;
+	}
+	dbl +=(str[63]-'0');
+	double* db = (double*)&dbl;
+	return *db;
+}         

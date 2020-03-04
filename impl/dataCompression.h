@@ -25,3 +25,7 @@ float* myDecompress(float[], char[], int[], int);
 int myCompress_double(double[], double**, char**, int**, int);
 double* myDecompress_double(double[], char[], int[], int);
 float* transform_3d_array_to_1d_array(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int, int);
+void floattostr(float*, char*);
+void doubletostr(double*, char*);
+float strtofloat(char*);
+double strtodbl(char*);
