@@ -8,7 +8,7 @@
 #define CT                  1 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz
 #define byte_or_bit         1 //1 byte, 2 bit
 #define data_num            8192 //pingpong
-#define filename            "input" //k-means, "input", "testdouble_8_8_128", "testdouble_8_8_8_128"
+#define filename            "dataset/testfloat_8_8_128" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128"
 #define suffix              ".txt" //k-means
 #define output_suffix       "_output_" //k-means
 #define clusters            10 //k-means

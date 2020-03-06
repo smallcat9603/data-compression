@@ -37,7 +37,9 @@ int main(int argc, char** argv) {
   }
 
   // read data file
-  FILE *fp = fopen("testfloat_8_8_128.txt", "r");
+  char output_filename[32];
+  sprintf(output_filename, "%s%s", filename, suffix);
+  FILE *fp = fopen(output_filename, "r");
   float *data = NULL; //data array
   int n; //data number = n-1
   for (n=0; !feof(fp); n++) 
