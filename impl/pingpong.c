@@ -130,9 +130,13 @@ int main(int argc, char** argv) {
     {
       float compress_ratio;
       compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
-      printf("Compression rate (byte): %f \n", 1/compress_ratio); 
+      printf("Compression rate (float, byte): %f \n", 1/compress_ratio); 
       compress_ratio = (float)(num_c*2+num_p*sizeof(float)*8)/((num_c+num_p)*sizeof(float)*8);
-      printf("Compression rate (bit): %f \n", 1/compress_ratio); 
+      printf("Compression rate (float, bit): %f \n", 1/compress_ratio); 
+      compress_ratio = (double)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double));
+      printf("Compression rate (double, byte): %f \n", 1/compress_ratio); 
+      compress_ratio = (double)(num_c*2+num_p*sizeof(double)*8)/((num_c+num_p)*sizeof(double)*8);
+      printf("Compression rate (double, bit): %f \n", 1/compress_ratio);       
     } 
   }
 
