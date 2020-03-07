@@ -13,18 +13,18 @@
 #define output_suffix       "_output_" //k-means
 #define clusters            10 //k-means
 
-float calcCompressionRatio_himeno_ij_ik_jk(float[MIMAX][MJMAX][MKMAX], int, int);
+float calcCompressionRatio_himeno_ij_ik_jk(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int);
 // MPI_Datatype myCompress_himeno(void*, int, int, int, int, int, int);
-float calcCompressionRatio_himeno_sz(float[MIMAX][MJMAX][MKMAX], int, int);
-float calcCompressionRatio_himeno_nolossy_performance(float[MIMAX][MJMAX][MKMAX], int, int);
-float calcCompressionRatio_himeno_nolossy_area(float[MIMAX][MJMAX][MKMAX], int, int);
+float calcCompressionRatio_himeno_sz(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int);
+float calcCompressionRatio_himeno_nolossy_performance(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int);
+float calcCompressionRatio_himeno_nolossy_area(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int);
 void getFloatBin(float, char[]);
 float* readFileFloat(char[]);
 int myCompress(float[], float**, char**, int**, int);
 float* myDecompress(float[], char[], int[], int);
 int myCompress_double(double[], double**, char**, int**, int);
 double* myDecompress_double(double[], char[], int[], int);
-float* transform_3d_array_to_1d_array(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int, int);
+float* transform_3d_array_to_1d_array(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int);
 void floattostr(float*, char*);
 void doubletostr(double*, char*);
 float strtofloat(char*);

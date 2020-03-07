@@ -14,13 +14,12 @@
 #include "param.h"
 #include "dataCompression.h"
 
-float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax, int len)
+float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax)
 {
   int A, B;
   //float array_1d[len]; 
-  float* array_1d = (float*) malloc(sizeof(float)*len);
-  int array_1d_len = 0;
-
+  float* array_1d;
+  
   if(ijk == 1) 
   {
     A = jmax;
@@ -36,6 +35,9 @@ float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, 
     A = imax;
     B = jmax;
   } 
+  array_1d = (float*) malloc(sizeof(float)*A*B);
+
+  int array_1d_len = 0;
   for(int a=0; a<A; a++)
   {
     for(int b=0; b<B; b++)
@@ -358,7 +360,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
 }
 
 //myCompress for himeno
-float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
+float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
@@ -375,18 +377,18 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
 
   if(ijk == 1) 
   {
-    A = MJMAX;
-    B = MKMAX;
+    A = jmax;
+    B = kmax;
   }
   else if(ijk == 2) 
   {
-    A = MIMAX;
-    B = MKMAX;
+    A = imax;
+    B = kmax;
   }
   else if(ijk == 3)
   {
-    A = MIMAX;
-    B = MJMAX;
+    A = imax;
+    B = jmax;
   } 
   for(int a=0; a<A; a++)
   {
@@ -505,7 +507,7 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
   return compress_ratio;
 }
 
-float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
+float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, predict_diff, selected_predict_value;
@@ -516,18 +518,18 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
 
   if(ijk == 1) 
   {
-    A = MJMAX;
-    B = MKMAX;
+    A = jmax;
+    B = kmax;
   }
   else if(ijk == 2) 
   {
-    A = MIMAX;
-    B = MKMAX;
+    A = imax;
+    B = kmax;
   }
   else if(ijk == 3)
   {
-    A = MIMAX;
-    B = MJMAX;
+    A = imax;
+    B = jmax;
   } 
   for(int a=0; a<A; a++)
   {
@@ -659,7 +661,7 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
   return compress_ratio;
 }
 
-float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
+float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
   float diff4;
@@ -669,18 +671,18 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
 
   if(ijk == 1) 
   {
-    A = MJMAX;
-    B = MKMAX;
+    A = jmax;
+    B = kmax;
   }
   else if(ijk == 2) 
   {
-    A = MIMAX;
-    B = MKMAX;
+    A = imax;
+    B = kmax;
   }
   else if(ijk == 3)
   {
-    A = MIMAX;
-    B = MJMAX;
+    A = imax;
+    B = jmax;
   } 
   for(int a=0; a<A; a++)
   {
@@ -749,7 +751,7 @@ float calcCompressionRatio_himeno_nolossy_performance(float data[MIMAX][MJMAX][M
   return compress_ratio;
 }
 
-float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], int ijk, int v)
+float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
   float diff4;
@@ -760,18 +762,18 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
 
   if(ijk == 1) 
   {
-    A = MJMAX;
-    B = MKMAX;
+    A = jmax;
+    B = kmax;
   }
   else if(ijk == 2) 
   {
-    A = MIMAX;
-    B = MKMAX;
+    A = imax;
+    B = kmax;
   }
   else if(ijk == 3)
   {
-    A = MIMAX;
-    B = MJMAX;
+    A = imax;
+    B = jmax;
   } 
   for(int a=0; a<A; a++)
   {
