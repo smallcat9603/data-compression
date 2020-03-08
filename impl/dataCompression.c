@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "mpi.h"
 #include "param.h"
 #include "dataCompression.h"
@@ -871,6 +872,7 @@ void getFloatBin(float num,char bin[])
     }
 }
 
+//100.0 --> 01000010110010000000000000000000
 //str should have at least 33 byte.
 void floattostr(float* a, char* str){
 	unsigned int c;
@@ -882,6 +884,7 @@ void floattostr(float* a, char* str){
 	str[32] = '\0';
 }
 
+//100.0 --> 0100000001011001000000000000000000000000000000000000000000000000
 //str should have at least 65 byte.
 void doubletostr(double* a, char* str){
 	long long c;
@@ -893,6 +896,7 @@ void doubletostr(double* a, char* str){
 	str[64] = '\0';
 }
 
+//01000010110010000000000000000000 --> 100.0
 float strtofloat(char * str){
 	unsigned int flt = 0;
 	for(int i=0;i<31;i++){
@@ -904,6 +908,7 @@ float strtofloat(char * str){
 	return *ret;
 }
 
+//0100000001011001000000000000000000000000000000000000000000000000 --> 100.0
 double strtodbl(char * str){
 	long long dbl = 0;
 	for(int i=0;i<63;i++){
@@ -989,4 +994,44 @@ double* readfrombinary_double(const char *file, int count)
     fclose(fp);
 
     return arr;
+}
+
+void readfrombinary_writetotxt_float(const char *binaryfile, const char *txtfile, int count)
+{
+    FILE *fp;
+    fp = fopen(binaryfile, "rb");
+    assert(fp);
+
+    float *arr = malloc(sizeof(float) * count);
+    fread(arr, sizeof(float), count, fp);
+    fclose(fp);
+
+    fp = fopen(txtfile, "w");
+    assert(fp);
+     
+    for(int i=0; i<count; i++)
+    {
+      fprintf(fp, "%f\n", arr[i]);
+    }
+    fclose(fp);
+}
+
+void readfrombinary_writetotxt_double(const char *binaryfile, const char *txtfile, int count)
+{
+    FILE *fp;
+    fp = fopen(binaryfile, "rb");
+    assert(fp);
+
+    double *arr = malloc(sizeof(double) * count);
+    fread(arr, sizeof(double), count, fp);
+    fclose(fp);
+
+    fp = fopen(txtfile, "w");
+    assert(fp);
+
+    for(int i=0; i<count; i++)
+    {
+      fprintf(fp, "%lf\n", arr[i]);
+    }
+    fclose(fp);
 }

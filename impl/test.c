@@ -27,10 +27,13 @@ int main(int argc, char** argv) {
   // printf("%s \n", float_arr);
   // printf("%s \n", double_arr);  
 
-  const char *file = "../fpc/test.trace";
-  double *arr = readfrombinary_double(file, 100000);
-  printf("%f \n", arr[0]);
-  printf("%f \n", arr[1]);
-  printf("%f \n", arr[2]);
+  // const char *file = "../fpc/test.trace";
+  // double *arr = readfrombinary_double(file, 100000);
+  // printf("%f \n", arr[0]);
+  // printf("%f \n", arr[1]);
+  // printf("%f \n", arr[2]);
+  const char *binaryfile = "../fpc/test.trace";
+  const char *txtfile = "../fpc/test.trace.txt";
+  readfrombinary_writetotxt_double(binaryfile, txtfile, 100000);
 
 }

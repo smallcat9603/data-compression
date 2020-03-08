@@ -33,3 +33,5 @@ void writetobinary_float(const char*, float*, int);
 void writetobinary_double(const char*, double*, int);
 float* readfrombinary_float(const char*, int);
 double* readfrombinary_double(const char*, int);
+void readfrombinary_writetotxt_float(const char*, const char*, int);
+void readfrombinary_writetotxt_double(const char*, const char*, int);
