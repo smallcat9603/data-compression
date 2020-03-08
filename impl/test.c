@@ -32,8 +32,9 @@ int main(int argc, char** argv) {
   // printf("%f \n", arr[0]);
   // printf("%f \n", arr[1]);
   // printf("%f \n", arr[2]);
-  const char *binaryfile = "../fpc/test.trace";
-  const char *txtfile = "../fpc/test.trace.txt";
-  readfrombinary_writetotxt_double(binaryfile, txtfile, 100000);
+  const char *binaryfile = "../spdp/num_plasma.sp";
+  const char *txtfile = "../spdp/num_plasma.sp.txt";
+  //readfrombinary_writetotxt_double(binaryfile, txtfile, 4386200);
+  readfrombinary_writetotxt_float(binaryfile, txtfile, 4386200);
 
 }
