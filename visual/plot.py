@@ -4,11 +4,12 @@ import pandas as pd
 
 RG = nx.Graph()  
 # RG = nx.grid_graph(dim=[4,4,4], periodic=True)
-base = "test" # "input", "testdouble_8_8_128"
+folder = "../impl/dataset/"
+base = "num_plasma" # "input", "testdouble_8_8_128", obs_info, num_plasma
 filename = base + ".txt"
-filename_output = base + "_output_0_0.01_100.txt"
-data = pd.read_csv(filename, header=None)
-data_output = pd.read_csv(filename_output, header=None)
+filename_output = base + "_output_1_1e-06_100.txt"
+data = pd.read_csv(folder+filename, header=None)
+data_output = pd.read_csv(folder+filename_output, header=None)
 # RG.add_node(1)
 # RG.add_node(2)
 # RG.add_node(3)
@@ -32,11 +33,11 @@ for i in range(0, len(data)/2):
 
 # print "colorlist: ", colorlist
 # print "position: ", position
-plt.figure(figsize=(80, 80), dpi=80)
+plt.figure(figsize=(10, 10), dpi=64)
 nx.draw(RG, node_size=30, with_labels=False, pos=position, node_color=colorlist, node_shape=">")  
 import matplotlib.pyplot as plt
 plt.axis('on')
 plt.xlabel('X')
 plt.ylabel('Y')
-plt.savefig("test.png", dpi=250)
-plt.show() 
+plt.savefig(filename_output+".png", dpi=128)
+#plt.show() 
