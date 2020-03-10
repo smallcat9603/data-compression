@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   // float float10 = strtofloat(float2);
   // printf("%f \n", double10);
   // printf("%f \n", float10);
-  // double10 = 100;
+  // double10 = 0.001;
   // float10 = 100;
   // char float_arr[32+1];
   // char double_arr[64+1];
