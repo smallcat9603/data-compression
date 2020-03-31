@@ -133,10 +133,15 @@ int main(int argc, char** argv) {
       printf("Compression rate (float, byte): %f \n", 1/compress_ratio); 
       compress_ratio = (float)(num_c*2+num_p*sizeof(float)*8)/((num_c+num_p)*sizeof(float)*8);
       printf("Compression rate (float, bit): %f \n", 1/compress_ratio); 
-      compress_ratio = (double)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double));
+      compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double));
       printf("Compression rate (double, byte): %f \n", 1/compress_ratio); 
-      compress_ratio = (double)(num_c*2+num_p*sizeof(double)*8)/((num_c+num_p)*sizeof(double)*8);
-      printf("Compression rate (double, bit): %f \n", 1/compress_ratio);       
+      compress_ratio = (float)(num_c*2+num_p*sizeof(double)*8)/((num_c+num_p)*sizeof(double)*8);
+      printf("Compression rate (double, bit): %f \n", 1/compress_ratio);     
+
+      compress_ratio = (3.0/(sizeof(float)*8))*((float)num_c/(num_c+num_p)) + calCompressRatio_bitwise_float(msg.p_data, num_p)*((float)num_p/(num_c+num_p));
+      printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio);        
+      compress_ratio = (3.0/(sizeof(double)*8))*((float)num_c/(num_c+num_p)) + calCompressRatio_bitwise_double2(msg.p_data, num_p)*((float)num_p/(num_c+num_p));
+      printf("Compression rate (bitwise, double): %f \n", 1/compress_ratio);    
     } 
   }
 

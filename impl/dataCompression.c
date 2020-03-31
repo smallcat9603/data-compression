@@ -15,6 +15,119 @@
 #include "param.h"
 #include "dataCompression.h"
 
+float calCompressRatio_bitwise_double2(float data[], int num)
+{
+  int bits_after_compress = 0;
+
+  for(int n=0; n<num; n++)
+  {
+    double double10 = data[n];
+    char double_arr[64+1];
+    doubletostr(&double10, double_arr);
+    //printf("%s \n", double_arr); 
+
+    int expo_value = 0;
+    //printf("%f \n", double10); 
+    for(int i=1; i<12; i++)
+    {
+      expo_value += (double_arr[i]-'0')*pow(2,11-i);
+      //printf("%d ", double_arr[i]-'0'); 
+    }
+    expo_value -= 1023;
+
+    //printf("%d ", expo_value); 
+
+    int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+
+    if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+    {
+      mantissa_bits_within_error_bound = 52;
+    }
+    else if(mantissa_bits_within_error_bound < 0)
+    {
+      mantissa_bits_within_error_bound = 0;
+    }
+    bits_after_compress += 1+11+mantissa_bits_within_error_bound;  
+  }
+
+  return (float)bits_after_compress/(sizeof(double)*8*num);
+}
+
+float calCompressRatio_bitwise_double(double data[], int num)
+{
+  int bits_after_compress = 0;
+
+  for(int n=0; n<num; n++)
+  {
+    double double10 = data[n];
+    char double_arr[64+1];
+    doubletostr(&double10, double_arr);
+    //printf("%s \n", double_arr); 
+
+    int expo_value = 0;
+    //printf("%f \n", double10); 
+    for(int i=1; i<12; i++)
+    {
+      expo_value += (double_arr[i]-'0')*pow(2,11-i);
+      //printf("%d ", double_arr[i]-'0'); 
+    }
+    expo_value -= 1023;
+
+    //printf("%d ", expo_value); 
+
+    int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+
+    if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+    {
+      mantissa_bits_within_error_bound = 52;
+    }
+    else if(mantissa_bits_within_error_bound < 0)
+    {
+      mantissa_bits_within_error_bound = 0;
+    }
+    bits_after_compress += 1+11+mantissa_bits_within_error_bound;  
+  }
+
+  return (float)bits_after_compress/(sizeof(double)*8*num);
+}
+
+float calCompressRatio_bitwise_float(float data[], int num)
+{
+  int bits_after_compress = 0;
+
+  for(int n=0; n<num; n++)
+  {
+    float float10 = data[n];
+    char float_arr[32+1];
+    floattostr(&float10, float_arr);
+    //printf("%s \n", float_arr); 
+
+    int expo_value = 0;
+    for(int i=1; i<9; i++)
+    {
+      expo_value += (float_arr[i]-'0')*pow(2,8-i);
+      //printf("%d ", float_arr[i]-'0'); 
+    }
+    expo_value -= 127;
+
+    //printf("%d ", expo_value); 
+
+    int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+
+    if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
+    {
+      mantissa_bits_within_error_bound = 23;
+    }
+    else if(mantissa_bits_within_error_bound < 0)
+    {
+      mantissa_bits_within_error_bound = 0;
+    }
+    bits_after_compress += 1+8+mantissa_bits_within_error_bound;  
+  }
+
+  return (float)bits_after_compress/(sizeof(float)*8*num);
+}
+
 float* transform_3d_array_to_1d_array(float data[MIMAX][MJMAX][MKMAX], int ijk, int v, int imax, int jmax, int kmax)
 {
   int A, B;
