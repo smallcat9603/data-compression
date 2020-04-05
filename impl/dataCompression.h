@@ -13,6 +13,9 @@
 #define output_suffix       "_output_" //k-means
 #define clusters            100 //k-means
 
+double toSmallDataset(double[], double**, int);
+float toSmallDataset(float[], float**, int);
+
 float calCompressRatio_bitwise_float(float[], int);
 float calCompressRatio_bitwise_double(double[], int);
 float calCompressRatio_bitwise_double2(float[], int);

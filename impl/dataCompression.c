@@ -15,6 +15,48 @@
 #include "param.h"
 #include "dataCompression.h"
 
+double toSmallDataset(double data[], double** data_small, int num)
+{
+  *data_small = malloc(sizeof(double) * num);
+  double min = data[0];
+
+  for(int i=1; i<num; i++)
+  {
+    if(data[i]<min)
+    {
+      min = data[i];
+    }
+  }
+
+  for(int i=0; i<num; i++)
+  {
+    (*data_small)[i] = data[i] - min;
+  }
+
+  return min;
+}
+
+float toSmallDataset(float data[], float** data_small, int num)
+{
+  *data_small = malloc(sizeof(float) * num);
+  float min = data[0];
+
+  for(int i=1; i<num; i++)
+  {
+    if(data[i]<min)
+    {
+      min = data[i];
+    }
+  }
+
+  for(int i=0; i<num; i++)
+  {
+    (*data_small)[i] = data[i] - min;
+  }
+
+  return min;
+}
+
 float calCompressRatio_bitwise_double2(float data[], int num)
 {
   int bits_after_compress = 0;
