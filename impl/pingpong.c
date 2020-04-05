@@ -58,16 +58,6 @@ int main(int argc, char** argv) {
 
   float* data_small = NULL;
   float min = toSmallDataset(data, &data_small, data_num);
-  if (world_rank == 0)
-  {
-    printf("%f ", data[0]);
-    printf("%f ", data_small[0]);
-    printf("%f ", data[1]);
-    printf("%f ", data_small[1]);
-    printf("%f ", data[data_num-1]);
-    printf("%f ", data_small[data_num-1]);
-    printf("%f \n", min);
-  }
 
   int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
 
