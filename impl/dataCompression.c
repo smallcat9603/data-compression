@@ -16,7 +16,7 @@
 #include "dataCompression.h"
 
 //bitwise myCompress for ping-pong & himeno (float)
-int myCompress_bitwise(float data[], float** array_float, char** array_char, int** array_char_displacement, int num)
+void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int& bytes, int& pos)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
@@ -26,6 +26,11 @@ int myCompress_bitwise(float data[], float** array_float, char** array_char, int
   char* array_char_more = NULL;
   int* array_char_displacement_more = NULL;
 
+  // unsigned char* data_bits = NULL;
+  // int flag = 0; //0, 1
+  // int bytes = 0; //total bytes of compressed data
+  // int pos = 8; //position of filled bit in last byte --> 87654321
+
   for(int n=0; n<num; n++)
   {
     real_value = data[n];
@@ -34,38 +39,14 @@ int myCompress_bitwise(float data[], float** array_float, char** array_char, int
     {
       if(real_value == 0)
       {
-        array_char_len++;
-        array_char_more = (char*)realloc(*array_char, sizeof(char)*array_char_len);
-        array_char_displacement_more = (int*)realloc(*array_char_displacement, sizeof(int)*array_char_len);
-        if (array_char_more != NULL && array_char_displacement_more != NULL) 
-        {
-          *array_char = array_char_more;
-          (*array_char)[array_char_len-1] = compress_type;
-          *array_char_displacement = array_char_displacement_more;
-          (*array_char_displacement)[array_char_len-1] = array_float_len + array_char_len;
-        }
-        else 
-        {
-          free(*array_char);
-          free(*array_char_displacement);
-          printf("Error (re)allocating memory");
-          exit(1);
-        }        
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
       }
-      
-      array_float_len++;
-      array_float_more = (float*)realloc(*array_float, sizeof(float)*array_float_len);
-      if (array_float_more != NULL) 
+      else
       {
-        *array_float = array_float_more;
-        (*array_float)[array_float_len-1] = real_value;
-      }
-      else 
-      {
-        free(*array_float);
-        printf("Error (re)allocating memory");
-        exit(1);
-      }        
+        compress_bitwise_float(real_value, data_bits, bytes, pos);
+      }       
       
       if(before_value3 == -1) 
       {
@@ -91,18 +72,18 @@ int myCompress_bitwise(float data[], float** array_float, char** array_char, int
       diff3 = fabs(predict_value3-real_value);
 
       diff_min = diff1;
-      compress_type = 'a';
+      compress_type = 'a'; //101
       selected_predict_value = predict_value1;
       if(diff2<diff_min)
       {
         diff_min = diff2;
-        compress_type = 'b';
+        compress_type = 'b'; //110
         selected_predict_value = predict_value2;
       }
       if(diff3<diff_min)
       {
         diff_min = diff3;
-        compress_type = 'c';
+        compress_type = 'c'; /111
         selected_predict_value = predict_value3;
       }        
 
@@ -112,43 +93,99 @@ int myCompress_bitwise(float data[], float** array_float, char** array_char, int
       
       if(diff_min<=absErrBound) 
       {
-        array_char_len++;
-        array_char_more = (char*)realloc(*array_char, sizeof(char)*array_char_len);
-        array_char_displacement_more = (int*)realloc(*array_char_displacement, sizeof(int)*array_char_len);
-        if (array_char_more != NULL && array_char_displacement_more != NULL) 
+        if(compress_type == 'a')
         {
-          *array_char = array_char_more;
-          (*array_char)[array_char_len-1] = compress_type;
-          *array_char_displacement = array_char_displacement_more;
-          (*array_char_displacement)[array_char_len-1] = array_float_len + array_char_len;
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);        
         }
-        else 
+        else if(compress_type == 'b')
         {
-          free(*array_char);
-          free(*array_char_displacement);
-          printf("Error (re)allocating memory");
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);  
+        }
+        else if(compress_type == 'c')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);  
+        }
+        else
+        {
+          printf("Error compress_type");
           exit(1);
-        } 
+        }
       }
       else 
       {
-        array_float_len++;
-        array_float_more = (float*)realloc(*array_float, sizeof(float)*array_float_len);
-        if (array_float_more != NULL) 
-        {
-          *array_float = array_float_more;
-          (*array_float)[array_float_len-1] = real_value;
-        }
-        else 
-        {
-          free(*array_float);
-          printf("Error (re)allocating memory");
-          exit(1);
-        }             
+        compress_bitwise_float(real_value, &data_bits, bytes, pos);            
       }
     }
   }
-  return array_float_len;
+}
+
+void compress_bitwise_double(double real_value, unsigned char** data_bits, int& bytes, int& pos)
+{
+  double double10 = real_value;
+  char double_arr[64+1];
+  doubletostr(&double10, double_arr);
+
+  int expo_value = 0;
+  for(int i=1; i<12; i++)
+  {
+    expo_value += (double_arr[i]-'0')*pow(2,11-i);
+  }
+  expo_value -= 1023;
+
+  int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+
+  if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+  {
+    mantissa_bits_within_error_bound = 52;
+  }
+  else if(mantissa_bits_within_error_bound < 0)
+  {
+    mantissa_bits_within_error_bound = 0;
+  }
+  int bits_after_compress = 1+11+mantissa_bits_within_error_bound;  
+
+  for(int i=0; i<bits_after_compress; i++)
+  {
+    add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+  }
+}
+
+void compress_bitwise_float(float real_value, unsigned char** data_bits, int& bytes, int& pos)
+{
+  float float10 = real_value;
+  char float_arr[32+1];
+  floattostr(&float10, float_arr);
+
+  int expo_value = 0;
+  for(int i=1; i<9; i++)
+  {
+    expo_value += (float_arr[i]-'0')*pow(2,8-i);
+  }
+  expo_value -= 127;
+
+  int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+
+  if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
+  {
+    mantissa_bits_within_error_bound = 23;
+  }
+  else if(mantissa_bits_within_error_bound < 0)
+  {
+    mantissa_bits_within_error_bound = 0;
+  }
+
+  int bits_after_compress = 1+8+mantissa_bits_within_error_bound;  
+
+  for(int i=0; i<bits_after_compress; i++)
+  {
+    add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+  }
 }
 
 double toSmallDataset(double data[], double** data_small, int num)
@@ -1325,4 +1362,59 @@ void readfrombinary_writetotxt_double(const char *binaryfile, const char *txtfil
       fprintf(fp, "%lf\n", arr[i]);
     }
     fclose(fp);
+}
+
+void add_bit_to_bytes(unsigned char** data_bits, int& bytes, int& pos, int flag)
+{
+  if(pos > 0 && pos < 9)
+  {
+    if(pos == 8) 
+    {
+      bytes++;
+      unsigned char* data_bits_more = (unsigned char*)realloc(*data_bits, sizeof(char)*bytes);
+      if (data_bits_more != NULL) 
+      {
+        *data_bits = data_bits_more;
+        bit_set((*data_bits)[bytes-1], pos, flag);
+        pos--;
+      }
+      else 
+      {
+        free(*data_bits);
+        printf("Error (re)allocating memory");
+        exit(1);
+      }         
+    }
+    else{
+      bit_set((*data_bits)[bytes-1], pos, flag);
+      pos--;     
+    }
+    if(pos == 0) pos = 8;
+  }
+  else
+  {
+    printf("Error position value");
+    return;
+  }
+}
+
+// n*8 bits, position --> 87654321, flag --> 1, 0
+void bit_set(unsigned char *p_data, unsigned char position, int flag)
+{
+	// int i = 0;
+	assert(p_data);
+	if (position > 8 || position < 1 || (flag != 0 && flag != 1))
+	{
+		printf("输入有误！\n");
+		return;
+	}
+	if (flag != (*p_data >> (position - 1) & 1))
+	{
+		*p_data ^= 1 << (position - 1);
+	}
+	// for (i = 7; i >= 0; i--)     //由低地址的位开始输出。
+	// {
+	// 	printf("%d", (*p_data >> i) & 1);
+	// }
+	// printf("\n");
 }
