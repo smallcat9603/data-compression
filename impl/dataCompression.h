@@ -13,6 +13,7 @@
 #define output_suffix       "_output_" //k-means
 #define clusters            100 //k-means
 
+void myCompress_bitwise_double(double[], int, unsigned char**, int*, int*);
 void myCompress_bitwise(float[], int, unsigned char**, int*, int*);
 
 void compress_bitwise_double(double, unsigned char**, int*, int*);

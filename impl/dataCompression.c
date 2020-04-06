@@ -15,16 +15,118 @@
 #include "param.h"
 #include "dataCompression.h"
 
+//bitwise myCompress for k-means (double)
+void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits, int* bytes, int* pos)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  double diff1, diff2, diff3, diff_min, selected_predict_value;
+  char compress_type;
+
+  // unsigned char* data_bits = NULL;
+  // int flag = 0; //0, 1
+  // int bytes = 0; //total bytes of compressed data
+  // int pos = 8; //position of filled bit in last byte --> 87654321
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      if(real_value == 0)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+      }
+      else
+      {
+        compress_bitwise_double(real_value, data_bits, bytes, pos);
+      }       
+      
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a'; //101
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b'; //110
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c'; //111
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+      
+      if(diff_min<=absErrBound) 
+      {
+        if(compress_type == 'a')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);        
+        }
+        else if(compress_type == 'b')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);  
+        }
+        else if(compress_type == 'c')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);  
+        }
+        else
+        {
+          printf("Error compress_type");
+          exit(1);
+        }
+      }
+      else 
+      {
+        compress_bitwise_double(real_value, data_bits, bytes, pos);            
+      }
+    }
+  }
+}
+
 //bitwise myCompress for ping-pong & himeno (float)
 void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* bytes, int* pos)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
-  int array_float_len = 0, array_char_len = 0;
   char compress_type;
-  float* array_float_more = NULL;
-  char* array_char_more = NULL;
-  int* array_char_displacement_more = NULL;
 
   // unsigned char* data_bits = NULL;
   // int flag = 0; //0, 1
