@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   int* array_char_displacement = NULL;
 
   float* data_small = NULL;
-  float min = toSmallDataset(data, &data_small, data_num);
+  float min = toSmallDataset_float(data, &data_small, data_num);
 
   int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
   int bytes = 0; //total bytes of compressed data
   int pos = 8; //position of filled bit in last byte --> 87654321
 
-  myCompress_bitwise(data_small, data_num, &data_bits, bytes, pos);
+  myCompress_bitwise(data_small, data_num, &data_bits, &bytes, &pos);
   printf("test %d %d \n", bytes, pos);
 
   struct vector msg; 

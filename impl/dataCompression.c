@@ -16,7 +16,7 @@
 #include "dataCompression.h"
 
 //bitwise myCompress for ping-pong & himeno (float)
-void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int& bytes, int& pos)
+void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* bytes, int* pos)
 {
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
@@ -83,7 +83,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int& b
       if(diff3<diff_min)
       {
         diff_min = diff3;
-        compress_type = 'c'; /111
+        compress_type = 'c'; //111
         selected_predict_value = predict_value3;
       }        
 
@@ -119,13 +119,13 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int& b
       }
       else 
       {
-        compress_bitwise_float(real_value, &data_bits, bytes, pos);            
+        compress_bitwise_float(real_value, data_bits, bytes, pos);            
       }
     }
   }
 }
 
-void compress_bitwise_double(double real_value, unsigned char** data_bits, int& bytes, int& pos)
+void compress_bitwise_double(double real_value, unsigned char** data_bits, int* bytes, int* pos)
 {
   double double10 = real_value;
   char double_arr[64+1];
@@ -152,11 +152,11 @@ void compress_bitwise_double(double real_value, unsigned char** data_bits, int& 
 
   for(int i=0; i<bits_after_compress; i++)
   {
-    add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+    add_bit_to_bytes(data_bits, bytes, pos, double_arr[i]-'0');
   }
 }
 
-void compress_bitwise_float(float real_value, unsigned char** data_bits, int& bytes, int& pos)
+void compress_bitwise_float(float real_value, unsigned char** data_bits, int* bytes, int* pos)
 {
   float float10 = real_value;
   char float_arr[32+1];
@@ -188,7 +188,7 @@ void compress_bitwise_float(float real_value, unsigned char** data_bits, int& by
   }
 }
 
-double toSmallDataset(double data[], double** data_small, int num)
+double toSmallDataset_double(double data[], double** data_small, int num)
 {
   *data_small = malloc(sizeof(double) * num);
   double min = data[0];
@@ -209,7 +209,7 @@ double toSmallDataset(double data[], double** data_small, int num)
   return min;
 }
 
-float toSmallDataset(float data[], float** data_small, int num)
+float toSmallDataset_float(float data[], float** data_small, int num)
 {
   *data_small = malloc(sizeof(float) * num);
   float min = data[0];
@@ -1364,19 +1364,19 @@ void readfrombinary_writetotxt_double(const char *binaryfile, const char *txtfil
     fclose(fp);
 }
 
-void add_bit_to_bytes(unsigned char** data_bits, int& bytes, int& pos, int flag)
+void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
 {
-  if(pos > 0 && pos < 9)
+  if(*pos > 0 && *pos < 9)
   {
-    if(pos == 8) 
+    if(*pos == 8) 
     {
-      bytes++;
-      unsigned char* data_bits_more = (unsigned char*)realloc(*data_bits, sizeof(char)*bytes);
+      (*bytes)++;
+      unsigned char* data_bits_more = (unsigned char*)realloc(*data_bits, sizeof(char)*(*bytes));
       if (data_bits_more != NULL) 
       {
         *data_bits = data_bits_more;
-        bit_set((*data_bits)[bytes-1], pos, flag);
-        pos--;
+        bit_set(data_bits[*bytes-1], *pos, flag);
+        (*pos)--;
       }
       else 
       {
@@ -1386,10 +1386,10 @@ void add_bit_to_bytes(unsigned char** data_bits, int& bytes, int& pos, int flag)
       }         
     }
     else{
-      bit_set((*data_bits)[bytes-1], pos, flag);
-      pos--;     
+      bit_set(data_bits[(*bytes)-1], *pos, flag);
+      (*pos)--;     
     }
-    if(pos == 0) pos = 8;
+    if(*pos == 0) *pos = 8;
   }
   else
   {

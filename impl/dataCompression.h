@@ -13,13 +13,13 @@
 #define output_suffix       "_output_" //k-means
 #define clusters            100 //k-means
 
-void myCompress_bitwise(float[], int, unsigned char**, int&, int&);
+void myCompress_bitwise(float[], int, unsigned char**, int*, int*);
 
-void compress_bitwise_double(double, unsigned char**, int&, int&);
-void compress_bitwise_float(float, unsigned char**, int&, int&);
+void compress_bitwise_double(double, unsigned char**, int*, int*);
+void compress_bitwise_float(float, unsigned char**, int*, int*);
 
-double toSmallDataset(double[], double**, int);
-float toSmallDataset(float[], float**, int);
+double toSmallDataset_double(double[], double**, int);
+float toSmallDataset_float(float[], float**, int);
 
 float calCompressRatio_bitwise_float(float[], int);
 float calCompressRatio_bitwise_double(double[], int);
@@ -48,5 +48,5 @@ double* readfrombinary_double(const char*, int);
 void readfrombinary_writetotxt_float(const char*, const char*, int);
 void readfrombinary_writetotxt_double(const char*, const char*, int);
 
-void add_bit_to_bytes(unsigned char**, int&, int&, int);
+void add_bit_to_bytes(unsigned char**, int*, int*, int);
 void bit_set(unsigned char*, unsigned char, int);
