@@ -1375,7 +1375,7 @@ void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
       if (data_bits_more != NULL) 
       {
         *data_bits = data_bits_more;
-        bit_set(data_bits[*bytes-1], *pos, flag);
+        bit_set(&((*data_bits)[*bytes-1]), *pos, flag);
         (*pos)--;
       }
       else 
@@ -1386,7 +1386,7 @@ void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
       }         
     }
     else{
-      bit_set(data_bits[(*bytes)-1], *pos, flag);
+      bit_set(&((*data_bits)[(*bytes)-1]), *pos, flag);
       (*pos)--;     
     }
     if(*pos == 0) *pos = 8;

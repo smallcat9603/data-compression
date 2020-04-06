@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
 
   myCompress_bitwise(data_small, data_num, &data_bits, &bytes, &pos);
   printf("test %d %d \n", bytes, pos);
+  float compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
+  printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio);  
 
   struct vector msg; 
   int num_p = array_float_len, num_c = data_num-array_float_len;
@@ -140,7 +142,6 @@ int main(int argc, char** argv) {
 
     if (CT == 1)
     {
-      float compress_ratio;
       compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
       printf("Compression rate (float, byte): %f \n", 1/compress_ratio); 
       compress_ratio = (float)(num_c*2+num_p*sizeof(float)*8)/((num_c+num_p)*sizeof(float)*8);
