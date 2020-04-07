@@ -35,6 +35,8 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
     {
       int bit = (data_bits[i] >> j) & 1;
 
+      //printf("%d(%d)", bit, bits_num);
+
       if(offset_bits == 0) //start bit
       {
         if(bits_num == 0) //not start bit of mantissa
@@ -52,7 +54,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
             else 
             {
               free(bits);
-              printf("Error (re)allocating memory");
+              printf("Error (re)allocating memory\n");
               exit(1);
             }             
           }
@@ -69,7 +71,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
             else 
             {
               free(bits);
-              printf("Error (re)allocating memory");
+              printf("Error (re)allocating memory\n");
               exit(1);
             }             
           }
@@ -107,7 +109,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
             else 
             {
               free(bits);
-              printf("Error (re)allocating memory");
+              printf("Error (re)allocating memory\n");
               exit(1);
             } 
           }
@@ -115,7 +117,8 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
           {
             decompressed_num++;
             decompressed[decompressed_num-1] = decompress_bitwise_float(bits, bits_num, before_value1, before_value2, before_value3);
-            
+            // printf("%f ", decompressed[decompressed_num-1]);
+
             if(before_value3 == -1) 
             {
               before_value3 = decompressed[decompressed_num-1]; 
@@ -151,7 +154,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
               else 
               {
                 free(bits);
-                printf("Error (re)allocating memory");
+                printf("Error (re)allocating memory\n");
                 exit(1);
               }             
             }
@@ -168,7 +171,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
               else 
               {
                 free(bits);
-                printf("Error (re)allocating memory");
+                printf("Error (re)allocating memory\n");
                 exit(1);
               }             
             }              
@@ -187,7 +190,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
         else 
         {
           free(bits);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory\n");
           exit(1);
         }        
       }
@@ -196,6 +199,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
       {
         decompressed_num++;
         decompressed[decompressed_num-1] = decompress_bitwise_float(bits, bits_num, before_value1, before_value2, before_value3);
+        // printf("%f ", decompressed[decompressed_num-1]);
         
         if(before_value3 == -1) 
         {
@@ -226,7 +230,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
 
 float decompress_bitwise_float(char* bits, int bits_num, float before_value1, float before_value2, float before_value3)
 {
-  if(bits_num = 3)
+  if(bits_num == 3)
   {
     if(bits[0] == '1')
     {
@@ -249,7 +253,7 @@ float decompress_bitwise_float(char* bits, int bits_num, float before_value1, fl
     }
     else
     {
-      printf("Error start bit of 3 bits is 0");
+      printf("Error start bit of 3 bits is 0\n");
       exit(1);
     }
   }
@@ -369,7 +373,7 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
         }
         else
         {
-          printf("Error compress_type");
+          printf("Error compress_type\n");
           exit(1);
         }
       }
@@ -475,7 +479,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
         }
         else
         {
-          printf("Error compress_type");
+          printf("Error compress_type\n");
           exit(1);
         }
       }
@@ -801,7 +805,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
       else 
       {
         free(*array_double);
-        printf("Error (re)allocating memory");
+        printf("Error (re)allocating memory\n");
         exit(1);
       }        
       
@@ -864,7 +868,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
         {
           free(*array_char);
           free(*array_char_displacement);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory\n");
           exit(1);
         } 
       }
@@ -880,7 +884,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
         else 
         {
           free(*array_double);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory\n");
           exit(1);
         }             
       }
@@ -953,7 +957,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
       else 
       {
         free(*array_float);
-        printf("Error (re)allocating memory");
+        printf("Error (re)allocating memory\n");
         exit(1);
       }        
       
@@ -1016,7 +1020,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
         {
           free(*array_char);
           free(*array_char_displacement);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory\n");
           exit(1);
         } 
       }
@@ -1032,7 +1036,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
         else 
         {
           free(*array_float);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory\n");
           exit(1);
         }             
       }
@@ -1101,7 +1105,7 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
         else 
         {
           free(array_float);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory\n");
           exit(1);
         }        
         
@@ -1164,7 +1168,7 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
           {
             free(array_char);
             free(array_char_displacement);
-            printf("Error (re)allocating memory");
+            printf("Error (re)allocating memory\n");
             exit(1);
           } 
         }
@@ -1180,7 +1184,7 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
           else 
           {
             free(array_float);
-            printf("Error (re)allocating memory");
+            printf("Error (re)allocating memory\n");
             exit(1);
           }             
         }
@@ -1743,7 +1747,7 @@ void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
       else 
       {
         free(*data_bits);
-        printf("Error (re)allocating memory");
+        printf("Error (re)allocating memory\n");
         exit(1);
       }         
     }
@@ -1755,7 +1759,7 @@ void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
   }
   else
   {
-    printf("Error position value");
+    printf("Error position value\n");
     return;
   }
 }

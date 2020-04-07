@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
 
   myCompress_bitwise(data_small, data_num, &data_bits, &bytes, &pos);
   printf("test %d %d \n", bytes, pos);
+  printf("%f %f %f\n", data_small[0], data_small[1], data_small[2]);
   float compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
   printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio);  
 
@@ -144,11 +145,21 @@ int main(int argc, char** argv) {
         }
         if(CT == 5)
         {
+          // for(int i=0; i<9; i++)
+          // {
+          //   for (int j=7; j>=0; j--)     //由低地址的位开始输出。
+          //   {
+          //     printf("%d", (data_bits[i] >> j) & 1);
+          //   }
+          //   printf(" ");          
+          // }
+          // printf("\n");
+
           float* decompressed_data = myDecompress_bitwise(data_bits, bytes, pos, data_num);
           float gosa = 0;
           for(int i=0; i<data_num; i++)
           {
-            gosa += fabs(decompressed_data[i]-data[i]);
+            gosa += fabs(decompressed_data[i]+min-data[i]);
           }
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
