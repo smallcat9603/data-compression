@@ -104,6 +104,10 @@ int main(int argc, char** argv) {
         //printf("%d sent msg.p_data to %d\n", world_rank, partner_rank);
         MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
         //printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
+      }
+      if(CT == 5)
+      {
+        MPI_Send(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD);
       }   
     }
     else {
@@ -121,16 +125,34 @@ int main(int argc, char** argv) {
         MPI_Recv(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         //printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
       }
-      if(ping_pong_count == PING_PONG_LIMIT && CT == 1)
+      if(CT == 5)
       {
-        float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, data_num);
-        float gosa = 0;
-        for(int i=0; i<data_num; i++)
+        MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }
+      if(ping_pong_count == PING_PONG_LIMIT)
+      {
+        if(CT == 1)
         {
-          gosa += fabs(decompressed_data[i]-data[i]);
+          float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, data_num);
+          float gosa = 0;
+          for(int i=0; i<data_num; i++)
+          {
+            gosa += fabs(decompressed_data[i]-data[i]);
+          }
+          gosa = gosa/data_num;
+          printf("gosa = %f \n", gosa);
         }
-        gosa = gosa/data_num;
-        printf("gosa = %f \n", gosa);
+        if(CT == 5)
+        {
+          float* decompressed_data = myDecompress_bitwise(data_bits, bytes, pos, data_num);
+          float gosa = 0;
+          for(int i=0; i<data_num; i++)
+          {
+            gosa += fabs(decompressed_data[i]-data[i]);
+          }
+          gosa = gosa/data_num;
+          printf("gosa = %f \n", gosa);          
+        }
       }
     }
   }
