@@ -68,9 +68,7 @@ int main(int argc, char** argv) {
 
   myCompress_bitwise(data_small, data_num, &data_bits, &bytes, &pos);
   printf("test %d %d \n", bytes, pos);
-  printf("%f %f %f\n", data_small[0], data_small[1], data_small[2]);
-  float compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
-  printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio);  
+  printf("%.10f %.10f %.10f %.10f\n", data_small[0], data_small[1], data_small[2], data_small[data_num-1]);
 
   struct vector msg; 
   int num_p = array_float_len, num_c = data_num-array_float_len;
@@ -156,6 +154,7 @@ int main(int argc, char** argv) {
           // printf("\n");
 
           float* decompressed_data = myDecompress_bitwise(data_bits, bytes, pos, data_num);
+          printf("%.10f %.10f %.10f %.10f\n", decompressed_data[0], decompressed_data[1], decompressed_data[2], decompressed_data[data_num-1]);
           float gosa = 0;
           for(int i=0; i<data_num; i++)
           {
@@ -173,7 +172,9 @@ int main(int argc, char** argv) {
   {
     printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 
-    if (CT == 1)
+    float compress_ratio;
+    
+    if(CT == 1)
     {
       compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
       printf("Compression rate (float, byte): %f \n", 1/compress_ratio); 
@@ -189,6 +190,11 @@ int main(int argc, char** argv) {
       compress_ratio = (3.0/(sizeof(double)*8))*((float)num_c/(num_c+num_p)) + calCompressRatio_bitwise_double2(msg.p_data, num_p)*((float)num_p/(num_c+num_p));
       printf("Compression rate (bitwise, double): %f \n", 1/compress_ratio);    
     } 
+    if(CT == 5)
+    {
+      compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
+      printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio); 
+    }
   }
 
   MPI_Finalize();
