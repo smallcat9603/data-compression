@@ -13,6 +13,8 @@
 #define output_suffix       "_output_" //k-means
 #define clusters            100 //k-means
 
+double* myDecompress_bitwise_double(unsigned char*, int, int, int);
+double decompress_bitwise_double(char*, int, double, double, double);
 float* myDecompress_bitwise(unsigned char*, int, int, int);
 float decompress_bitwise_float(char*, int, float, float, float);
 
