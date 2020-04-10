@@ -456,6 +456,11 @@ sendp3()
   MPI_Status   st_plus[12];
   MPI_Request  req_plus[12];
 
+  if(CT == 5)
+  {
+    
+  }
+
   //revised
   if(CT == 1)
   {
@@ -510,16 +515,17 @@ sendp3()
     MPI_Isend(array_char_send[1], num_c_send_1, MPI_CHAR, npz[1], 6, mpi_comm_cart, req_plus+10); 
     MPI_Isend(array_char_displacement_send[1], num_c_send_1, MPI_INT, npz[1], 7, mpi_comm_cart, req_plus+11); 
     MPI_Waitall(12, req_plus, st_plus);
+
     //calculate bitwise compress ratio
     // printf("%d %d\n", num_p_send_0, num_c_send_0);
     // printf("%d %d\n", num_p_send_1, num_c_send_1);
     // printf("%f \n", calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0));
-    cr += (3.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0)*((float)num_p_send_0/(imax*jmax));
+    // cr += (3.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0)*((float)num_p_send_0/(imax*jmax));
     // printf("%f \n", (3.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0)*((float)num_p_send_0/(imax*jmax)));
     // printf("%f \n", cr);
-    cr += (3.0/(sizeof(float)*8))*((float)num_c_send_1/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[1], num_p_send_1)*((float)num_p_send_1/(imax*jmax));
+    // cr += (3.0/(sizeof(float)*8))*((float)num_c_send_1/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[1], num_p_send_1)*((float)num_p_send_1/(imax*jmax));
     // printf("%f \n", cr);
-    cr_num += 2;
+    // cr_num += 2;
     // printf("%d \n", cr_num);
 
     float* decompressed_data_0 = myDecompress(array_float_recv[0], array_char_recv[0], array_char_displacement_recv[0], imax*jmax);
