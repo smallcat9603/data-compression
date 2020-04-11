@@ -458,7 +458,24 @@ sendp3()
 
   if(CT == 5)
   {
-    
+    float* data_0 = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax);
+    float* data_1 = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax);
+
+    float* data_0_small = NULL;
+    float* data_1_small = NULL;
+
+    float data_0_min = toSmallDataset_float(data_0, &data_0_small, imax*jmax);        
+    float data_1_min = toSmallDataset_float(data_1, &data_1_small, imax*jmax);    
+
+    unsigned char* data_0_bits = NULL;
+    unsigned char* data_1_bits = NULL;
+    int data_0_bytes = 0; //total bytes of compressed data
+    int data_0_pos = 8; //position of filled bit in last byte --> 87654321
+    int data_1_bytes = 0; //total bytes of compressed data
+    int data_1_pos = 8; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise(data_0_small, imax*jmax, &data_0_bits, &data_0_bytes, &data_0_pos);
+    myCompress_bitwise(data_1_small, imax*jmax, &data_1_bits, &data_1_bytes, &data_1_pos);
   }
 
   //revised

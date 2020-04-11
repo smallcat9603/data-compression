@@ -15,7 +15,7 @@
 #include "param.h"
 #include "dataCompression.h"
 
-double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int pos, int num)
+double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num)
 {
   int offset_bits = 0;
   char* bits = NULL;
@@ -29,7 +29,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int pos
 
   for(int i=0; i<bytes; i++)
   {
-    if(i == bytes - 1 && pos != 8) min_shift = pos;
+    //if(i == bytes - 1 && pos != 8) min_shift = pos;
 
     for (int j=7; j>=min_shift; j--) //each bit of byte
     {
@@ -279,7 +279,7 @@ double decompress_bitwise_double(char* bits, int bits_num, double before_value1,
   }
 }
 
-float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int num)
+float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int num)
 {
   int offset_bits = 0;
   char* bits = NULL;
@@ -293,7 +293,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int pos, int nu
 
   for(int i=0; i<bytes; i++)
   {
-    if(i == bytes - 1 && pos != 8) min_shift = pos;
+    //if(i == bytes - 1 && pos != 8) min_shift = pos;
 
     for (int j=7; j>=min_shift; j--) //each bit of byte
     {
@@ -2005,6 +2005,7 @@ void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
       if (data_bits_more != NULL) 
       {
         *data_bits = data_bits_more;
+        (*data_bits)[*bytes-1] = 0; //put all 8 bits to 0
         bit_set(&((*data_bits)[*bytes-1]), *pos, flag);
         (*pos)--;
       }

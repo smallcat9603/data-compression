@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
           // }
           // printf("\n");
 
-          float* decompressed_data = myDecompress_bitwise(data_bits, bytes, pos, data_num);
+          float* decompressed_data = myDecompress_bitwise(data_bits, bytes, data_num);
           printf("%.10f %.10f %.10f %.10f\n", decompressed_data[0], decompressed_data[1], decompressed_data[2], decompressed_data[data_num-1]);
           float gosa = 0;
           for(int i=0; i<data_num; i++)
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 
     float compress_ratio;
-    
+
     if(CT == 1)
     {
       compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
