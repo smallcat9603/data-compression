@@ -490,13 +490,13 @@ sendp3()
     MPI_Isend(&data_bytes_send[1], 1, MPI_INT, npz[1], 1, mpi_comm_cart, req+3); 
     MPI_Waitall(4, req, st);  
 
-    cr += data_bytes_send[0]*8.0/(imax*jmax*sizeof(float)*8);
-    cr += data_bytes_send[1]*8.0/(imax*jmax*sizeof(float)*8);
-    cr_num += 2;
-
     // printf("npz %d %d \n", npz[0], npz[1]);  
     // printf("send %d %d \n", data_bytes_send[0], data_bytes_send[1]);
     // printf("recv %d %d \n", data_bytes_recv[0], data_bytes_recv[1]);
+
+    cr += data_bytes_send[0]*8.0/(imax*jmax*sizeof(float)*8);
+    cr += data_bytes_send[1]*8.0/(imax*jmax*sizeof(float)*8);
+    cr_num += 2;
 
     unsigned char* data_bits_recv[2];
     float data_min_recv[2];
