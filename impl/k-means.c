@@ -293,6 +293,84 @@ int main(int argc, char *argv[])
 	start_time = MPI_Wtime();
 	while(count < MAX_ITERATIONS)
 	{
+		if(CT == 5)
+		{
+			int data_bytes_x = 0, data_bytes_y = 0;
+			double k_means_x_min = 0, k_means_y_min = 0;
+
+			unsigned char* data_bits_x = NULL;
+			unsigned char* data_bits_y = NULL;
+			
+			//x
+			if(world_rank == 0)
+			{
+				//mycommpress
+				double* k_means_x_small = NULL;
+				k_means_x_min = toSmallDataset_double(k_means_x, &k_means_x_small, numOfClusters);
+
+				int data_pos_x = 8; //position of filled bit in last byte --> 87654321
+
+				myCompress_bitwise_double(k_means_x_small, numOfClusters, &data_bits_x, &data_bytes_x, &data_pos_x);			
+			}
+
+			MPI_Bcast(&data_bytes_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_Bcast(&k_means_x_min, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			compress_ratio += data_bytes_x*8.0/(numOfClusters*sizeof(double)*8);
+		
+			if(world_rank != 0)
+			{
+				data_bits_x = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_x);
+			}
+			MPI_Bcast(data_bits_x, data_bytes_x, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+
+			//y
+			if(world_rank == 0)
+			{
+				//mycommpress
+				double* k_means_y_small = NULL;
+				k_means_y_min = toSmallDataset_double(k_means_y, &k_means_y_small, numOfClusters);
+
+				int data_pos_y = 8; //position of filled bit in last byte --> 87654321
+
+				myCompress_bitwise_double(k_means_y_small, numOfClusters, &data_bits_y, &data_bytes_y, &data_pos_y);			
+			}
+
+			MPI_Bcast(&data_bytes_y, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_Bcast(&k_means_y_min, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			compress_ratio += data_bytes_y*8.0/(numOfClusters*sizeof(double)*8);
+		
+			if(world_rank != 0)
+			{
+				data_bits_y = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_y);
+			}
+			MPI_Bcast(data_bits_y, data_bytes_y, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+
+			double* decompressed_data_x = myDecompress_bitwise_double(data_bits_x, data_bytes_x, numOfClusters);
+			double* decompressed_data_y = myDecompress_bitwise_double(data_bits_y, data_bytes_y, numOfClusters);
+			for(int i=0; i<numOfClusters; i++)
+			{
+				if(world_rank == 0)
+				{
+					gosa += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
+					gosa += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
+				}
+				else
+				{
+					k_means_x[i] = decompressed_data_x[i] + k_means_x_min;
+					k_means_y[i] = decompressed_data_y[i] + k_means_y_min;
+				}
+			}
+			
+			if(count == MAX_ITERATIONS - 1)
+			{
+				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
+			}
+
+			//todo
+			free(data_bits_x);
+			free(data_bits_y);
+		}
+
 		if(CT == 1)
 		{
 			int array_double_len_x, array_double_len_y;
