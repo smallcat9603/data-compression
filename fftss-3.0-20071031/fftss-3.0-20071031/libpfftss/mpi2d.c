@@ -931,7 +931,7 @@ pfftss_plan_dft_2d(long nx, long ny, long py, long oy, long ly,
       p->fp = pfftss_execute_pdft_2d_s;
       test_run(p, pfftss_execute_pdft_2d_s);      
     }
-    if(CT == 1)
+    else if(CT == 1)
     {
       p->fp = pfftss_execute_pdft_2d_sc;
       test_run(p, pfftss_execute_pdft_2d_sc);    
