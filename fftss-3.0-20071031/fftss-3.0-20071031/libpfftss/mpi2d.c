@@ -47,12 +47,25 @@
 //todo
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 #define absErrBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
-#define CT                  1 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz
+#define absErrBound_binary  20 //bitwise, SZ, equal to above
+#define CT                  5 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise
+
 int myCompress_double(double[], double**, char**, int**, int);
 double* myDecompress_double(double[], char[], int[], int);
 // static void alltoalls0c(pfftss_plan);
 // static void alltoalls1c(pfftss_plan);
+double* myDecompress_bitwise_double(unsigned char*, int, int);
+double decompress_bitwise_double(char*, int, double, double, double);
+void myCompress_bitwise_double(double[], int, unsigned char**, int*, int*);
+void compress_bitwise_double(double, unsigned char**, int*, int*);
+double toSmallDataset_double(double[], double**, int);
+void doubletostr(double*, char*);
+double strtodbl(char*);
+void add_bit_to_bytes(unsigned char**, int*, int*, int);
+void bit_set(unsigned char*, unsigned char, int);
+
 
 typedef struct _pfftss_plan_s {
   void (*fp)(struct _pfftss_plan_s *, double *);
@@ -245,6 +258,109 @@ static void alltoalls0c(pfftss_plan p)
     for(int j = 0; j < bsize; j++)
     {
       p->rb[first_index++] = decompressed_data[j];
+    }
+  }
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+  end_time0 = fftss_get_wtime();
+
+  if(p->id == 0) 
+  {
+    printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress time, total time  = %f, %f \n", time_compress, end_time0 - start_time0);
+  }
+}
+
+static void alltoalls0cb(pfftss_plan p)
+{
+  long i;
+  int bsize;
+
+  double time_compress = 0;
+  double start_time;
+  double end_time;
+  double start_time0 = fftss_get_wtime();;
+  double end_time0;
+
+  bsize = p->plx * p->ly * 2;
+
+  float compress_ratio = 0;
+
+  int data_bytes_send[p->npe - 1];
+  int data_bytes_recv[p->npe - 1];
+
+  unsigned char* data_bits_send[p->npe - 1];
+  double data_min_send[p->npe - 1];
+
+  MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms0 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    MPI_Irecv(&data_bytes_recv[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2]);
+    double send_data[bsize];
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      send_data[j] = p->sb[first_index++];
+    }
+    double* send_data_small = NULL;
+    data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);        
+
+    data_bits_send[i - 1] = NULL;
+    int pos = 8; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise_double(send_data_small, bsize, &data_bits_send[i - 1], &data_bytes_send[i - 1], &pos);
+    compress_ratio += data_bytes_send[i - 1]*8.0/(bsize*sizeof(double)*8); 
+    MPI_Isend(&data_bytes_send[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2 + 1]); 
+  }
+  MPI_Waitall((p->npe - 1) * 2, mr0, ms0);
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+
+  unsigned char* data_bits_recv[p->npe - 1];
+  double data_min_recv[p->npe - 1];
+
+  MPI_Request* mr1 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms1 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    data_bits_recv[i - 1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[i - 1]);
+    MPI_Irecv(&data_min_recv[i - 1], 1, MPI_DOUBLE, d, 1, p->comm, &mr1[(i - 1) * 2]);
+    MPI_Irecv(data_bits_recv[i - 1], data_bytes_recv[i - 1], MPI_UNSIGNED_CHAR, d, 2, p->comm, &mr1[(i - 1) * 2 + 1]);
+  }
+
+  MPI_Request* mr2 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms2 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    //bitwise compress
+    MPI_Isend(&data_min_send[i - 1], 1, MPI_DOUBLE, d, 1, p->comm, &mr2[(i - 1) * 2]); 
+    MPI_Isend(data_bits_send[i - 1], data_bytes_send[i - 1], MPI_UNSIGNED_CHAR, d, 2, p->comm, &mr2[(i - 1) * 2 + 1]); 
+  }
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (i = 0; i < bsize; i++) 
+    p->rb[bsize * p->id + i] = p->sb[bsize * p->id + i];
+
+  MPI_Waitall((p->npe - 1) * 2, mr1, ms1);
+  MPI_Waitall((p->npe - 1) * 2, mr2, ms2);  
+
+  //bitwise decompress
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    double* decompressed_data = myDecompress_bitwise_double(data_bits_recv[i - 1], data_bytes_recv[i - 1], bsize);
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      p->rb[first_index++] = decompressed_data[j] + data_min_recv[i - 1];
     }
   }
   end_time = fftss_get_wtime();
@@ -490,6 +606,109 @@ static void alltoalls1c(pfftss_plan p)
   }  
 }
 
+static void alltoalls1cb(pfftss_plan p)
+{
+  long i;
+  int bsize;
+
+  double time_compress = 0;
+  double start_time;
+  double end_time;
+  double start_time0 = fftss_get_wtime();;
+  double end_time0;
+
+  bsize = p->plx * p->ly * 2;
+
+  float compress_ratio = 0;
+
+  int data_bytes_send[p->npe - 1];
+  int data_bytes_recv[p->npe - 1];
+
+  unsigned char* data_bits_send[p->npe - 1];
+  double data_min_send[p->npe - 1];
+
+  MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms0 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    MPI_Irecv(&data_bytes_recv[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2]);
+    double send_data[bsize];
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      send_data[j] = p->rb[first_index++];
+    }
+    double* send_data_small = NULL;
+    data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);        
+
+    data_bits_send[i - 1] = NULL;
+    int pos = 8; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise_double(send_data_small, bsize, &data_bits_send[i - 1], &data_bytes_send[i - 1], &pos);
+    compress_ratio += data_bytes_send[i - 1]*8.0/(bsize*sizeof(double)*8); 
+    MPI_Isend(&data_bytes_send[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2 + 1]); 
+  }
+  MPI_Waitall((p->npe - 1) * 2, mr0, ms0);
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+
+  unsigned char* data_bits_recv[p->npe - 1];
+  double data_min_recv[p->npe - 1];
+
+  MPI_Request* mr1 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms1 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    data_bits_recv[i - 1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[i - 1]);
+    MPI_Irecv(&data_min_recv[i - 1], 1, MPI_DOUBLE, d, 1, p->comm, &mr1[(i - 1) * 2]);
+    MPI_Irecv(data_bits_recv[i - 1], data_bytes_recv[i - 1], MPI_UNSIGNED_CHAR, d, 2, p->comm, &mr1[(i - 1) * 2 + 1]);
+  }
+
+  MPI_Request* mr2 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms2 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    //bitwise compress
+    MPI_Isend(&data_min_send[i - 1], 1, MPI_DOUBLE, d, 1, p->comm, &mr2[(i - 1) * 2]); 
+    MPI_Isend(data_bits_send[i - 1], data_bytes_send[i - 1], MPI_UNSIGNED_CHAR, d, 2, p->comm, &mr2[(i - 1) * 2 + 1]); 
+  }
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (i = 0; i < bsize; i++) 
+    p->sb[bsize * p->id + i] = p->rb[bsize * p->id + i];
+
+  MPI_Waitall((p->npe - 1) * 2, mr1, ms1);
+  MPI_Waitall((p->npe - 1) * 2, mr2, ms2);  
+
+  //bitwise decompress
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    double* decompressed_data = myDecompress_bitwise_double(data_bits_recv[i - 1], data_bytes_recv[i - 1], bsize);
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      p->sb[first_index++] = decompressed_data[j] + data_min_recv[i - 1];
+    }
+  }
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+  end_time0 = fftss_get_wtime();
+
+  if(p->id == 0) 
+  {
+    printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress time, total time  = %f, %f \n", time_compress, end_time0 - start_time0);
+  }
+}
+
 #ifdef HAVE_MPI2
 
 static void alltoallp1(pfftss_plan p)
@@ -699,6 +918,18 @@ void pfftss_execute_pdft_2d_sc(pfftss_plan p, double *inout)
   alltoalls0c(p);
   trans_y(p);
   alltoalls1c(p);
+  unpack1(p, inout);
+
+  return;
+}
+
+void pfftss_execute_pdft_2d_scb(pfftss_plan p, double *inout)
+{
+  trans_x(p, inout);
+  pack0(p, inout);
+  alltoalls0cb(p);
+  trans_y(p);
+  alltoalls1cb(p);
   unpack1(p, inout);
 
   return;
@@ -936,6 +1167,11 @@ pfftss_plan_dft_2d(long nx, long ny, long py, long oy, long ly,
       p->fp = pfftss_execute_pdft_2d_sc;
       test_run(p, pfftss_execute_pdft_2d_sc);    
     }
+    else if(CT == 5)
+    {
+      p->fp = pfftss_execute_pdft_2d_scb;
+      test_run(p, pfftss_execute_pdft_2d_scb);          
+    }
     else
     {
       p->fp = pfftss_execute_pdft_2d_a;
@@ -1160,4 +1396,506 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
     }
   }
   return array_double_len;
+}
+
+//100.0 --> 0100000001011001000000000000000000000000000000000000000000000000
+//str should have at least 65 byte.
+void doubletostr(double* a, char* str){
+	long long c;
+	c= ((long long*)a)[0]; 
+	for(int i=0;i<64;i++){
+		str[63-i]=(char)(c&1)+'0';
+		c>>=1;
+	}
+	str[64] = '\0';
+}
+
+//0100000001011001000000000000000000000000000000000000000000000000 --> 100.0
+double strtodbl(char * str){
+	long long dbl = 0;
+	for(int i=0;i<63;i++){
+		dbl += (str[i]-'0');
+		dbl <<= 1;
+	}
+	dbl +=(str[63]-'0');
+	double* db = (double*)&dbl;
+	return *db;
+} 
+
+double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num)
+{
+  int offset_bits = 0;
+  char* bits = NULL;
+  char* bits_more = NULL;
+  int bits_num = 0;
+  int min_shift = 0;
+
+  double before_value1=-1, before_value2=-1, before_value3=-1;
+  double* decompressed = (double*) malloc(sizeof(double)*num);
+  int decompressed_num = 0;
+
+  for(int i=0; i<bytes; i++)
+  {
+    //if(i == bytes - 1 && pos != 8) min_shift = pos;
+
+    for (int j=7; j>=min_shift; j--) //each bit of byte
+    {
+      int bit = (data_bits[i] >> j) & 1;
+
+      //printf("%d(%d)", bit, bits_num);
+
+      if(offset_bits == 0) //start bit
+      {
+        if(bits_num == 0) //not start bit of mantissa
+        {
+          if(bit == 0)
+          {
+            offset_bits = 1+11;
+            bits_num++;
+            bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+            if (bits_more != NULL) 
+            {
+              bits = bits_more;
+              bits[bits_num-1] = bit + '0';
+            }
+            else 
+            {
+              free(bits);
+              printf("Error (re)allocating memory\n");
+              exit(1);
+            }             
+          }
+          else if(bit == 1)
+          {
+            offset_bits = 3; //100, 101, 110, 111
+            bits_num++;
+            bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+            if (bits_more != NULL) 
+            {
+              bits = bits_more;
+              bits[bits_num-1] = bit + '0';
+            }
+            else 
+            {
+              free(bits);
+              printf("Error (re)allocating memory\n");
+              exit(1);
+            }             
+          }
+        }
+        else //start bit of mantissa
+        {
+          int expo_value = 0;
+          for(int i=1; i<12; i++)
+          {
+            expo_value += (bits[i]-'0')*pow(2,11-i);
+          }
+          expo_value -= 1023;
+
+          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+          {
+            mantissa_bits_within_error_bound = 52;
+          }
+          else if(mantissa_bits_within_error_bound < 0)
+          {
+            mantissa_bits_within_error_bound = 0;
+          }
+
+          offset_bits = mantissa_bits_within_error_bound;
+
+          if(offset_bits > 0) //has mantissa bits
+          {
+            bits_num++;
+            bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+            if (bits_more != NULL) 
+            {
+              bits = bits_more;
+              bits[bits_num-1] = bit + '0';
+            }
+            else 
+            {
+              free(bits);
+              printf("Error (re)allocating memory\n");
+              exit(1);
+            } 
+          }
+          else //no mantissa bit
+          {
+            decompressed_num++;
+            decompressed[decompressed_num-1] = decompress_bitwise_double(bits, bits_num, before_value1, before_value2, before_value3);
+            // printf("%f ", decompressed[decompressed_num-1]);
+
+            if(before_value3 == -1) 
+            {
+              before_value3 = decompressed[decompressed_num-1]; 
+            }
+            else if(before_value2 == -1) 
+            {
+              before_value2 = decompressed[decompressed_num-1];
+            }
+            else if(before_value1 == -1) 
+            {
+              before_value1 = decompressed[decompressed_num-1];
+            }
+            else
+            {
+              before_value3 = before_value2;
+              before_value2 = before_value1;
+              before_value1 = decompressed[decompressed_num-1];
+            }
+
+            bits = NULL;
+            bits_num = 0;
+
+            if(bit == 0)
+            {
+              offset_bits = 1+11;
+              bits_num++;
+              bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+              if (bits_more != NULL) 
+              {
+                bits = bits_more;
+                bits[bits_num-1] = bit + '0';
+              }
+              else 
+              {
+                free(bits);
+                printf("Error (re)allocating memory\n");
+                exit(1);
+              }             
+            }
+            else if(bit == 1)
+            {
+              offset_bits = 3;
+              bits_num++;
+              bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+              if (bits_more != NULL) 
+              {
+                bits = bits_more;
+                bits[bits_num-1] = bit + '0';
+              }
+              else 
+              {
+                free(bits);
+                printf("Error (re)allocating memory\n");
+                exit(1);
+              }             
+            }              
+          }
+        }
+      }
+      else
+      {
+        bits_num++;
+        bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+        if (bits_more != NULL) 
+        {
+          bits = bits_more;
+          bits[bits_num-1] = bit + '0';
+        }
+        else 
+        {
+          free(bits);
+          printf("Error (re)allocating memory\n");
+          exit(1);
+        }        
+      }
+      offset_bits--;
+      if(offset_bits == 0 && bits_num != 1+11)
+      {
+        decompressed_num++;
+        decompressed[decompressed_num-1] = decompress_bitwise_double(bits, bits_num, before_value1, before_value2, before_value3);
+        // printf("%f ", decompressed[decompressed_num-1]);
+        
+        if(before_value3 == -1) 
+        {
+          before_value3 = decompressed[decompressed_num-1]; 
+        }
+        else if(before_value2 == -1) 
+        {
+          before_value2 = decompressed[decompressed_num-1];
+        }
+        else if(before_value1 == -1) 
+        {
+          before_value1 = decompressed[decompressed_num-1];
+        }
+        else
+        {
+          before_value3 = before_value2;
+          before_value2 = before_value1;
+          before_value1 = decompressed[decompressed_num-1];
+        }
+
+        bits = NULL;
+        bits_num = 0;
+      }
+    }       
+  }
+  return decompressed;
+}
+
+double decompress_bitwise_double(char* bits, int bits_num, double before_value1, double before_value2, double before_value3)
+{
+  if(bits_num == 3)
+  {
+    if(bits[0] == '1')
+    {
+      if(bits[1] == '0' && bits[2] == '0')
+      {
+        return 0.0;
+      }
+      else if(bits[1] == '0' && bits[2] == '1')
+      {
+        return before_value1;
+      }
+      else if(bits[1] == '1' && bits[2] == '0')
+      {
+        return 2*before_value1 - before_value2;
+      }
+      else if(bits[1] == '1' && bits[2] == '1')
+      {
+        return 3*before_value1 - 3*before_value2 + before_value3;
+      }
+    }
+    else
+    {
+      printf("Error start bit of 3 bits is 0\n");
+      exit(1);
+    }
+  }
+  else
+  {
+    if(bits_num == sizeof(double)*8)
+    {
+      return strtodbl(bits);
+    }
+    else
+    {
+      char* bits64 = (char*)realloc(bits, sizeof(double)*8);
+      bits64[bits_num] = '1';
+      if(bits_num+1 < sizeof(double)*8)     
+      {
+        for(int i=bits_num+1; i< sizeof(double)*8; i++)
+        {
+          bits64[i] = '0';
+        }
+      }
+      return strtodbl(bits64); 
+    }
+  }
+}
+
+//bitwise myCompress for k-means (double)
+void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits, int* bytes, int* pos)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  double diff1, diff2, diff3, diff_min, selected_predict_value;
+  char compress_type;
+
+  // unsigned char* data_bits = NULL;
+  // int flag = 0; //0, 1
+  // int bytes = 0; //total bytes of compressed data
+  // int pos = 8; //position of filled bit in last byte --> 87654321
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      if(real_value == 0)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+      }
+      else
+      {
+        compress_bitwise_double(real_value, data_bits, bytes, pos);
+      }       
+      
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a'; //101
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b'; //110
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c'; //111
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+      
+      if(diff_min<=absErrBound) 
+      {
+        if(compress_type == 'a')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);        
+        }
+        else if(compress_type == 'b')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);  
+        }
+        else if(compress_type == 'c')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);  
+        }
+        else
+        {
+          printf("Error compress_type\n");
+          exit(1);
+        }
+      }
+      else 
+      {
+        compress_bitwise_double(real_value, data_bits, bytes, pos);            
+      }
+    }
+  }
+}
+
+void compress_bitwise_double(double real_value, unsigned char** data_bits, int* bytes, int* pos)
+{
+  double double10 = real_value;
+  char double_arr[64+1];
+  doubletostr(&double10, double_arr);
+
+  int expo_value = 0;
+  for(int i=1; i<12; i++)
+  {
+    expo_value += (double_arr[i]-'0')*pow(2,11-i);
+  }
+  expo_value -= 1023;
+
+  int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+
+  if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+  {
+    mantissa_bits_within_error_bound = 52;
+  }
+  else if(mantissa_bits_within_error_bound < 0)
+  {
+    mantissa_bits_within_error_bound = 0;
+  }
+  int bits_after_compress = 1+11+mantissa_bits_within_error_bound;  
+
+  for(int i=0; i<bits_after_compress; i++)
+  {
+    add_bit_to_bytes(data_bits, bytes, pos, double_arr[i]-'0');
+  }
+}
+
+double toSmallDataset_double(double data[], double** data_small, int num)
+{
+  *data_small = malloc(sizeof(double) * num);
+  double min = data[0];
+
+  for(int i=1; i<num; i++)
+  {
+    if(data[i]<min)
+    {
+      min = data[i];
+    }
+  }
+
+  for(int i=0; i<num; i++)
+  {
+    (*data_small)[i] = data[i] - min;
+  }
+
+  return min;
+}
+
+void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
+{
+  if(*pos > 0 && *pos < 9)
+  {
+    if(*pos == 8) 
+    {
+      (*bytes)++;
+      unsigned char* data_bits_more = (unsigned char*)realloc(*data_bits, sizeof(char)*(*bytes));
+      if (data_bits_more != NULL) 
+      {
+        *data_bits = data_bits_more;
+        (*data_bits)[*bytes-1] = 0; //put all 8 bits to 0
+        bit_set(&((*data_bits)[*bytes-1]), *pos, flag);
+        (*pos)--;
+      }
+      else 
+      {
+        free(*data_bits);
+        printf("Error (re)allocating memory\n");
+        exit(1);
+      }         
+    }
+    else{
+      bit_set(&((*data_bits)[(*bytes)-1]), *pos, flag);
+      (*pos)--;     
+    }
+    if(*pos == 0) *pos = 8;
+  }
+  else
+  {
+    printf("Error position value\n");
+    return;
+  }
+}
+
+// n*8 bits, position --> 87654321, flag --> 1, 0
+void bit_set(unsigned char *p_data, unsigned char position, int flag)
+{
+	// int i = 0;
+	assert(p_data);
+	if (position > 8 || position < 1 || (flag != 0 && flag != 1))
+	{
+		printf("输入有误！\n");
+		return;
+	}
+	if (flag != (*p_data >> (position - 1) & 1))
+	{
+		*p_data ^= 1 << (position - 1);
+	}
+	// for (i = 7; i >= 0; i--)     //由低地址的位开始输出。
+	// {
+	// 	printf("%d", (*p_data >> i) & 1);
+	// }
+	// printf("\n");
 }

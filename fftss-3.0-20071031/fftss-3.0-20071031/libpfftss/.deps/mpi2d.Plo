@@ -56,7 +56,7 @@ mpi2d.lo: mpi2d.c /usr/include/stdc-predef.h ../include/config.h \
  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
- /usr/include/x86_64-linux-gnu/bits/mathinline.h
+ /usr/include/x86_64-linux-gnu/bits/mathinline.h /usr/include/assert.h
 
 /usr/include/stdc-predef.h:
 
@@ -187,3 +187,5 @@ mpi2d.lo: mpi2d.c /usr/include/stdc-predef.h ../include/config.h \
 /usr/include/x86_64-linux-gnu/bits/mathcalls.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathinline.h:
+
+/usr/include/assert.h:
