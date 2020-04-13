@@ -50,7 +50,7 @@
 #include <assert.h>
 #define absErrBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 #define absErrBound_binary  20 //bitwise, SZ, equal to above
-#define CT                  5 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise
+#define CT                  1 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise
 
 int myCompress_double(double[], double**, char**, int**, int);
 double* myDecompress_double(double[], char[], int[], int);
@@ -171,7 +171,7 @@ static void alltoalls0c(pfftss_plan p)
   double time_compress = 0;
   double start_time;
   double end_time;
-  double start_time0 = fftss_get_wtime();;
+  double start_time0 = fftss_get_wtime();
   double end_time0;
 
   bsize = p->plx * p->ly * 2;
@@ -306,7 +306,7 @@ static void alltoalls0cb(pfftss_plan p)
       send_data[j] = p->sb[first_index++];
     }
     double* send_data_small = NULL;
-    data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);        
+    data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);          
 
     data_bits_send[i - 1] = NULL;
     int pos = 8; //position of filled bit in last byte --> 87654321
@@ -369,7 +369,7 @@ static void alltoalls0cb(pfftss_plan p)
 
   if(p->id == 0) 
   {
-    printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress ratio (0cb) = %f \n", 1/(compress_ratio/(p->npe - 1)));
     printf("compress time, total time  = %f, %f \n", time_compress, end_time0 - start_time0);
   }
 }
@@ -641,7 +641,7 @@ static void alltoalls1cb(pfftss_plan p)
       send_data[j] = p->rb[first_index++];
     }
     double* send_data_small = NULL;
-    data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);        
+    data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);    
 
     data_bits_send[i - 1] = NULL;
     int pos = 8; //position of filled bit in last byte --> 87654321
@@ -704,7 +704,7 @@ static void alltoalls1cb(pfftss_plan p)
 
   if(p->id == 0) 
   {
-    printf("compress ratio = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress ratio (1cb) = %f \n", 1/(compress_ratio/(p->npe - 1)));
     printf("compress time, total time  = %f, %f \n", time_compress, end_time0 - start_time0);
   }
 }
