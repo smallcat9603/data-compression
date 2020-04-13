@@ -225,6 +225,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
       }
     }       
   }
+  printf("%d %d \n", decompressed_num, num);
   return decompressed;
 }
 
