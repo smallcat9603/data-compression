@@ -1271,6 +1271,10 @@ double* myDecompress_double(double array_double[], char array_char[], int array_
       {
         data[i] = 3*data[i-1] - 3*data[i-2] + data[i-3];
       }
+      else if(array_char[array_char_p] == 'd')
+      {
+        data[i] = 4*data[i-1] - 6*data[i-2] + 4*data[i-3] - data[i-4];
+      }      
       array_char_p++;
       array_char_displacement_p++;
     }
@@ -1286,8 +1290,8 @@ double* myDecompress_double(double array_double[], char array_char[], int array_
 //myCompress for k-means (double)
 int myCompress_double(double data[], double** array_double, char** array_char, int** array_char_displacement, int num)
 {
-  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
-  double diff1, diff2, diff3, diff_min, selected_predict_value;
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value1, predict_value2, predict_value3, predict_value4;
+  double diff1, diff2, diff3, diff4, diff_min, selected_predict_value;
   int array_double_len = 0, array_char_len = 0;
   char compress_type;
   double* array_double_more = NULL;
@@ -1298,7 +1302,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
   {
     real_value = data[n];
 
-    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
     {
       array_double_len++;
       array_double_more = (double*)realloc(*array_double, sizeof(double)*array_double_len);
@@ -1313,8 +1317,12 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
         printf("Error (re)allocating memory");
         exit(1);
       }        
-      
-      if(before_value3 == -1) 
+
+      if(before_value4 == -1) 
+      {
+        before_value4 = real_value; 
+      }      
+      else if(before_value3 == -1) 
       {
         before_value3 = real_value; 
       }
@@ -1332,10 +1340,12 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
       predict_value1 = before_value1;
       predict_value2 = 2*before_value1 - before_value2;
       predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+      predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
 
       diff1 = fabs(predict_value1-real_value);
       diff2 = fabs(predict_value2-real_value);
       diff3 = fabs(predict_value3-real_value);
+      diff4 = fabs(predict_value4-real_value);
 
       diff_min = diff1;
       compress_type = 'a';
@@ -1351,8 +1361,15 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
         diff_min = diff3;
         compress_type = 'c';
         selected_predict_value = predict_value3;
-      }        
+      }   
+      if(diff4<diff_min)
+      {
+        diff_min = diff4;
+        compress_type = 'd';
+        selected_predict_value = predict_value4;
+      }            
 
+      before_value4 = before_value3;
       before_value3 = before_value2;
       before_value2 = before_value1;
       before_value1 = real_value;
