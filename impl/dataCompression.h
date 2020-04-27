@@ -8,7 +8,7 @@
 #define CT                  5 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress
 #define byte_or_bit         1 //1 byte, 2 bit
 #define data_num            8192 //pingpong
-#define filename            "dataset/test" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
+#define filename            "dataset/testfloat_8_8_128" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
 #define suffix              ".txt" //k-means
 #define output_suffix       "_output_" //k-means
 #define clusters            100 //k-means
@@ -30,6 +30,13 @@ float toSmallDataset_float(float[], float**, int);
 float calCompressRatio_bitwise_float(float[], int);
 float calCompressRatio_bitwise_double(double[], int);
 float calCompressRatio_bitwise_double2(float[], int);
+
+float calcCompressionRatio_sz_float(float[], int);
+float calcCompressionRatio_nolossy_performance_float(float[], int);
+float calcCompressionRatio_nolossy_area_float(float[], int);
+float calcCompressionRatio_sz_double(double[], int);
+float calcCompressionRatio_nolossy_performance_double(double[], int);
+float calcCompressionRatio_nolossy_area_double(double[], int);
 
 float calcCompressionRatio_himeno_ij_ik_jk(float[MIMAX][MJMAX][MKMAX], int, int, int, int, int);
 // MPI_Datatype myCompress_himeno(void*, int, int, int, int, int, int);

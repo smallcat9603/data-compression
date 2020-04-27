@@ -67,8 +67,8 @@ int main(int argc, char** argv) {
   int pos = 8; //position of filled bit in last byte --> 87654321
 
   myCompress_bitwise(data_small, data_num, &data_bits, &bytes, &pos);
-  printf("test %d %d \n", bytes, pos);
-  printf("%.10f %.10f %.10f %.10f\n", data_small[0], data_small[1], data_small[2], data_small[data_num-1]);
+  //printf("test %d %d \n", bytes, pos);
+  //printf("%.10f %.10f %.10f %.10f\n", data_small[0], data_small[1], data_small[2], data_small[data_num-1]);
 
   struct vector msg; 
   int num_p = array_float_len, num_c = data_num-array_float_len;
@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
           // printf("\n");
 
           float* decompressed_data = myDecompress_bitwise(data_bits, bytes, data_num);
-          printf("%.10f %.10f %.10f %.10f\n", decompressed_data[0], decompressed_data[1], decompressed_data[2], decompressed_data[data_num-1]);
+          //printf("%.10f %.10f %.10f %.10f\n", decompressed_data[0], decompressed_data[1], decompressed_data[2], decompressed_data[data_num-1]);
           float gosa = 0;
           for(int i=0; i<data_num; i++)
           {
