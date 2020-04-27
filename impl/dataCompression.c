@@ -549,6 +549,7 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
   double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   double diff1, diff2, diff3, diff_min, selected_predict_value;
   char compress_type;
+  int a=0, b=0, c=0, d=0;
 
   // unsigned char* data_bits = NULL;
   // int flag = 0; //0, 1
@@ -566,6 +567,7 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
       }
       else
       {
@@ -621,19 +623,22 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
         {
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 0);
-          add_bit_to_bytes(data_bits, bytes, pos, 1);        
+          add_bit_to_bytes(data_bits, bytes, pos, 1);    
+          a++;    
         }
         else if(compress_type == 'b')
         {
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 0);  
+          b++;
         }
         else if(compress_type == 'c')
         {
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 1);  
+          c++;
         }
         else
         {
@@ -647,6 +652,8 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
       }
     }
   }
+
+  printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
 }
 
 //bitwise myCompress for ping-pong & himeno (float)
@@ -655,6 +662,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
   float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
   float diff1, diff2, diff3, diff_min, selected_predict_value;
   char compress_type;
+  int a=0, b=0, c=0, d=0;
 
   // unsigned char* data_bits = NULL;
   // int flag = 0; //0, 1
@@ -672,6 +680,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
       }
       else
       {
@@ -727,19 +736,22 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
         {
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 0);
-          add_bit_to_bytes(data_bits, bytes, pos, 1);        
+          add_bit_to_bytes(data_bits, bytes, pos, 1);   
+          a++;     
         }
         else if(compress_type == 'b')
         {
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 0);  
+          b++;
         }
         else if(compress_type == 'c')
         {
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 1);  
+          c++;
         }
         else
         {
@@ -753,6 +765,8 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
       }
     }
   }
+
+  printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
 }
 
 void compress_bitwise_double(double real_value, unsigned char** data_bits, int* bytes, int* pos)
