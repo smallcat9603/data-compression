@@ -61,6 +61,11 @@ int main(int argc, char** argv) {
 
   int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
 
+  float sz_comp_ratio = calcCompressionRatio_sz_float(data, data_num);
+  float nolossy_performance = calcCompressionRatio_nolossy_performance_float(data, data_num);
+  float nolossy_area = calcCompressionRatio_nolossy_area_float(data, data_num);
+  printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);
+
   unsigned char* data_bits = NULL;
   //int flag = 0; //0, 1
   int bytes = 0; //total bytes of compressed data

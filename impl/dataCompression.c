@@ -1879,6 +1879,584 @@ float calcCompressionRatio_himeno_nolossy_area(float data[MIMAX][MJMAX][MKMAX], 
   return compress_ratio;
 }
 
+float calcCompressionRatio_sz_float(float data[], int num)
+{
+  float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  float diff1, diff2, diff3, diff_min, predict_diff, selected_predict_value;
+  char compress_type;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(float)*8;     
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    { 
+      compressed_bits += sizeof(float)*8; 
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a';
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b';
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c';
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      if(diff_min<=absErrBound) 
+      {
+        if(byte_or_bit == 1)
+        {
+          compressed_bits += sizeof(char)*8; 
+        }
+        else if(byte_or_bit == 2)
+        {
+          compressed_bits += 2; 
+        }
+      }
+      else 
+      {
+        float max, min;
+        if(predict_value1 > predict_value2)
+        {
+          max = predict_value1;
+          min = predict_value2;
+        }
+        else
+        {
+          max = predict_value2;
+          min = predict_value1;
+        }
+        if(predict_value3 > max)
+        {
+          max = predict_value3;
+        }
+        else if(predict_value3 < min)
+        {
+          min = predict_value3;
+        }
+        
+        predict_diff = max-min;
+
+        char c[sizeof(float)*8];
+        getFloatBin(predict_diff/2, c);
+        int expo_value = 0;
+        int mantissa_bits_within_error_bound;
+
+        for(int i=1;i<9;i++) //1-9 exponential part of float (1-12 in the case of double)
+        {
+          if(c[i] != 0) 
+          {
+            expo_value += pow(2, 8-i);
+          }  
+        }
+        expo_value -= 127;
+        mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+        if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
+        {
+          mantissa_bits_within_error_bound = 23;
+        }
+        else if(mantissa_bits_within_error_bound < 0)
+        {
+          mantissa_bits_within_error_bound = 0;
+        }
+        if(byte_or_bit == 1)
+        {
+          if(mantissa_bits_within_error_bound%8 != 0) compressed_bits += 1+8+(mantissa_bits_within_error_bound/8+1)*8;  
+          else compressed_bits += 1+8+mantissa_bits_within_error_bound;
+        }
+        else if(byte_or_bit == 2)
+        {
+          compressed_bits += 1+8+mantissa_bits_within_error_bound;  
+        }
+      }
+    }
+  }
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;
+}
+
+float calcCompressionRatio_nolossy_performance_float(float data[], int num)
+{
+  float real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
+  float diff4;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(float)*8;
+
+    if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      compressed_bits += sizeof(float)*8;       
+      
+      if(before_value4 == -1) 
+      {
+        before_value4 = real_value; 
+      }
+      else if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
+
+      diff4 = predict_value4-real_value;     
+
+      before_value4 = before_value3;
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      char c[sizeof(float)*8];
+      getFloatBin(diff4, c);
+      for(int i=1;i<sizeof(float)*8;i++)
+      {
+        if(c[i] != 0) 
+        {
+          if(byte_or_bit == 1)
+          {
+            if((sizeof(float)*8 - i + 3 + 1)%8 != 0) compressed_bits += ((sizeof(float)*8 - i + 3 + 1)/8+1)*8;  
+            else compressed_bits += sizeof(float)*8 - i + 3 + 1;
+          }
+          else if(byte_or_bit == 2)
+          {
+            compressed_bits += sizeof(float)*8 - i + 3 + 1;
+          }
+          break;
+        } 
+      }
+    }    
+  }
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;
+}
+
+float calcCompressionRatio_nolossy_area_float(float data[], int num)
+{
+  float real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
+  float diff4;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+  int cdb = 512, cdb_num = 1, occupied_bits = 0, indication = 5, le = 285, re = 222, re1 = 2, re2 = 4, re3 = 32, llrb = 2, ex = 1;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(float)*8;
+
+    if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      occupied_bits += re3+llrb+ex;       
+      
+      if(before_value4 == -1) 
+      {
+        before_value4 = real_value; 
+      }
+      else if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
+
+      diff4 = predict_value4-real_value;     
+
+      before_value4 = before_value3;
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      char c[sizeof(float)*8];
+      getFloatBin(diff4, c);
+      for(int i=1;i<sizeof(float)*8;i++)
+      {
+        if(c[i] != 0) 
+        {
+          int nonzero = sizeof(float)*8 - i;
+          int data_bits;
+          if(nonzero <= re1)
+          {
+            data_bits = re1+llrb+ex;
+          }
+          else if(nonzero <= re2)
+          {
+            data_bits = re2+llrb+ex;
+          }
+          else if(nonzero <= re3)
+          {
+            data_bits = re3+llrb+ex;
+          }
+          
+          if(occupied_bits + data_bits > cdb-indication)
+          {
+            cdb_num++;
+            occupied_bits = data_bits;
+          }
+          else
+          {
+            occupied_bits += data_bits;
+          }
+
+          break;
+        }  
+      }
+    }    
+  }
+  compressed_bits = cdb_num*cdb;
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;  
+}
+
+float calcCompressionRatio_sz_double(double data[], int num)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  double diff1, diff2, diff3, diff_min, predict_diff, selected_predict_value;
+  char compress_type;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(double)*8;     
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    { 
+      compressed_bits += sizeof(double)*8; 
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a';
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b';
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c';
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      if(diff_min<=absErrBound) 
+      {
+        if(byte_or_bit == 1)
+        {
+          compressed_bits += sizeof(char)*8; 
+        }
+        else if(byte_or_bit == 2)
+        {
+          compressed_bits += 2; 
+        }
+      }
+      else 
+      {
+        double max, min;
+        if(predict_value1 > predict_value2)
+        {
+          max = predict_value1;
+          min = predict_value2;
+        }
+        else
+        {
+          max = predict_value2;
+          min = predict_value1;
+        }
+        if(predict_value3 > max)
+        {
+          max = predict_value3;
+        }
+        else if(predict_value3 < min)
+        {
+          min = predict_value3;
+        }
+        
+        predict_diff = max-min;
+
+        char c[sizeof(double)*8];
+        getDoubleBin(predict_diff/2, c);
+        int expo_value = 0;
+        int mantissa_bits_within_error_bound;
+
+        for(int i=1;i<12;i++) //1-9 exponential part of float (1-12 in the case of double)
+        {
+          if(c[i] != 0) 
+          {
+            expo_value += pow(2, 11-i);
+          }  
+        }
+        expo_value -= 1023;
+        mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+        if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+        {
+          mantissa_bits_within_error_bound = 52;
+        }
+        else if(mantissa_bits_within_error_bound < 0)
+        {
+          mantissa_bits_within_error_bound = 0;
+        }
+        if(byte_or_bit == 1)
+        {
+          if(mantissa_bits_within_error_bound%8 != 0) compressed_bits += 1+11+(mantissa_bits_within_error_bound/8+1)*8;  
+          else compressed_bits += 1+11+mantissa_bits_within_error_bound;
+        }
+        else if(byte_or_bit == 2)
+        {
+          compressed_bits += 1+11+mantissa_bits_within_error_bound;  
+        }
+      }
+    }
+  }
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;
+}
+
+float calcCompressionRatio_nolossy_performance_double(double data[], int num)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
+  double diff4;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(double)*8;
+
+    if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      compressed_bits += sizeof(double)*8;       
+      
+      if(before_value4 == -1) 
+      {
+        before_value4 = real_value; 
+      }
+      else if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
+
+      diff4 = predict_value4-real_value;     
+
+      before_value4 = before_value3;
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      char c[sizeof(double)*8];
+      getDoubleBin(diff4, c);
+      for(int i=1;i<sizeof(double)*8;i++)
+      {
+        if(c[i] != 0) 
+        {
+          if(byte_or_bit == 1)
+          {
+            if((sizeof(double)*8 - i + 3 + 1)%8 != 0) compressed_bits += ((sizeof(double)*8 - i + 3 + 1)/8+1)*8;  
+            else compressed_bits += sizeof(double)*8 - i + 3 + 1;
+          }
+          else if(byte_or_bit == 2)
+          {
+            compressed_bits += sizeof(double)*8 - i + 3 + 1;
+          }
+          break;
+        } 
+      }
+    }    
+  }
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;  
+}
+
+float calcCompressionRatio_nolossy_area_double(double data[], int num)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
+  double diff4;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+  int cdb = 512, cdb_num = 1, occupied_bits = 0, indication = 5, le = 285, re = 222, re1 = 2, re2 = 4, re3 = 32, llrb = 2, ex = 1;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(double)*8;
+
+    if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      occupied_bits += re3+llrb+ex;       
+      
+      if(before_value4 == -1) 
+      {
+        before_value4 = real_value; 
+      }
+      else if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
+
+      diff4 = predict_value4-real_value;     
+
+      before_value4 = before_value3;
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      char c[sizeof(double)*8];
+      getDoubleBin(diff4, c);
+      for(int i=1;i<sizeof(double)*8;i++)
+      {
+        if(c[i] != 0) 
+        {
+          int nonzero = sizeof(double)*8 - i;
+          int data_bits;
+          if(nonzero <= re1)
+          {
+            data_bits = re1+llrb+ex;
+          }
+          else if(nonzero <= re2)
+          {
+            data_bits = re2+llrb+ex;
+          }
+          else if(nonzero <= re3)
+          {
+            data_bits = re3+llrb+ex;
+          }
+          
+          if(occupied_bits + data_bits > cdb-indication)
+          {
+            cdb_num++;
+            occupied_bits = data_bits;
+          }
+          else
+          {
+            occupied_bits += data_bits;
+          }
+
+          break;
+        }  
+      }
+    }    
+  }
+  compressed_bits = cdb_num*cdb;
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;    
+}
+
 void getFloatBin(float num,char bin[])
 {
     int t = 1;//用来按位与操作
@@ -1888,6 +2466,16 @@ void getFloatBin(float num,char bin[])
     //从最高位开始按位与，如果为1，则bin[i]=1，如果为0，则bin[i]=0
     //这里没有将bin存成字符，而是数字1 0
         bin[i] = (*f)&(t<<31-i)?1:0;
+    }
+}
+
+void getDoubleBin(double num,char bin[])
+{
+    int t = 1;
+    int *f = (int*)(&num);
+    for(int i=0;i<64;i++)
+    {
+        bin[i] = (*f)&(t<<63-i)?1:0;
     }
 }
 
