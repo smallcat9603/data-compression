@@ -661,7 +661,7 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
     }
   }
 
-  printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
+  //printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
 }
 
 //bitwise myCompress for ping-pong & himeno (float)
@@ -782,7 +782,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
     }
   }
 
-  printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
+  //printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
 }
 
 void compress_bitwise_double(double real_value, unsigned char** data_bits, int* bytes, int* pos)
