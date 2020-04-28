@@ -229,10 +229,10 @@ int main(int argc, char *argv[])
 		}
 
 		printf("Running k-means algorithm for %d iterations...\n\n", MAX_ITERATIONS);
-		for(int i = 0; i < numOfClusters; i++)
-		{
-			printf("Initial K-means: (%f, %f)\n", k_means_x[i], k_means_y[i]);
-		}
+		// for(int i = 0; i < numOfClusters; i++)
+		// {
+		// 	printf("Initial K-means: (%f, %f)\n", k_means_x[i], k_means_y[i]);
+		// }
 
 		// allocate memory for receive buffers
 		recv_x = (double *)malloc(sizeof(double) * ((numOfElements/num_of_processes)/* + 1*/));
@@ -290,6 +290,9 @@ int main(int argc, char *argv[])
 	double gosa = 0;
 	double start_time, end_time;
 	float compress_ratio = 0;
+	float sz_comp_ratio = 0;
+	float nolossy_performance = 0;
+	float nolossy_area = 0;
 	start_time = MPI_Wtime();
 	while(count < MAX_ITERATIONS)
 	{
@@ -304,6 +307,10 @@ int main(int argc, char *argv[])
 			//x
 			if(world_rank == 0)
 			{
+				sz_comp_ratio += calcCompressionRatio_sz_float(k_means_x, numOfClusters);
+				nolossy_performance += calcCompressionRatio_nolossy_performance_float(k_means_x, numOfClusters);
+				nolossy_area += calcCompressionRatio_nolossy_area_float(k_means_x, numOfClusters);
+
 				//mycommpress
 				double* k_means_x_small = NULL;
 				k_means_x_min = toSmallDataset_double(k_means_x, &k_means_x_small, numOfClusters);
@@ -326,6 +333,10 @@ int main(int argc, char *argv[])
 			//y
 			if(world_rank == 0)
 			{
+				sz_comp_ratio += calcCompressionRatio_sz_float(k_means_y, numOfClusters);
+				nolossy_performance += calcCompressionRatio_nolossy_performance_float(k_means_y, numOfClusters);
+				nolossy_area += calcCompressionRatio_nolossy_area_float(k_means_y, numOfClusters);
+
 				//mycommpress
 				double* k_means_y_small = NULL;
 				k_means_y_min = toSmallDataset_double(k_means_y, &k_means_y_small, numOfClusters);
@@ -550,7 +561,7 @@ int main(int argc, char *argv[])
 		}
 		for(int i = 0; i < numOfClusters; i++)
 		{
-			printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
+			//printf("Cluster #%d: (%f, %f)\n", i, k_means_x[i], k_means_y[i]);
 			fprintf(fp, "%lf\n", k_means_x[i]);
 			fprintf(fp, "%lf\n", k_means_y[i]);
 
@@ -560,6 +571,7 @@ int main(int argc, char *argv[])
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 		printf("gosa = %f \n", gosa);
+		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/(2*MAX_ITERATIONS)), 1/(nolossy_performance/(2*MAX_ITERATIONS)), 1/(nolossy_area/(2*MAX_ITERATIONS)));
 		printf("compress ratio = %f \n", 1/(compress_ratio/(2*MAX_ITERATIONS)));
 	}
 
