@@ -307,9 +307,9 @@ int main(int argc, char *argv[])
 			//x
 			if(world_rank == 0)
 			{
-				sz_comp_ratio += calcCompressionRatio_sz_float(k_means_x, numOfClusters);
-				nolossy_performance += calcCompressionRatio_nolossy_performance_float(k_means_x, numOfClusters);
-				nolossy_area += calcCompressionRatio_nolossy_area_float(k_means_x, numOfClusters);
+				sz_comp_ratio += calcCompressionRatio_sz_double(k_means_x, numOfClusters);
+				nolossy_performance += calcCompressionRatio_nolossy_performance_double(k_means_x, numOfClusters);
+				nolossy_area += calcCompressionRatio_nolossy_area_double(k_means_x, numOfClusters);
 
 				//mycommpress
 				double* k_means_x_small = NULL;
@@ -333,9 +333,9 @@ int main(int argc, char *argv[])
 			//y
 			if(world_rank == 0)
 			{
-				sz_comp_ratio += calcCompressionRatio_sz_float(k_means_y, numOfClusters);
-				nolossy_performance += calcCompressionRatio_nolossy_performance_float(k_means_y, numOfClusters);
-				nolossy_area += calcCompressionRatio_nolossy_area_float(k_means_y, numOfClusters);
+				sz_comp_ratio += calcCompressionRatio_sz_double(k_means_y, numOfClusters);
+				nolossy_performance += calcCompressionRatio_nolossy_performance_double(k_means_y, numOfClusters);
+				nolossy_area += calcCompressionRatio_nolossy_area_double(k_means_y, numOfClusters);
 
 				//mycommpress
 				double* k_means_y_small = NULL;
