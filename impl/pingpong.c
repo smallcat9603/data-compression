@@ -61,6 +61,8 @@ int main(int argc, char** argv) {
 
   int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
 
+  float compress_ratio;
+
   float sz_comp_ratio = calcCompressionRatio_sz_float(data, data_num);
   float nolossy_performance = calcCompressionRatio_nolossy_performance_float(data, data_num);
   float nolossy_area = calcCompressionRatio_nolossy_area_float(data, data_num);
@@ -87,6 +89,15 @@ int main(int argc, char** argv) {
   // }
   msg.p_data = array_float;
   msg.c_data = array_char;
+
+  compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
+  printf("Compression rate (float, byte): %f \n", 1/compress_ratio); 
+  compress_ratio = (float)(num_c*2+num_p*sizeof(float)*8)/((num_c+num_p)*sizeof(float)*8);
+  printf("Compression rate (float, bit): %f \n", 1/compress_ratio); 
+  compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double));
+  printf("Compression rate (double, byte): %f \n", 1/compress_ratio); 
+  compress_ratio = (float)(num_c*2+num_p*sizeof(double)*8)/((num_c+num_p)*sizeof(double)*8);
+  printf("Compression rate (double, bit): %f \n", 1/compress_ratio);     
 
   int ping_pong_count = 0;
   int partner_rank = (world_rank + 1) % 2;
@@ -176,8 +187,6 @@ int main(int argc, char** argv) {
   if(world_rank == 0)
   {
     printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
-
-    float compress_ratio;
 
     if(CT == 1)
     {

@@ -562,7 +562,8 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
 
     if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
     {
-      if(real_value == 0)
+      //if(real_value == 0)
+      if(fabs(real_value) < absErrBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
@@ -617,7 +618,14 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(diff_min<=absErrBound) 
+      if(fabs(real_value) < absErrBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else if(diff_min<=absErrBound) 
       {
         if(compress_type == 'a')
         {
@@ -675,7 +683,8 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
 
     if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
     {
-      if(real_value == 0)
+      //if(real_value == 0)
+      if(fabs(real_value) < absErrBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
@@ -730,7 +739,14 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(diff_min<=absErrBound) 
+      if(fabs(real_value) < absErrBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else if(diff_min<=absErrBound) 
       {
         if(compress_type == 'a')
         {
