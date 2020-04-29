@@ -50,7 +50,8 @@
 #include <assert.h>
 #define absErrBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 #define absErrBound_binary  20 //bitwise, SZ, equal to above
-#define CT                  1 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise
+#define CT                  5 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise
+#define byte_or_bit         2 //1 byte, 2 bit
 
 int myCompress_double(double[], double**, char**, int**, int);
 double* myDecompress_double(double[], char[], int[], int);
@@ -65,7 +66,10 @@ void doubletostr(double*, char*);
 double strtodbl(char*);
 void add_bit_to_bytes(unsigned char**, int*, int*, int);
 void bit_set(unsigned char*, unsigned char, int);
-
+float calcCompressionRatio_sz_double(double[], int);
+float calcCompressionRatio_nolossy_performance_double(double[], int);
+float calcCompressionRatio_nolossy_area_double(double[], int);
+void getDoubleBin(double,char[]);
 
 typedef struct _pfftss_plan_s {
   void (*fp)(struct _pfftss_plan_s *, double *);
@@ -305,6 +309,12 @@ static void alltoalls0cb(pfftss_plan p)
     {
       send_data[j] = p->sb[first_index++];
     }
+
+    float sz_comp_ratio = calcCompressionRatio_sz_double(send_data, bsize);
+    float nolossy_performance = calcCompressionRatio_nolossy_performance_double(send_data, bsize);
+    float nolossy_area = calcCompressionRatio_nolossy_area_double(send_data, bsize);
+    printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);
+
     double* send_data_small = NULL;
     data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);          
 
@@ -640,6 +650,12 @@ static void alltoalls1cb(pfftss_plan p)
     {
       send_data[j] = p->rb[first_index++];
     }
+
+    float sz_comp_ratio = calcCompressionRatio_sz_double(send_data, bsize);
+    float nolossy_performance = calcCompressionRatio_nolossy_performance_double(send_data, bsize);
+    float nolossy_area = calcCompressionRatio_nolossy_area_double(send_data, bsize);
+    printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);
+
     double* send_data_small = NULL;
     data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);    
 
@@ -1314,7 +1330,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
       else 
       {
         free(*array_double);
-        printf("Error (re)allocating memory");
+        printf("Error (re)allocating memory1");
         exit(1);
       }        
 
@@ -1390,7 +1406,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
         {
           free(*array_char);
           free(*array_char_displacement);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory2");
           exit(1);
         } 
       }
@@ -1406,7 +1422,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
         else 
         {
           free(*array_double);
-          printf("Error (re)allocating memory");
+          printf("Error (re)allocating memory3");
           exit(1);
         }             
       }
@@ -1478,7 +1494,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
             else 
             {
               free(bits);
-              printf("Error (re)allocating memory\n");
+              printf("Error (re)allocating memory4\n");
               exit(1);
             }             
           }
@@ -1495,7 +1511,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
             else 
             {
               free(bits);
-              printf("Error (re)allocating memory\n");
+              printf("Error (re)allocating memory5\n");
               exit(1);
             }             
           }
@@ -1533,7 +1549,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
             else 
             {
               free(bits);
-              printf("Error (re)allocating memory\n");
+              printf("Error (re)allocating memory6\n");
               exit(1);
             } 
           }
@@ -1578,7 +1594,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
               else 
               {
                 free(bits);
-                printf("Error (re)allocating memory\n");
+                printf("Error (re)allocating memory7\n");
                 exit(1);
               }             
             }
@@ -1595,7 +1611,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
               else 
               {
                 free(bits);
-                printf("Error (re)allocating memory\n");
+                printf("Error (re)allocating memory8\n");
                 exit(1);
               }             
             }              
@@ -1614,7 +1630,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
         else 
         {
           free(bits);
-          printf("Error (re)allocating memory\n");
+          printf("Error (re)allocating memory9\n");
           exit(1);
         }        
       }
@@ -1821,7 +1837,7 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
     }
   }
 
-  printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
+  //printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
 }
 
 void compress_bitwise_double(double real_value, unsigned char** data_bits, int* bytes, int* pos)
@@ -1876,6 +1892,295 @@ double toSmallDataset_double(double data[], double** data_small, int num)
   return min;
 }
 
+float calcCompressionRatio_sz_double(double data[], int num)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  double diff1, diff2, diff3, diff_min, predict_diff, selected_predict_value;
+  char compress_type;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(double)*8;     
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    { 
+      compressed_bits += sizeof(double)*8; 
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a';
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b';
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c';
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      if(diff_min<=absErrBound) 
+      {
+        if(byte_or_bit == 1)
+        {
+          compressed_bits += sizeof(char)*8; 
+        }
+        else if(byte_or_bit == 2)
+        {
+          compressed_bits += 2; 
+        }
+      }
+      else 
+      {
+        double max, min;
+        if(predict_value1 > predict_value2)
+        {
+          max = predict_value1;
+          min = predict_value2;
+        }
+        else
+        {
+          max = predict_value2;
+          min = predict_value1;
+        }
+        if(predict_value3 > max)
+        {
+          max = predict_value3;
+        }
+        else if(predict_value3 < min)
+        {
+          min = predict_value3;
+        }
+        
+        predict_diff = max-min;
+
+        char c[sizeof(double)*8];
+        getDoubleBin(predict_diff/2, c);
+        int expo_value = 0;
+        int mantissa_bits_within_error_bound;
+
+        for(int i=1;i<12;i++) //1-9 exponential part of float (1-12 in the case of double)
+        {
+          if(c[i] != 0) 
+          {
+            expo_value += pow(2, 11-i);
+          }  
+        }
+        expo_value -= 1023;
+        mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+        if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+        {
+          mantissa_bits_within_error_bound = 52;
+        }
+        else if(mantissa_bits_within_error_bound < 0)
+        {
+          mantissa_bits_within_error_bound = 0;
+        }
+        if(byte_or_bit == 1)
+        {
+          if(mantissa_bits_within_error_bound%8 != 0) compressed_bits += 1+11+(mantissa_bits_within_error_bound/8+1)*8;  
+          else compressed_bits += 1+11+mantissa_bits_within_error_bound;
+        }
+        else if(byte_or_bit == 2)
+        {
+          compressed_bits += 1+11+mantissa_bits_within_error_bound;  
+        }
+      }
+    }
+  }
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;
+}
+
+float calcCompressionRatio_nolossy_performance_double(double data[], int num)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
+  double diff4;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(double)*8;
+
+    if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      compressed_bits += sizeof(double)*8;       
+      
+      if(before_value4 == -1) 
+      {
+        before_value4 = real_value; 
+      }
+      else if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
+
+      diff4 = predict_value4-real_value;     
+
+      before_value4 = before_value3;
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      char c[sizeof(double)*8];
+      getDoubleBin(diff4, c);
+      for(int i=1;i<sizeof(double)*8;i++)
+      {
+        if(c[i] != 0) 
+        {
+          if(byte_or_bit == 1)
+          {
+            if((sizeof(double)*8 - i + 3 + 1)%8 != 0) compressed_bits += ((sizeof(double)*8 - i + 3 + 1)/8+1)*8;  
+            else compressed_bits += sizeof(double)*8 - i + 3 + 1;
+          }
+          else if(byte_or_bit == 2)
+          {
+            compressed_bits += sizeof(double)*8 - i + 3 + 1;
+          }
+          break;
+        } 
+      }
+    }    
+  }
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;  
+}
+
+float calcCompressionRatio_nolossy_area_double(double data[], int num)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, before_value4=-1, predict_value4;
+  double diff4;
+  float compress_ratio;
+  long origin_bits=0, compressed_bits=0;
+  int cdb = 512, cdb_num = 1, occupied_bits = 0, indication = 5, le = 285, re = 222, re1 = 2, re2 = 4, re3 = 32, llrb = 2, ex = 1;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n]; 
+
+    origin_bits += sizeof(double)*8;
+
+    if(before_value4 == -1 || before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      occupied_bits += re3+llrb+ex;       
+      
+      if(before_value4 == -1) 
+      {
+        before_value4 = real_value; 
+      }
+      else if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value4 = 4*before_value1 - 6*before_value2 + 4*before_value3 - before_value4;
+
+      diff4 = predict_value4-real_value;     
+
+      before_value4 = before_value3;
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+
+      char c[sizeof(double)*8];
+      getDoubleBin(diff4, c);
+      for(int i=1;i<sizeof(double)*8;i++)
+      {
+        if(c[i] != 0) 
+        {
+          int nonzero = sizeof(double)*8 - i;
+          int data_bits;
+          if(nonzero <= re1)
+          {
+            data_bits = re1+llrb+ex;
+          }
+          else if(nonzero <= re2)
+          {
+            data_bits = re2+llrb+ex;
+          }
+          else if(nonzero <= re3)
+          {
+            data_bits = re3+llrb+ex;
+          }
+          
+          if(occupied_bits + data_bits > cdb-indication)
+          {
+            cdb_num++;
+            occupied_bits = data_bits;
+          }
+          else
+          {
+            occupied_bits += data_bits;
+          }
+
+          break;
+        }  
+      }
+    }    
+  }
+  compressed_bits = cdb_num*cdb;
+  compress_ratio = (float)compressed_bits/origin_bits;
+  return compress_ratio;    
+}
+
 void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
 {
   if(*pos > 0 && *pos < 9)
@@ -1894,7 +2199,7 @@ void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)
       else 
       {
         free(*data_bits);
-        printf("Error (re)allocating memory\n");
+        printf("Error (re)allocating memory0\n");
         exit(1);
       }         
     }
@@ -1930,4 +2235,14 @@ void bit_set(unsigned char *p_data, unsigned char position, int flag)
 	// 	printf("%d", (*p_data >> i) & 1);
 	// }
 	// printf("\n");
+}
+
+void getDoubleBin(double num,char bin[])
+{
+    int t = 1;
+    int *f = (int*)(&num);
+    for(int i=0;i<64;i++)
+    {
+        bin[i] = (*f)&(t<<63-i)?1:0;
+    }
 }
