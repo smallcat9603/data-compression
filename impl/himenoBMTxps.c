@@ -273,7 +273,7 @@ jacobi(int nn)
     double start_time = MPI_Wtime();
     sendp(ndx,ndy,ndz);
     double end_time = MPI_Wtime();
-    printf("execution time: %f", end_time-start_time);
+    printf("execution time: %f\n", end_time-start_time);
 
     MPI_Allreduce(&wgosa,
                   &gosa,
