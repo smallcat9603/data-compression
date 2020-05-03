@@ -270,7 +270,10 @@ jacobi(int nn)
         for(k=1 ; k<kmax-1 ; ++k)
           p[i][j][k] = wrk2[i][j][k];
 
+    double start_time = MPI_Wtime();
     sendp(ndx,ndy,ndz);
+    double end_time = MPI_Wtime();
+    printf("execution time: %f", end_time-start_time);
 
     MPI_Allreduce(&wgosa,
                   &gosa,
