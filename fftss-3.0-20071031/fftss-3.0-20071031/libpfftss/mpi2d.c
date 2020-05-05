@@ -50,7 +50,7 @@
 #include <assert.h>
 #define absErrBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 #define absErrBound_binary  20 //bitwise, SZ, equal to above
-#define CT                  0 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise
+#define CT                  5 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise
 #define byte_or_bit         2 //1 byte, 2 bit
 
 int myCompress_double(double[], double**, char**, int**, int);
@@ -319,10 +319,10 @@ static void alltoalls0cb(pfftss_plan p)
       send_data[j] = p->sb[first_index++];
     }
 
-    float sz_comp_ratio = calcCompressionRatio_sz_double(send_data, bsize);
-    float nolossy_performance = calcCompressionRatio_nolossy_performance_double(send_data, bsize);
-    float nolossy_area = calcCompressionRatio_nolossy_area_double(send_data, bsize);
-    printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);
+    // float sz_comp_ratio = calcCompressionRatio_sz_double(send_data, bsize);
+    // float nolossy_performance = calcCompressionRatio_nolossy_performance_double(send_data, bsize);
+    // float nolossy_area = calcCompressionRatio_nolossy_area_double(send_data, bsize);
+    // printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);
 
     double* send_data_small = NULL;
     data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);          
@@ -670,10 +670,10 @@ static void alltoalls1cb(pfftss_plan p)
       send_data[j] = p->rb[first_index++];
     }
 
-    float sz_comp_ratio = calcCompressionRatio_sz_double(send_data, bsize);
-    float nolossy_performance = calcCompressionRatio_nolossy_performance_double(send_data, bsize);
-    float nolossy_area = calcCompressionRatio_nolossy_area_double(send_data, bsize);
-    printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);
+    // float sz_comp_ratio = calcCompressionRatio_sz_double(send_data, bsize);
+    // float nolossy_performance = calcCompressionRatio_nolossy_performance_double(send_data, bsize);
+    // float nolossy_area = calcCompressionRatio_nolossy_area_double(send_data, bsize);
+    // printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);
 
     double* send_data_small = NULL;
     data_min_send[i - 1] = toSmallDataset_double(send_data, &send_data_small, bsize);    
