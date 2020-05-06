@@ -1,4 +1,6 @@
 /********************************************************************
+ 
+ modified by huyao for data compression
 
  This benchmark test program is measuring a cpu performance
  of floating point operation by a Poisson equation solver.
@@ -273,7 +275,7 @@ jacobi(int nn)
     double start_time = MPI_Wtime();
     sendp(ndx,ndy,ndz);
     double end_time = MPI_Wtime();
-    printf("execution time: %f\n", end_time-start_time);
+    //printf("execution time: %f\n", end_time-start_time);
 
     MPI_Allreduce(&wgosa,
                   &gosa,
@@ -473,16 +475,12 @@ sendp3()
     float* data[2];
     data[0] = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax);
     data[1] = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax);
-    float* data_small[2];
-    data_small[0] = NULL;
-    data_small[1] = NULL;
+    float* data_small[2] = {NULL, NULL};
     float data_min_send[2];
     data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], imax*jmax);        
     data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], imax*jmax);    
 
-    unsigned char* data_bits_send[2];
-    data_bits_send[0] = NULL;
-    data_bits_send[1] = NULL;
+    unsigned char* data_bits_send[2] = {NULL, NULL};
 
     int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
 
@@ -535,23 +533,18 @@ sendp3()
   //revised
   if(CT == 1)
   {
-    int array_float_len_send[2];
-    int array_float_len_recv[2];
+    int array_float_len_send[2] = {0, 0};
+    int array_float_len_recv[2] = {0, 0};
 
-    float* array_float_send[2];
-    char* array_char_send[2];
-    int* array_char_displacement_send[2];
+    float* array_float_send[2] = {NULL, NULL};
+    char* array_char_send[2] = {NULL, NULL};
+    int* array_char_displacement_send[2] = {NULL, NULL};
 
     MPI_Irecv(&array_float_len_recv[0], 1, MPI_INT, npz[1], 0, mpi_comm_cart, req);
     MPI_Irecv(&array_float_len_recv[1], 1, MPI_INT, npz[0], 1, mpi_comm_cart, req+1);
     float* data_0 = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax);
     float* data_1 = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax);
-    array_float_send[0] = NULL;
-    array_char_send[0] = NULL;
-    array_char_displacement_send[0] = NULL;
-    array_float_send[1] = NULL;
-    array_char_send[1] = NULL;
-    array_char_displacement_send[1] = NULL;
+
     array_float_len_send[0] = myCompress(data_0, &array_float_send[0], &array_char_send[0], &array_char_displacement_send[0], imax*jmax);
     array_float_len_send[1] = myCompress(data_1, &array_float_send[1], &array_char_send[1], &array_char_displacement_send[1], imax*jmax);
     MPI_Isend(&array_float_len_send[0], 1, MPI_INT, npz[0], 0, mpi_comm_cart, req+2); 
@@ -590,6 +583,10 @@ sendp3()
     MPI_Isend(array_char_displacement_send[1], num_c_send_1, MPI_INT, npz[1], 7, mpi_comm_cart, req_plus+11); 
     MPI_Waitall(12, req_plus, st_plus);
 
+    cr += (8.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + 1.0*((float)num_p_send_0/(imax*jmax));
+    cr += (8.0/(sizeof(float)*8))*((float)num_c_send_1/(imax*jmax)) + 1.0*((float)num_p_send_1/(imax*jmax));
+    cr_num += 2;
+
     //calculate bitwise compress ratio
     // printf("%d %d\n", num_p_send_0, num_c_send_0);
     // printf("%d %d\n", num_p_send_1, num_c_send_1);
@@ -604,19 +601,20 @@ sendp3()
 
     float* decompressed_data_0 = myDecompress(array_float_recv[0], array_char_recv[0], array_char_displacement_recv[0], imax*jmax);
     int pointer_0 = 0;
-    for(int a=0; a<imax; a++)
-    {
-      for(int b=0; b<jmax; b++)
-      {
-        p[a][b][kmax-1] = decompressed_data_0[pointer_0++];
-      }
-    }
+    // for(int a=0; a<imax; a++)
+    // {
+    //   for(int b=0; b<jmax; b++)
+    //   {
+    //     p[a][b][kmax-1] = decompressed_data_0[pointer_0++];
+    //   }
+    // }
     float* decompressed_data_1 = myDecompress(array_float_recv[1], array_char_recv[1], array_char_displacement_recv[1], imax*jmax);
     int pointer_1 = 0;
     for(int a=0; a<imax; a++)
     {
       for(int b=0; b<jmax; b++)
       {
+        p[a][b][kmax-1] = decompressed_data_0[pointer_0++];
         p[a][b][0] = decompressed_data_1[pointer_1++];
       }
     }
@@ -693,60 +691,226 @@ sendp2()
   MPI_Status  st[4];
   MPI_Request req[4];
 
-  MPI_Irecv(&p[0][jmax-1][0],
-            1,
-            ikvec,
-            npy[1],
-            1,
-            mpi_comm_cart,
-            req);
-  MPI_Irecv(&p[0][0][0],
-            1,
-            ikvec,
-            npy[0],
-            2,
-            mpi_comm_cart,
-            req+1);
   //todo
-  if (CT == 1)
-  {
-    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 2, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 2, jmax-2, imax, jmax, kmax); 
-  }
-  else if(CT == 2)
-  {
-    cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, jmax-2, imax, jmax, kmax); 
-  } 
-  else if(CT == 3)    
-  {
-    cr += calcCompressionRatio_himeno_nolossy_area(p, 2, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_nolossy_area(p, 2, jmax-2, imax, jmax, kmax);     
-  }   
-  else if(CT == 4)    
-  {
-    cr += calcCompressionRatio_himeno_sz(p, 2, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_sz(p, 2, jmax-2, imax, jmax, kmax);     
-  }      
-  cr_num += 2;         
-  MPI_Isend(&p[0][1][0],
-            1,
-            ikvec,
-            npy[0],
-            1,
-            mpi_comm_cart,
-            req+2);
-  MPI_Isend(&p[0][jmax-2][0],
-            1,
-            ikvec,
-            npy[1],
-            2,
-            mpi_comm_cart,
-            req+3);
+  MPI_Status   st_plus[12];
+  MPI_Request  req_plus[12];
 
-  MPI_Waitall(4,
-              req,
-              st);
+  MPI_Status   st_bitwise[8];
+  MPI_Request  req_bitwise[8];  
+
+  if(CT == 5)
+  {
+    int data_bytes_send[2] = {0, 0};
+    int data_bytes_recv[2] = {0, 0};
+
+    MPI_Irecv(&data_bytes_recv[0], 1, MPI_INT, npy[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&data_bytes_recv[1], 1, MPI_INT, npy[0], 1, mpi_comm_cart, req+1);
+    
+    float* data[2];
+    data[0] = transform_3d_array_to_1d_array(p, 2, 1, imax, jmax, kmax);
+    data[1] = transform_3d_array_to_1d_array(p, 2, jmax-2, imax, jmax, kmax);
+    float* data_small[2] = {NULL, NULL};
+    float data_min_send[2];
+    data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], imax*kmax);        
+    data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], imax*kmax);    
+
+    unsigned char* data_bits_send[2] = {NULL, NULL};
+
+    int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise(data_small[0], imax*kmax, &data_bits_send[0], &data_bytes_send[0], &data_pos[0]);
+    myCompress_bitwise(data_small[1], imax*kmax, &data_bits_send[1], &data_bytes_send[1], &data_pos[1]);
+
+    MPI_Isend(&data_bytes_send[0], 1, MPI_INT, npy[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&data_bytes_send[1], 1, MPI_INT, npy[1], 1, mpi_comm_cart, req+3); 
+    MPI_Waitall(4, req, st);  
+
+    // printf("npy %d %d \n", npy[0], npy[1]);  
+    // printf("send %d %d \n", data_bytes_send[0], data_bytes_send[1]);
+    // printf("recv %d %d \n", data_bytes_recv[0], data_bytes_recv[1]);
+
+    cr += data_bytes_send[0]*8.0/(imax*kmax*sizeof(float)*8);
+    cr += data_bytes_send[1]*8.0/(imax*kmax*sizeof(float)*8);
+    cr_num += 2;
+
+    unsigned char* data_bits_recv[2];
+    float data_min_recv[2];
+
+    data_bits_recv[0] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[0]);
+    data_bits_recv[1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[1]);
+    MPI_Irecv(&data_min_recv[0], 1, MPI_FLOAT, npy[1], 2, mpi_comm_cart, req_bitwise);
+    MPI_Irecv(data_bits_recv[0], data_bytes_recv[0], MPI_UNSIGNED_CHAR, npy[1], 3, mpi_comm_cart, req_bitwise+1);
+    MPI_Irecv(&data_min_recv[1], 1, MPI_FLOAT, npy[0], 4, mpi_comm_cart, req_bitwise+2);
+    MPI_Irecv(data_bits_recv[1], data_bytes_recv[1], MPI_UNSIGNED_CHAR, npy[0], 5, mpi_comm_cart, req_bitwise+3);  
+    //bitwise compress
+    MPI_Isend(&data_min_send[0], 1, MPI_FLOAT, npy[0], 2, mpi_comm_cart, req_bitwise+4); 
+    MPI_Isend(data_bits_send[0], data_bytes_send[0], MPI_UNSIGNED_CHAR, npy[0], 3, mpi_comm_cart, req_bitwise+5); 
+    MPI_Isend(&data_min_send[1], 1, MPI_FLOAT, npy[1], 4, mpi_comm_cart, req_bitwise+6); 
+    MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npy[1], 5, mpi_comm_cart, req_bitwise+7); 
+    MPI_Waitall(8, req_bitwise, st_bitwise);    
+
+    float* decompressed_data[2];
+    decompressed_data[0] = myDecompress_bitwise(data_bits_recv[0], data_bytes_recv[0], imax*kmax);
+    decompressed_data[1] = myDecompress_bitwise(data_bits_recv[1], data_bytes_recv[1], imax*kmax);
+    int pointer = 0;
+    for(int a=0; a<imax; a++)
+    {
+      for(int b=0; b<kmax; b++)
+      {
+        p[a][jmax-1][b] = decompressed_data[0][pointer] + data_min_recv[0];
+        p[a][0][b] = decompressed_data[1][pointer] + data_min_recv[1];
+        pointer++;
+      }
+    }
+  }  
+
+  if(CT == 1)
+  {
+    int array_float_len_send[2] = {0, 0};
+    int array_float_len_recv[2] = {0, 0};
+
+    float* array_float_send[2] = {NULL, NULL};
+    char* array_char_send[2] = {NULL, NULL};
+    int* array_char_displacement_send[2] = {NULL, NULL};
+
+    MPI_Irecv(&array_float_len_recv[0], 1, MPI_INT, npy[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&array_float_len_recv[1], 1, MPI_INT, npy[0], 1, mpi_comm_cart, req+1);
+    float* data_0 = transform_3d_array_to_1d_array(p, 2, 1, imax, jmax, kmax);
+    float* data_1 = transform_3d_array_to_1d_array(p, 2, jmax-2, imax, jmax, kmax);
+    array_float_len_send[0] = myCompress(data_0, &array_float_send[0], &array_char_send[0], &array_char_displacement_send[0], imax*kmax);
+    array_float_len_send[1] = myCompress(data_1, &array_float_send[1], &array_char_send[1], &array_char_displacement_send[1], imax*kmax);
+    MPI_Isend(&array_float_len_send[0], 1, MPI_INT, npy[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&array_float_len_send[1], 1, MPI_INT, npy[1], 1, mpi_comm_cart, req+3); 
+    //printf("send1 %d %d \n", array_float_len_send[0], array_float_len_send[1]);
+    MPI_Waitall(4, req, st);
+
+    //printf("recv1 %d %d \n", array_float_len_recv[0], array_float_len_recv[1]);
+
+    float* array_float_recv[2]; 
+    char* array_char_recv[2]; 
+    int* array_char_displacement_recv[2]; 
+
+    int num_p_recv_0 = array_float_len_recv[0], num_c_recv_0 = imax*kmax - array_float_len_recv[0];
+    int num_p_recv_1 = array_float_len_recv[1], num_c_recv_1 = imax*kmax - array_float_len_recv[1];
+    array_float_recv[0] = (float*) malloc(sizeof(float)*num_p_recv_0);
+    array_char_recv[0] = (char*) malloc(sizeof(char)*num_c_recv_0);
+    array_char_displacement_recv[0] = (int*) malloc(sizeof(int)*num_c_recv_0);
+    array_float_recv[1] = (float*) malloc(sizeof(float)*num_p_recv_1);
+    array_char_recv[1] = (char*) malloc(sizeof(char)*num_c_recv_1);
+    array_char_displacement_recv[1] = (int*) malloc(sizeof(int)*num_c_recv_1);
+    MPI_Irecv(array_float_recv[0], num_p_recv_0, MPI_FLOAT, npy[1], 2, mpi_comm_cart, req_plus);
+    MPI_Irecv(array_char_recv[0], num_c_recv_0, MPI_CHAR, npy[1], 3, mpi_comm_cart, req_plus+1);
+    MPI_Irecv(array_char_displacement_recv[0], num_c_recv_0, MPI_INT, npy[1], 4, mpi_comm_cart, req_plus+2);    
+    MPI_Irecv(array_float_recv[1], num_p_recv_1, MPI_FLOAT, npy[0], 5, mpi_comm_cart, req_plus+3);
+    MPI_Irecv(array_char_recv[1], num_c_recv_1, MPI_CHAR, npy[0], 6, mpi_comm_cart, req_plus+4);
+    MPI_Irecv(array_char_displacement_recv[1], num_c_recv_1, MPI_INT, npy[0], 7, mpi_comm_cart, req_plus+5);  
+    //mycompress
+    int num_p_send_0 = array_float_len_send[0], num_c_send_0 = imax*kmax - array_float_len_send[0];
+    int num_p_send_1 = array_float_len_send[1], num_c_send_1 = imax*kmax - array_float_len_send[1];
+    MPI_Isend(array_float_send[0], num_p_send_0, MPI_FLOAT, npy[0], 2, mpi_comm_cart, req_plus+6); 
+    MPI_Isend(array_char_send[0], num_c_send_0, MPI_CHAR, npy[0], 3, mpi_comm_cart, req_plus+7); 
+    MPI_Isend(array_char_displacement_send[0], num_c_send_0, MPI_INT, npy[0], 4, mpi_comm_cart, req_plus+8); 
+    MPI_Isend(array_float_send[1], num_p_send_1, MPI_FLOAT, npy[1], 5, mpi_comm_cart, req_plus+9); 
+    MPI_Isend(array_char_send[1], num_c_send_1, MPI_CHAR, npy[1], 6, mpi_comm_cart, req_plus+10); 
+    MPI_Isend(array_char_displacement_send[1], num_c_send_1, MPI_INT, npy[1], 7, mpi_comm_cart, req_plus+11); 
+    MPI_Waitall(12, req_plus, st_plus);
+
+    cr += (8.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*kmax)) + 1.0*((float)num_p_send_0/(imax*kmax));
+    cr += (8.0/(sizeof(float)*8))*((float)num_c_send_1/(imax*kmax)) + 1.0*((float)num_p_send_1/(imax*kmax));
+    cr_num += 2;
+
+    //calculate bitwise compress ratio
+    // printf("%d %d\n", num_p_send_0, num_c_send_0);
+    // printf("%d %d\n", num_p_send_1, num_c_send_1);
+    // printf("%f \n", calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0));
+    // cr += (3.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0)*((float)num_p_send_0/(imax*jmax));
+    // printf("%f \n", (3.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0)*((float)num_p_send_0/(imax*jmax)));
+    // printf("%f \n", cr);
+    // cr += (3.0/(sizeof(float)*8))*((float)num_c_send_1/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[1], num_p_send_1)*((float)num_p_send_1/(imax*jmax));
+    // printf("%f \n", cr);
+    // cr_num += 2;
+    // printf("%d \n", cr_num);
+
+    float* decompressed_data_0 = myDecompress(array_float_recv[0], array_char_recv[0], array_char_displacement_recv[0], imax*kmax);
+    int pointer_0 = 0;
+    // for(int a=0; a<imax; a++)
+    // {
+    //   for(int b=0; b<jmax; b++)
+    //   {
+    //     p[a][b][kmax-1] = decompressed_data_0[pointer_0++];
+    //   }
+    // }
+    float* decompressed_data_1 = myDecompress(array_float_recv[1], array_char_recv[1], array_char_displacement_recv[1], imax*kmax);
+    int pointer_1 = 0;
+    for(int a=0; a<imax; a++)
+    {
+      for(int b=0; b<kmax; b++)
+      {
+        p[a][jmax-1][b] = decompressed_data_0[pointer_0++];
+        p[a][0][b] = decompressed_data_1[pointer_1++];
+      }
+    }
+  }  
+
+  if(CT == 0)
+  {
+    MPI_Irecv(&p[0][jmax-1][0],
+              1,
+              ikvec,
+              npy[1],
+              1,
+              mpi_comm_cart,
+              req);
+    MPI_Irecv(&p[0][0][0],
+              1,
+              ikvec,
+              npy[0],
+              2,
+              mpi_comm_cart,
+              req+1);
+    //todo
+    // if (CT == 1)
+    // {
+    //   cr += calcCompressionRatio_himeno_ij_ik_jk(p, 2, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_ij_ik_jk(p, 2, jmax-2, imax, jmax, kmax); 
+    // }
+    // else if(CT == 2)
+    // {
+    //   cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_nolossy_performance(p, 2, jmax-2, imax, jmax, kmax); 
+    // } 
+    // else if(CT == 3)    
+    // {
+    //   cr += calcCompressionRatio_himeno_nolossy_area(p, 2, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_nolossy_area(p, 2, jmax-2, imax, jmax, kmax);     
+    // }   
+    // else if(CT == 4)    
+    // {
+    //   cr += calcCompressionRatio_himeno_sz(p, 2, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_sz(p, 2, jmax-2, imax, jmax, kmax);     
+    // }      
+    // cr_num += 2;         
+    MPI_Isend(&p[0][1][0],
+              1,
+              ikvec,
+              npy[0],
+              1,
+              mpi_comm_cart,
+              req+2);
+    MPI_Isend(&p[0][jmax-2][0],
+              1,
+              ikvec,
+              npy[1],
+              2,
+              mpi_comm_cart,
+              req+3);
+
+    MPI_Waitall(4,
+                req,
+                st);
+  }
+
+
 }
 
 
@@ -756,59 +920,225 @@ sendp1()
   MPI_Status  st[4];
   MPI_Request req[4];
 
-  MPI_Irecv(&p[imax-1][0][0],
-            1,
-            jkvec,
-            npx[1],
-            1,
-            mpi_comm_cart,
-            req);
-  MPI_Irecv(&p[0][0][0],
-            1,
-            jkvec,
-            npx[0],
-            2,
-            mpi_comm_cart,
-            req+1);
   //todo
-  if (CT == 1)
-  {
-    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 1, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_ij_ik_jk(p, 1, imax-2, imax, jmax, kmax); 
-  }
-  else if(CT == 2)
-  {
-    cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, imax-2, imax, jmax, kmax); 
-  } 
-  else if(CT == 3)    
-  {
-    cr += calcCompressionRatio_himeno_nolossy_area(p, 1, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_nolossy_area(p, 1, imax-2, imax, jmax, kmax);     
-  }    
-  else if(CT == 4)    
-  {
-    cr += calcCompressionRatio_himeno_sz(p, 1, 1, imax, jmax, kmax);
-    cr += calcCompressionRatio_himeno_sz(p, 1, imax-2, imax, jmax, kmax);     
-  }   
-  cr_num += 2;               
-  MPI_Isend(&p[1][0][0],
-            1,
-            jkvec,
-            npx[0],
-            1,
-            mpi_comm_cart,
-            req+2);
-  MPI_Isend(&p[imax-2][0][0],
-            1,
-            jkvec,
-            npx[1],
-            2,
-            mpi_comm_cart,
-            req+3);
+  MPI_Status   st_plus[12];
+  MPI_Request  req_plus[12];
 
-  MPI_Waitall(4,
-              req,
-              st);
+  MPI_Status   st_bitwise[8];
+  MPI_Request  req_bitwise[8];  
+
+  if(CT == 5)
+  {
+    int data_bytes_send[2] = {0, 0};
+    int data_bytes_recv[2] = {0, 0};
+
+    MPI_Irecv(&data_bytes_recv[0], 1, MPI_INT, npx[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&data_bytes_recv[1], 1, MPI_INT, npx[0], 1, mpi_comm_cart, req+1);
+    
+    float* data[2];
+    data[0] = transform_3d_array_to_1d_array(p, 1, 1, imax, jmax, kmax);
+    data[1] = transform_3d_array_to_1d_array(p, 1, imax-2, imax, jmax, kmax);
+    float* data_small[2] = {NULL, NULL};
+    float data_min_send[2];
+    data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], jmax*kmax);        
+    data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], jmax*kmax);    
+
+    unsigned char* data_bits_send[2] = {NULL, NULL};
+
+    int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise(data_small[0], jmax*kmax, &data_bits_send[0], &data_bytes_send[0], &data_pos[0]);
+    myCompress_bitwise(data_small[1], jmax*kmax, &data_bits_send[1], &data_bytes_send[1], &data_pos[1]);
+
+    MPI_Isend(&data_bytes_send[0], 1, MPI_INT, npx[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&data_bytes_send[1], 1, MPI_INT, npx[1], 1, mpi_comm_cart, req+3); 
+    MPI_Waitall(4, req, st);  
+
+    // printf("npx %d %d \n", npx[0], npx[1]);  
+    // printf("send %d %d \n", data_bytes_send[0], data_bytes_send[1]);
+    // printf("recv %d %d \n", data_bytes_recv[0], data_bytes_recv[1]);
+
+    cr += data_bytes_send[0]*8.0/(jmax*kmax*sizeof(float)*8);
+    cr += data_bytes_send[1]*8.0/(jmax*kmax*sizeof(float)*8);
+    cr_num += 2;
+
+    unsigned char* data_bits_recv[2];
+    float data_min_recv[2];
+
+    data_bits_recv[0] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[0]);
+    data_bits_recv[1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[1]);
+    MPI_Irecv(&data_min_recv[0], 1, MPI_FLOAT, npx[1], 2, mpi_comm_cart, req_bitwise);
+    MPI_Irecv(data_bits_recv[0], data_bytes_recv[0], MPI_UNSIGNED_CHAR, npx[1], 3, mpi_comm_cart, req_bitwise+1);
+    MPI_Irecv(&data_min_recv[1], 1, MPI_FLOAT, npx[0], 4, mpi_comm_cart, req_bitwise+2);
+    MPI_Irecv(data_bits_recv[1], data_bytes_recv[1], MPI_UNSIGNED_CHAR, npx[0], 5, mpi_comm_cart, req_bitwise+3);  
+    //bitwise compress
+    MPI_Isend(&data_min_send[0], 1, MPI_FLOAT, npx[0], 2, mpi_comm_cart, req_bitwise+4); 
+    MPI_Isend(data_bits_send[0], data_bytes_send[0], MPI_UNSIGNED_CHAR, npx[0], 3, mpi_comm_cart, req_bitwise+5); 
+    MPI_Isend(&data_min_send[1], 1, MPI_FLOAT, npx[1], 4, mpi_comm_cart, req_bitwise+6); 
+    MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npx[1], 5, mpi_comm_cart, req_bitwise+7); 
+    MPI_Waitall(8, req_bitwise, st_bitwise);    
+
+    float* decompressed_data[2];
+    decompressed_data[0] = myDecompress_bitwise(data_bits_recv[0], data_bytes_recv[0], jmax*kmax);
+    decompressed_data[1] = myDecompress_bitwise(data_bits_recv[1], data_bytes_recv[1], jmax*kmax);
+    int pointer = 0;
+    for(int a=0; a<jmax; a++)
+    {
+      for(int b=0; b<kmax; b++)
+      {
+        p[imax-1][a][b] = decompressed_data[0][pointer] + data_min_recv[0];
+        p[0][a][b] = decompressed_data[1][pointer] + data_min_recv[1];
+        pointer++;
+      }
+    }
+  }  
+
+  if(CT == 1)
+  {
+    int array_float_len_send[2] = {0, 0};
+    int array_float_len_recv[2] = {0, 0};
+
+    float* array_float_send[2] = {NULL, NULL};
+    char* array_char_send[2] = {NULL, NULL};
+    int* array_char_displacement_send[2] = {NULL, NULL};
+
+    MPI_Irecv(&array_float_len_recv[0], 1, MPI_INT, npx[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&array_float_len_recv[1], 1, MPI_INT, npx[0], 1, mpi_comm_cart, req+1);
+    float* data_0 = transform_3d_array_to_1d_array(p, 1, 1, imax, jmax, kmax);
+    float* data_1 = transform_3d_array_to_1d_array(p, 1, imax-2, imax, jmax, kmax);
+    array_float_len_send[0] = myCompress(data_0, &array_float_send[0], &array_char_send[0], &array_char_displacement_send[0], jmax*kmax);
+    array_float_len_send[1] = myCompress(data_1, &array_float_send[1], &array_char_send[1], &array_char_displacement_send[1], jmax*kmax);
+    MPI_Isend(&array_float_len_send[0], 1, MPI_INT, npx[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&array_float_len_send[1], 1, MPI_INT, npx[1], 1, mpi_comm_cart, req+3); 
+    //printf("send1 %d %d \n", array_float_len_send[0], array_float_len_send[1]);
+    MPI_Waitall(4, req, st);
+
+    //printf("recv1 %d %d \n", array_float_len_recv[0], array_float_len_recv[1]);
+
+    float* array_float_recv[2]; 
+    char* array_char_recv[2]; 
+    int* array_char_displacement_recv[2]; 
+
+    int num_p_recv_0 = array_float_len_recv[0], num_c_recv_0 = jmax*kmax - array_float_len_recv[0];
+    int num_p_recv_1 = array_float_len_recv[1], num_c_recv_1 = jmax*kmax - array_float_len_recv[1];
+    array_float_recv[0] = (float*) malloc(sizeof(float)*num_p_recv_0);
+    array_char_recv[0] = (char*) malloc(sizeof(char)*num_c_recv_0);
+    array_char_displacement_recv[0] = (int*) malloc(sizeof(int)*num_c_recv_0);
+    array_float_recv[1] = (float*) malloc(sizeof(float)*num_p_recv_1);
+    array_char_recv[1] = (char*) malloc(sizeof(char)*num_c_recv_1);
+    array_char_displacement_recv[1] = (int*) malloc(sizeof(int)*num_c_recv_1);
+    MPI_Irecv(array_float_recv[0], num_p_recv_0, MPI_FLOAT, npx[1], 2, mpi_comm_cart, req_plus);
+    MPI_Irecv(array_char_recv[0], num_c_recv_0, MPI_CHAR, npx[1], 3, mpi_comm_cart, req_plus+1);
+    MPI_Irecv(array_char_displacement_recv[0], num_c_recv_0, MPI_INT, npx[1], 4, mpi_comm_cart, req_plus+2);    
+    MPI_Irecv(array_float_recv[1], num_p_recv_1, MPI_FLOAT, npx[0], 5, mpi_comm_cart, req_plus+3);
+    MPI_Irecv(array_char_recv[1], num_c_recv_1, MPI_CHAR, npx[0], 6, mpi_comm_cart, req_plus+4);
+    MPI_Irecv(array_char_displacement_recv[1], num_c_recv_1, MPI_INT, npx[0], 7, mpi_comm_cart, req_plus+5);  
+    //mycompress
+    int num_p_send_0 = array_float_len_send[0], num_c_send_0 = jmax*kmax - array_float_len_send[0];
+    int num_p_send_1 = array_float_len_send[1], num_c_send_1 = jmax*kmax - array_float_len_send[1];
+    MPI_Isend(array_float_send[0], num_p_send_0, MPI_FLOAT, npx[0], 2, mpi_comm_cart, req_plus+6); 
+    MPI_Isend(array_char_send[0], num_c_send_0, MPI_CHAR, npx[0], 3, mpi_comm_cart, req_plus+7); 
+    MPI_Isend(array_char_displacement_send[0], num_c_send_0, MPI_INT, npx[0], 4, mpi_comm_cart, req_plus+8); 
+    MPI_Isend(array_float_send[1], num_p_send_1, MPI_FLOAT, npx[1], 5, mpi_comm_cart, req_plus+9); 
+    MPI_Isend(array_char_send[1], num_c_send_1, MPI_CHAR, npx[1], 6, mpi_comm_cart, req_plus+10); 
+    MPI_Isend(array_char_displacement_send[1], num_c_send_1, MPI_INT, npx[1], 7, mpi_comm_cart, req_plus+11); 
+    MPI_Waitall(12, req_plus, st_plus);
+
+    cr += (8.0/(sizeof(float)*8))*((float)num_c_send_0/(jmax*kmax)) + 1.0*((float)num_p_send_0/(jmax*kmax));
+    cr += (8.0/(sizeof(float)*8))*((float)num_c_send_1/(jmax*kmax)) + 1.0*((float)num_p_send_1/(jmax*kmax));
+    cr_num += 2;
+
+    //calculate bitwise compress ratio
+    // printf("%d %d\n", num_p_send_0, num_c_send_0);
+    // printf("%d %d\n", num_p_send_1, num_c_send_1);
+    // printf("%f \n", calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0));
+    // cr += (3.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0)*((float)num_p_send_0/(imax*jmax));
+    // printf("%f \n", (3.0/(sizeof(float)*8))*((float)num_c_send_0/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[0], num_p_send_0)*((float)num_p_send_0/(imax*jmax)));
+    // printf("%f \n", cr);
+    // cr += (3.0/(sizeof(float)*8))*((float)num_c_send_1/(imax*jmax)) + calCompressRatio_bitwise_float(array_float_send[1], num_p_send_1)*((float)num_p_send_1/(imax*jmax));
+    // printf("%f \n", cr);
+    // cr_num += 2;
+    // printf("%d \n", cr_num);
+
+    float* decompressed_data_0 = myDecompress(array_float_recv[0], array_char_recv[0], array_char_displacement_recv[0], jmax*kmax);
+    int pointer_0 = 0;
+    // for(int a=0; a<imax; a++)
+    // {
+    //   for(int b=0; b<jmax; b++)
+    //   {
+    //     p[a][b][kmax-1] = decompressed_data_0[pointer_0++];
+    //   }
+    // }
+    float* decompressed_data_1 = myDecompress(array_float_recv[1], array_char_recv[1], array_char_displacement_recv[1], jmax*kmax);
+    int pointer_1 = 0;
+    for(int a=0; a<jmax; a++)
+    {
+      for(int b=0; b<kmax; b++)
+      {
+        p[imax-1][a][b] = decompressed_data_0[pointer_0++];
+        p[0][a][b] = decompressed_data_1[pointer_1++];
+      }
+    }
+  } 
+
+  if(CT == 0)
+  {
+    MPI_Irecv(&p[imax-1][0][0],
+              1,
+              jkvec,
+              npx[1],
+              1,
+              mpi_comm_cart,
+              req);
+    MPI_Irecv(&p[0][0][0],
+              1,
+              jkvec,
+              npx[0],
+              2,
+              mpi_comm_cart,
+              req+1);
+    //todo
+    // if (CT == 1)
+    // {
+    //   cr += calcCompressionRatio_himeno_ij_ik_jk(p, 1, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_ij_ik_jk(p, 1, imax-2, imax, jmax, kmax); 
+    // }
+    // else if(CT == 2)
+    // {
+    //   cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_nolossy_performance(p, 1, imax-2, imax, jmax, kmax); 
+    // } 
+    // else if(CT == 3)    
+    // {
+    //   cr += calcCompressionRatio_himeno_nolossy_area(p, 1, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_nolossy_area(p, 1, imax-2, imax, jmax, kmax);     
+    // }    
+    // else if(CT == 4)    
+    // {
+    //   cr += calcCompressionRatio_himeno_sz(p, 1, 1, imax, jmax, kmax);
+    //   cr += calcCompressionRatio_himeno_sz(p, 1, imax-2, imax, jmax, kmax);     
+    // }   
+    // cr_num += 2;               
+    MPI_Isend(&p[1][0][0],
+              1,
+              jkvec,
+              npx[0],
+              1,
+              mpi_comm_cart,
+              req+2);
+    MPI_Isend(&p[imax-2][0][0],
+              1,
+              jkvec,
+              npx[1],
+              2,
+              mpi_comm_cart,
+              req+3);
+
+    MPI_Waitall(4,
+                req,
+                st);
+    }
+
+
 }
             
