@@ -76,8 +76,6 @@ MPI_Datatype ijvec,ikvec,jkvec;
 //todo
 static float cr = 0; //compression rate
 static int cr_num = 0;
-static double wtime = 0;
-static int wtime_num = 0;
 
 int
 main(int argc,char *argv[])
@@ -173,7 +171,6 @@ main(int argc,char *argv[])
            mflops(nn,cpu,flop)/82.84);
     //todo
     printf("Compression rate: %f \n", 1/(cr/cr_num));
-    printf("Wtime: %f \n", wtime/wtime_num);
   }
 
   MPI_Finalize();
@@ -278,8 +275,6 @@ jacobi(int nn)
     double start_time = MPI_Wtime();
     sendp(ndx,ndy,ndz);
     double end_time = MPI_Wtime();
-    wtime += end_time-start_time;
-    wtime_num++;
     //printf("execution time: %f\n", end_time-start_time);
 
     MPI_Allreduce(&wgosa,
@@ -480,16 +475,12 @@ sendp3()
     float* data[2];
     data[0] = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax);
     data[1] = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax);
-    float* data_small[2];
-    data_small[0] = NULL;
-    data_small[1] = NULL;
+    float* data_small[2] = {NULL, NULL};
     float data_min_send[2];
     data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], imax*jmax);        
     data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], imax*jmax);    
 
-    unsigned char* data_bits_send[2];
-    data_bits_send[0] = NULL;
-    data_bits_send[1] = NULL;
+    unsigned char* data_bits_send[2] = {NULL, NULL};
 
     int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
 
@@ -545,20 +536,15 @@ sendp3()
     int array_float_len_send[2] = {0, 0};
     int array_float_len_recv[2] = {0, 0};
 
-    float* array_float_send[2];
-    char* array_char_send[2];
-    int* array_char_displacement_send[2];
+    float* array_float_send[2] = {NULL, NULL};
+    char* array_char_send[2] = {NULL, NULL};
+    int* array_char_displacement_send[2] = {NULL, NULL};
 
     MPI_Irecv(&array_float_len_recv[0], 1, MPI_INT, npz[1], 0, mpi_comm_cart, req);
     MPI_Irecv(&array_float_len_recv[1], 1, MPI_INT, npz[0], 1, mpi_comm_cart, req+1);
     float* data_0 = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax);
     float* data_1 = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax);
-    array_float_send[0] = NULL;
-    array_char_send[0] = NULL;
-    array_char_displacement_send[0] = NULL;
-    array_float_send[1] = NULL;
-    array_char_send[1] = NULL;
-    array_char_displacement_send[1] = NULL;
+
     array_float_len_send[0] = myCompress(data_0, &array_float_send[0], &array_char_send[0], &array_char_displacement_send[0], imax*jmax);
     array_float_len_send[1] = myCompress(data_1, &array_float_send[1], &array_char_send[1], &array_char_displacement_send[1], imax*jmax);
     MPI_Isend(&array_float_len_send[0], 1, MPI_INT, npz[0], 0, mpi_comm_cart, req+2); 
@@ -723,16 +709,12 @@ sendp2()
     float* data[2];
     data[0] = transform_3d_array_to_1d_array(p, 2, 1, imax, jmax, kmax);
     data[1] = transform_3d_array_to_1d_array(p, 2, jmax-2, imax, jmax, kmax);
-    float* data_small[2];
-    data_small[0] = NULL;
-    data_small[1] = NULL;
+    float* data_small[2] = {NULL, NULL};
     float data_min_send[2];
     data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], imax*kmax);        
     data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], imax*kmax);    
 
-    unsigned char* data_bits_send[2];
-    data_bits_send[0] = NULL;
-    data_bits_send[1] = NULL;
+    unsigned char* data_bits_send[2] = {NULL, NULL};
 
     int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
 
@@ -787,20 +769,14 @@ sendp2()
     int array_float_len_send[2] = {0, 0};
     int array_float_len_recv[2] = {0, 0};
 
-    float* array_float_send[2];
-    char* array_char_send[2];
-    int* array_char_displacement_send[2];
+    float* array_float_send[2] = {NULL, NULL};
+    char* array_char_send[2] = {NULL, NULL};
+    int* array_char_displacement_send[2] = {NULL, NULL};
 
     MPI_Irecv(&array_float_len_recv[0], 1, MPI_INT, npy[1], 0, mpi_comm_cart, req);
     MPI_Irecv(&array_float_len_recv[1], 1, MPI_INT, npy[0], 1, mpi_comm_cart, req+1);
     float* data_0 = transform_3d_array_to_1d_array(p, 2, 1, imax, jmax, kmax);
     float* data_1 = transform_3d_array_to_1d_array(p, 2, jmax-2, imax, jmax, kmax);
-    array_float_send[0] = NULL;
-    array_char_send[0] = NULL;
-    array_char_displacement_send[0] = NULL;
-    array_float_send[1] = NULL;
-    array_char_send[1] = NULL;
-    array_char_displacement_send[1] = NULL;
     array_float_len_send[0] = myCompress(data_0, &array_float_send[0], &array_char_send[0], &array_char_displacement_send[0], imax*kmax);
     array_float_len_send[1] = myCompress(data_1, &array_float_send[1], &array_char_send[1], &array_char_displacement_send[1], imax*kmax);
     MPI_Isend(&array_float_len_send[0], 1, MPI_INT, npy[0], 0, mpi_comm_cart, req+2); 
@@ -962,16 +938,12 @@ sendp1()
     float* data[2];
     data[0] = transform_3d_array_to_1d_array(p, 1, 1, imax, jmax, kmax);
     data[1] = transform_3d_array_to_1d_array(p, 1, imax-2, imax, jmax, kmax);
-    float* data_small[2];
-    data_small[0] = NULL;
-    data_small[1] = NULL;
+    float* data_small[2] = {NULL, NULL};
     float data_min_send[2];
     data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], jmax*kmax);        
     data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], jmax*kmax);    
 
-    unsigned char* data_bits_send[2];
-    data_bits_send[0] = NULL;
-    data_bits_send[1] = NULL;
+    unsigned char* data_bits_send[2] = {NULL, NULL};
 
     int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
 
@@ -1026,20 +998,14 @@ sendp1()
     int array_float_len_send[2] = {0, 0};
     int array_float_len_recv[2] = {0, 0};
 
-    float* array_float_send[2];
-    char* array_char_send[2];
-    int* array_char_displacement_send[2];
+    float* array_float_send[2] = {NULL, NULL};
+    char* array_char_send[2] = {NULL, NULL};
+    int* array_char_displacement_send[2] = {NULL, NULL};
 
     MPI_Irecv(&array_float_len_recv[0], 1, MPI_INT, npx[1], 0, mpi_comm_cart, req);
     MPI_Irecv(&array_float_len_recv[1], 1, MPI_INT, npx[0], 1, mpi_comm_cart, req+1);
     float* data_0 = transform_3d_array_to_1d_array(p, 1, 1, imax, jmax, kmax);
     float* data_1 = transform_3d_array_to_1d_array(p, 1, imax-2, imax, jmax, kmax);
-    array_float_send[0] = NULL;
-    array_char_send[0] = NULL;
-    array_char_displacement_send[0] = NULL;
-    array_float_send[1] = NULL;
-    array_char_send[1] = NULL;
-    array_char_displacement_send[1] = NULL;
     array_float_len_send[0] = myCompress(data_0, &array_float_send[0], &array_char_send[0], &array_char_displacement_send[0], jmax*kmax);
     array_float_len_send[1] = myCompress(data_1, &array_float_send[1], &array_char_send[1], &array_char_displacement_send[1], jmax*kmax);
     MPI_Isend(&array_float_len_send[0], 1, MPI_INT, npx[0], 0, mpi_comm_cart, req+2); 
