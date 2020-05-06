@@ -77,6 +77,7 @@ MPI_Datatype ijvec,ikvec,jkvec;
 static float cr = 0; //compression rate
 static int cr_num = 0;
 static double wtime = 0;
+static int wtime_num = 0;
 
 int
 main(int argc,char *argv[])
@@ -172,7 +173,7 @@ main(int argc,char *argv[])
            mflops(nn,cpu,flop)/82.84);
     //todo
     printf("Compression rate: %f \n", 1/(cr/cr_num));
-    printf("Wtime: %f \n", wtime);
+    printf("Wtime: %f \n", wtime/wtime_num);
   }
 
   MPI_Finalize();
@@ -278,6 +279,7 @@ jacobi(int nn)
     sendp(ndx,ndy,ndz);
     double end_time = MPI_Wtime();
     wtime += end_time-start_time;
+    wtime_num++;
     //printf("execution time: %f\n", end_time-start_time);
 
     MPI_Allreduce(&wgosa,
@@ -540,8 +542,8 @@ sendp3()
   //revised
   if(CT == 1)
   {
-    int array_float_len_send[2];
-    int array_float_len_recv[2];
+    int array_float_len_send[2] = {0, 0};
+    int array_float_len_recv[2] = {0, 0};
 
     float* array_float_send[2];
     char* array_char_send[2];
@@ -782,8 +784,8 @@ sendp2()
 
   if(CT == 1)
   {
-    int array_float_len_send[2];
-    int array_float_len_recv[2];
+    int array_float_len_send[2] = {0, 0};
+    int array_float_len_recv[2] = {0, 0};
 
     float* array_float_send[2];
     char* array_char_send[2];
@@ -1021,8 +1023,8 @@ sendp1()
 
   if(CT == 1)
   {
-    int array_float_len_send[2];
-    int array_float_len_recv[2];
+    int array_float_len_send[2] = {0, 0};
+    int array_float_len_recv[2] = {0, 0};
 
     float* array_float_send[2];
     char* array_char_send[2];
