@@ -19,7 +19,9 @@ struct vector
 int main(int argc, char** argv) {
 
   double start_time, end_time;
-
+  double start_time_comp_byte, end_time_comp_byte, start_time_decomp_byte, end_time_decomp_byte;
+  double start_time_comp_bit, end_time_comp_bit, start_time_decomp_bit, end_time_decomp_bit;
+  
   const int PING_PONG_LIMIT = 10000;
 
   // Initialize the MPI environment
@@ -59,7 +61,9 @@ int main(int argc, char** argv) {
   float* data_small = NULL;
   float min = toSmallDataset_float(data, &data_small, data_num);
 
+  start_time_comp_byte = MPI_Wtime();
   int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
+  end_time_comp_byte = MPI_Wtime();
 
   float compress_ratio;
 
@@ -73,7 +77,9 @@ int main(int argc, char** argv) {
   int bytes = 0; //total bytes of compressed data
   int pos = 8; //position of filled bit in last byte --> 87654321
 
+  start_time_comp_bit = MPI_Wtime();
   myCompress_bitwise(data_small, data_num, &data_bits, &bytes, &pos);
+  end_time_comp_bit = MPI_Wtime();
   //printf("test %d %d \n", bytes, pos);
   //printf("%.10f %.10f %.10f %.10f\n", data_small[0], data_small[1], data_small[2], data_small[data_num-1]);
 
@@ -148,7 +154,10 @@ int main(int argc, char** argv) {
       {
         if(CT == 1)
         {
+          start_time_decomp_byte = MPI_Wtime();
           float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, data_num);
+          end_time_decomp_byte = MPI_Wtime();
+
           float gosa = 0;
           for(int i=0; i<data_num; i++)
           {
@@ -168,8 +177,9 @@ int main(int argc, char** argv) {
           //   printf(" ");          
           // }
           // printf("\n");
-
+          start_time_decomp_bit = MPI_Wtime();
           float* decompressed_data = myDecompress_bitwise(data_bits, bytes, data_num);
+          end_time_decomp_bit = MPI_Wtime();
           //printf("%.10f %.10f %.10f %.10f\n", decompressed_data[0], decompressed_data[1], decompressed_data[2], decompressed_data[data_num-1]);
           float gosa = 0;
           for(int i=0; i<data_num; i++)
@@ -188,6 +198,9 @@ int main(int argc, char** argv) {
   {
     printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 
+    printf("Compression time (bytewise): %f \n", end_time_comp_byte-start_time_comp_byte); 
+    printf("Compression time (bitwise): %f \n", end_time_comp_bit-start_time_comp_bit); 
+
     if(CT == 1)
     {
       compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
@@ -202,12 +215,16 @@ int main(int argc, char** argv) {
       compress_ratio = (3.0/(sizeof(float)*8))*((float)num_c/(num_c+num_p)) + calCompressRatio_bitwise_float(msg.p_data, num_p)*((float)num_p/(num_c+num_p));
       printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio);        
       compress_ratio = (3.0/(sizeof(double)*8))*((float)num_c/(num_c+num_p)) + calCompressRatio_bitwise_double2(msg.p_data, num_p)*((float)num_p/(num_c+num_p));
-      printf("Compression rate (bitwise, double): %f \n", 1/compress_ratio);    
+      printf("Compression rate (bitwise, double): %f \n", 1/compress_ratio); 
+
+      printf("Decompression time (bytewise): %f \n", end_time_decomp_byte-start_time_decomp_byte);  
     } 
     if(CT == 5)
     {
       compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
       printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio); 
+
+      printf("Decompression time (bitwise): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
     }
   }
 
