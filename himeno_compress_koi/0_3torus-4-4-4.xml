@@ -15,7 +15,7 @@
   <prop id='smpi/coll_selector' value='mvapich2'/>
   <prop id='smpi/cpu_threshold' value='0.00000000001'/>
  </config>
- <AS id='AS0' routing='Dijkstra'>
+ <AS id='AS0' routing='Floyd'>
   <host id='n1' power='5000000000000.0' core='1'/>
   <link id='linkn1s0' bandwidth='200000000000.0' latency='1.0e-08'/>
   <link id='linkn1_loopback' bandwidth='2000000000000.0' latency='1.0e-07'/>
