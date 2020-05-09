@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid/simgrid.dtd">
-<platform version="4.0">
+<platform version="4">
   <zone id="world" routing="Full">
     <cluster id="bob_cluster" topology="TORUS" topo_parameters="4,4,4"
 	     prefix="node-" radical="0-63" suffix=".simgrid.org"
