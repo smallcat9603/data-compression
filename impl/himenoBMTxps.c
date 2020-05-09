@@ -139,6 +139,7 @@ main(int argc,char *argv[])
            mflops(nn,cpu,flop),cpu,gosa);
   }
   nn= (int)(target/(cpu/3.0));
+  nn= 12; // for simgrid
 
   if(id == 0){
     printf(" Now, start the actual measurement process.\n");
