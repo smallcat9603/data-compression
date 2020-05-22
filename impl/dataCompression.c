@@ -15,6 +15,372 @@
 #include "param.h"
 #include "dataCompression.h"
 
+double* myDecompress_bitwise_double_np(unsigned char* data_bits, int bytes, int num)
+{
+  int offset_bits = 0;
+  char* bits = NULL;
+  char* bits_more = NULL;
+  int bits_num = 0;
+  int min_shift = 0;
+
+  double* decompressed = (double*) malloc(sizeof(double)*num);
+  int decompressed_num = 0;
+
+  for(int i=0; i<bytes; i++)
+  {
+    //if(i == bytes - 1 && pos != 8) min_shift = pos;
+
+    for (int j=7; j>=min_shift; j--) //each bit of byte
+    {
+      int bit = (data_bits[i] >> j) & 1;
+
+      //printf("%d(%d)", bit, bits_num);
+
+      if(offset_bits == 0) //start bit
+      {
+        if(bits_num == 0) //not start bit of mantissa
+        {
+          if(bit == 0)
+          {
+            offset_bits = 1+11;
+            bits_num++;
+            bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+            if (bits_more != NULL) 
+            {
+              bits = bits_more;
+              bits[bits_num-1] = bit + '0';
+            }
+            else 
+            {
+              free(bits);
+              printf("Error (re)allocating memory\n");
+              exit(1);
+            }             
+          }
+          else if(bit == 1)
+          {
+            printf("Error leading bit 1\n");
+            exit(1);             
+          }
+        }
+        else //start bit of mantissa
+        {
+          int expo_value = 0;
+          for(int i=1; i<12; i++)
+          {
+            expo_value += (bits[i]-'0')*pow(2,11-i);
+          }
+          expo_value -= 1023;
+
+          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+          {
+            mantissa_bits_within_error_bound = 52;
+          }
+          else if(mantissa_bits_within_error_bound < 0)
+          {
+            mantissa_bits_within_error_bound = 0;
+          }
+
+          offset_bits = mantissa_bits_within_error_bound;
+
+          if(offset_bits > 0) //has mantissa bits
+          {
+            bits_num++;
+            bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+            if (bits_more != NULL) 
+            {
+              bits = bits_more;
+              bits[bits_num-1] = bit + '0';
+            }
+            else 
+            {
+              free(bits);
+              printf("Error (re)allocating memory\n");
+              exit(1);
+            } 
+          }
+          else //no mantissa bit
+          {
+            decompressed_num++;
+            decompressed[decompressed_num-1] = decompress_bitwise_double_np(bits, bits_num);
+            // printf("%f ", decompressed[decompressed_num-1]);
+
+            bits = NULL;
+            bits_num = 0;
+
+            if(bit == 0)
+            {
+              offset_bits = 1+11;
+              bits_num++;
+              bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+              if (bits_more != NULL) 
+              {
+                bits = bits_more;
+                bits[bits_num-1] = bit + '0';
+              }
+              else 
+              {
+                free(bits);
+                printf("Error (re)allocating memory\n");
+                exit(1);
+              }             
+            }
+            else if(bit == 1)
+            {
+              printf("Error leading bit 1\n");
+              exit(1);            
+            }              
+          }
+        }
+      }
+      else
+      {
+        bits_num++;
+        bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+        if (bits_more != NULL) 
+        {
+          bits = bits_more;
+          bits[bits_num-1] = bit + '0';
+        }
+        else 
+        {
+          free(bits);
+          printf("Error (re)allocating memory\n");
+          exit(1);
+        }        
+      }
+      offset_bits--;
+      if(offset_bits == 0 && bits_num != 1+11)
+      {
+        decompressed_num++;
+        decompressed[decompressed_num-1] = decompress_bitwise_double_np(bits, bits_num);
+        // printf("%f ", decompressed[decompressed_num-1]);
+
+        bits = NULL;
+        bits_num = 0;
+      }
+    }       
+  }
+  return decompressed;
+}
+
+double decompress_bitwise_double_np(char* bits, int bits_num)
+{
+  if(bits_num == sizeof(double)*8)
+  {
+    return strtodbl(bits);
+  }
+  else
+  {
+    char* bits64 = (char*)realloc(bits, sizeof(double)*8);
+    bits64[bits_num] = '1';
+    if(bits_num+1 < sizeof(double)*8)     
+    {
+      for(int i=bits_num+1; i< sizeof(double)*8; i++)
+      {
+        bits64[i] = '0';
+      }
+    }
+    return strtodbl(bits64); 
+  }
+}
+
+float* myDecompress_bitwise_np(unsigned char* data_bits, int bytes, int num)
+{
+  int offset_bits = 0;
+  char* bits = NULL;
+  char* bits_more = NULL;
+  int bits_num = 0;
+  int min_shift = 0;
+
+  float* decompressed = (float*) malloc(sizeof(float)*num);
+  int decompressed_num = 0;
+
+  for(int i=0; i<bytes; i++)
+  {
+    //if(i == bytes - 1 && pos != 8) min_shift = pos;
+
+    for (int j=7; j>=min_shift; j--) //each bit of byte
+    {
+      int bit = (data_bits[i] >> j) & 1;
+
+      //printf("%d(%d)", bit, bits_num);
+
+      if(offset_bits == 0) //start bit
+      {
+        if(bits_num == 0) //not start bit of mantissa
+        {
+          if(bit == 0)
+          {
+            offset_bits = 1+8;
+            bits_num++;
+            bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+            if (bits_more != NULL) 
+            {
+              bits = bits_more;
+              bits[bits_num-1] = bit + '0';
+            }
+            else 
+            {
+              free(bits);
+              printf("Error (re)allocating memory\n");
+              exit(1);
+            }             
+          }
+          else if(bit == 1)
+          {
+            printf("Error leading bit 1\n");
+            exit(1);            
+          }
+        }
+        else //start bit of mantissa
+        {
+          int expo_value = 0;
+          for(int i=1; i<9; i++)
+          {
+            expo_value += (bits[i]-'0')*pow(2,8-i);
+          }
+          expo_value -= 127;
+
+          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
+          {
+            mantissa_bits_within_error_bound = 23;
+          }
+          else if(mantissa_bits_within_error_bound < 0)
+          {
+            mantissa_bits_within_error_bound = 0;
+          }
+
+          offset_bits = mantissa_bits_within_error_bound;
+
+          if(offset_bits > 0) //has mantissa bits
+          {
+            bits_num++;
+            bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+            if (bits_more != NULL) 
+            {
+              bits = bits_more;
+              bits[bits_num-1] = bit + '0';
+            }
+            else 
+            {
+              free(bits);
+              printf("Error (re)allocating memory\n");
+              exit(1);
+            } 
+          }
+          else //no mantissa bit
+          {
+            decompressed_num++;
+            decompressed[decompressed_num-1] = decompress_bitwise_float_np(bits, bits_num);
+            // printf("%f ", decompressed[decompressed_num-1]);
+
+            bits = NULL;
+            bits_num = 0;
+
+            if(bit == 0)
+            {
+              offset_bits = 1+8;
+              bits_num++;
+              bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+              if (bits_more != NULL) 
+              {
+                bits = bits_more;
+                bits[bits_num-1] = bit + '0';
+              }
+              else 
+              {
+                free(bits);
+                printf("Error (re)allocating memory\n");
+                exit(1);
+              }             
+            }
+            else if(bit == 1)
+            {
+              printf("Error leading bit 1\n");
+              exit(1);            
+            }              
+          }
+        }
+      }
+      else
+      {
+        bits_num++;
+        bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+        if (bits_more != NULL) 
+        {
+          bits = bits_more;
+          bits[bits_num-1] = bit + '0';
+        }
+        else 
+        {
+          free(bits);
+          printf("Error (re)allocating memory\n");
+          exit(1);
+        }        
+      }
+      offset_bits--;
+      if(offset_bits == 0 && bits_num != 1+8)
+      {
+        decompressed_num++;
+        decompressed[decompressed_num-1] = decompress_bitwise_float_np(bits, bits_num);
+        // printf("%f ", decompressed[decompressed_num-1]);
+
+        bits = NULL;
+        bits_num = 0;
+      }
+    }       
+  }
+  return decompressed;
+}
+
+float decompress_bitwise_float_np(char* bits, int bits_num)
+{
+  if(bits_num == sizeof(float)*8)
+  {
+    return strtofloat(bits);
+  }
+  else
+  {
+    char* bits32 = (char*)realloc(bits, sizeof(float)*8);
+    bits32[bits_num] = '1';
+    if(bits_num+1 < sizeof(float)*8)     
+    {
+      for(int i=bits_num+1; i< sizeof(float)*8; i++)
+      {
+        bits32[i] = '0';
+      }
+    }
+    return strtofloat(bits32); 
+  }
+}
+
+//bitwise myCompress no prediction for k-means (double)
+void myCompress_bitwise_double_np(double data[], int num, unsigned char** data_bits, int* bytes, int* pos)
+{
+  double real_value;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+    compress_bitwise_double(real_value, data_bits, bytes, pos);
+  }
+}
+
+//bitwise myCompress no prediction for ping-pong & himeno (float)
+void myCompress_bitwise_np(float data[], int num, unsigned char** data_bits, int* bytes, int* pos)
+{
+  float real_value;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+    compress_bitwise_float(real_value, data_bits, bytes, pos);
+  }
+}
+
 double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num)
 {
   int offset_bits = 0;
