@@ -465,6 +465,72 @@ sendp3()
   MPI_Status   st_bitwise[8];
   MPI_Request  req_bitwise[8];  
 
+  if(CT == 6)
+  {
+    int data_bytes_send[2] = {0, 0};
+    int data_bytes_recv[2] = {0, 0};
+
+    MPI_Irecv(&data_bytes_recv[0], 1, MPI_INT, npz[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&data_bytes_recv[1], 1, MPI_INT, npz[0], 1, mpi_comm_cart, req+1);
+    
+    float* data[2];
+    data[0] = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax);
+    data[1] = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax);
+    float* data_small[2] = {NULL, NULL};
+    float data_min_send[2];
+    data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], imax*jmax);        
+    data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], imax*jmax);    
+
+    unsigned char* data_bits_send[2] = {NULL, NULL};
+
+    int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise_np(data_small[0], imax*jmax, &data_bits_send[0], &data_bytes_send[0], &data_pos[0]);
+    myCompress_bitwise_np(data_small[1], imax*jmax, &data_bits_send[1], &data_bytes_send[1], &data_pos[1]);
+
+    MPI_Isend(&data_bytes_send[0], 1, MPI_INT, npz[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&data_bytes_send[1], 1, MPI_INT, npz[1], 1, mpi_comm_cart, req+3); 
+    MPI_Waitall(4, req, st);  
+
+    // printf("npz %d %d \n", npz[0], npz[1]);  
+    // printf("send %d %d \n", data_bytes_send[0], data_bytes_send[1]);
+    // printf("recv %d %d \n", data_bytes_recv[0], data_bytes_recv[1]);
+
+    cr += data_bytes_send[0]*8.0/(imax*jmax*sizeof(float)*8);
+    cr += data_bytes_send[1]*8.0/(imax*jmax*sizeof(float)*8);
+    cr_num += 2;
+
+    unsigned char* data_bits_recv[2];
+    float data_min_recv[2];
+
+    data_bits_recv[0] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[0]);
+    data_bits_recv[1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[1]);
+    MPI_Irecv(&data_min_recv[0], 1, MPI_FLOAT, npz[1], 2, mpi_comm_cart, req_bitwise);
+    MPI_Irecv(data_bits_recv[0], data_bytes_recv[0], MPI_UNSIGNED_CHAR, npz[1], 3, mpi_comm_cart, req_bitwise+1);
+    MPI_Irecv(&data_min_recv[1], 1, MPI_FLOAT, npz[0], 4, mpi_comm_cart, req_bitwise+2);
+    MPI_Irecv(data_bits_recv[1], data_bytes_recv[1], MPI_UNSIGNED_CHAR, npz[0], 5, mpi_comm_cart, req_bitwise+3);  
+    //bitwise compress
+    MPI_Isend(&data_min_send[0], 1, MPI_FLOAT, npz[0], 2, mpi_comm_cart, req_bitwise+4); 
+    MPI_Isend(data_bits_send[0], data_bytes_send[0], MPI_UNSIGNED_CHAR, npz[0], 3, mpi_comm_cart, req_bitwise+5); 
+    MPI_Isend(&data_min_send[1], 1, MPI_FLOAT, npz[1], 4, mpi_comm_cart, req_bitwise+6); 
+    MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npz[1], 5, mpi_comm_cart, req_bitwise+7); 
+    MPI_Waitall(8, req_bitwise, st_bitwise);    
+
+    float* decompressed_data[2];
+    decompressed_data[0] = myDecompress_bitwise_np(data_bits_recv[0], data_bytes_recv[0], imax*jmax);
+    decompressed_data[1] = myDecompress_bitwise_np(data_bits_recv[1], data_bytes_recv[1], imax*jmax);
+    int pointer = 0;
+    for(int a=0; a<imax; a++)
+    {
+      for(int b=0; b<jmax; b++)
+      {
+        p[a][b][kmax-1] = decompressed_data[0][pointer] + data_min_recv[0];
+        p[a][b][0] = decompressed_data[1][pointer] + data_min_recv[1];
+        pointer++;
+      }
+    }
+  }
+
   if(CT == 5)
   {
     int data_bytes_send[2] = {0, 0};
@@ -699,6 +765,72 @@ sendp2()
   MPI_Status   st_bitwise[8];
   MPI_Request  req_bitwise[8];  
 
+  if(CT == 6)
+  {
+    int data_bytes_send[2] = {0, 0};
+    int data_bytes_recv[2] = {0, 0};
+
+    MPI_Irecv(&data_bytes_recv[0], 1, MPI_INT, npy[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&data_bytes_recv[1], 1, MPI_INT, npy[0], 1, mpi_comm_cart, req+1);
+    
+    float* data[2];
+    data[0] = transform_3d_array_to_1d_array(p, 2, 1, imax, jmax, kmax);
+    data[1] = transform_3d_array_to_1d_array(p, 2, jmax-2, imax, jmax, kmax);
+    float* data_small[2] = {NULL, NULL};
+    float data_min_send[2];
+    data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], imax*kmax);        
+    data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], imax*kmax);    
+
+    unsigned char* data_bits_send[2] = {NULL, NULL};
+
+    int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise_np(data_small[0], imax*kmax, &data_bits_send[0], &data_bytes_send[0], &data_pos[0]);
+    myCompress_bitwise_np(data_small[1], imax*kmax, &data_bits_send[1], &data_bytes_send[1], &data_pos[1]);
+
+    MPI_Isend(&data_bytes_send[0], 1, MPI_INT, npy[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&data_bytes_send[1], 1, MPI_INT, npy[1], 1, mpi_comm_cart, req+3); 
+    MPI_Waitall(4, req, st);  
+
+    // printf("npy %d %d \n", npy[0], npy[1]);  
+    // printf("send %d %d \n", data_bytes_send[0], data_bytes_send[1]);
+    // printf("recv %d %d \n", data_bytes_recv[0], data_bytes_recv[1]);
+
+    cr += data_bytes_send[0]*8.0/(imax*kmax*sizeof(float)*8);
+    cr += data_bytes_send[1]*8.0/(imax*kmax*sizeof(float)*8);
+    cr_num += 2;
+
+    unsigned char* data_bits_recv[2];
+    float data_min_recv[2];
+
+    data_bits_recv[0] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[0]);
+    data_bits_recv[1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[1]);
+    MPI_Irecv(&data_min_recv[0], 1, MPI_FLOAT, npy[1], 2, mpi_comm_cart, req_bitwise);
+    MPI_Irecv(data_bits_recv[0], data_bytes_recv[0], MPI_UNSIGNED_CHAR, npy[1], 3, mpi_comm_cart, req_bitwise+1);
+    MPI_Irecv(&data_min_recv[1], 1, MPI_FLOAT, npy[0], 4, mpi_comm_cart, req_bitwise+2);
+    MPI_Irecv(data_bits_recv[1], data_bytes_recv[1], MPI_UNSIGNED_CHAR, npy[0], 5, mpi_comm_cart, req_bitwise+3);  
+    //bitwise compress
+    MPI_Isend(&data_min_send[0], 1, MPI_FLOAT, npy[0], 2, mpi_comm_cart, req_bitwise+4); 
+    MPI_Isend(data_bits_send[0], data_bytes_send[0], MPI_UNSIGNED_CHAR, npy[0], 3, mpi_comm_cart, req_bitwise+5); 
+    MPI_Isend(&data_min_send[1], 1, MPI_FLOAT, npy[1], 4, mpi_comm_cart, req_bitwise+6); 
+    MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npy[1], 5, mpi_comm_cart, req_bitwise+7); 
+    MPI_Waitall(8, req_bitwise, st_bitwise);    
+
+    float* decompressed_data[2];
+    decompressed_data[0] = myDecompress_bitwise_np(data_bits_recv[0], data_bytes_recv[0], imax*kmax);
+    decompressed_data[1] = myDecompress_bitwise_np(data_bits_recv[1], data_bytes_recv[1], imax*kmax);
+    int pointer = 0;
+    for(int a=0; a<imax; a++)
+    {
+      for(int b=0; b<kmax; b++)
+      {
+        p[a][jmax-1][b] = decompressed_data[0][pointer] + data_min_recv[0];
+        p[a][0][b] = decompressed_data[1][pointer] + data_min_recv[1];
+        pointer++;
+      }
+    }
+  } 
+
   if(CT == 5)
   {
     int data_bytes_send[2] = {0, 0};
@@ -927,6 +1059,72 @@ sendp1()
 
   MPI_Status   st_bitwise[8];
   MPI_Request  req_bitwise[8];  
+
+  if(CT == 6)
+  {
+    int data_bytes_send[2] = {0, 0};
+    int data_bytes_recv[2] = {0, 0};
+
+    MPI_Irecv(&data_bytes_recv[0], 1, MPI_INT, npx[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&data_bytes_recv[1], 1, MPI_INT, npx[0], 1, mpi_comm_cart, req+1);
+    
+    float* data[2];
+    data[0] = transform_3d_array_to_1d_array(p, 1, 1, imax, jmax, kmax);
+    data[1] = transform_3d_array_to_1d_array(p, 1, imax-2, imax, jmax, kmax);
+    float* data_small[2] = {NULL, NULL};
+    float data_min_send[2];
+    data_min_send[0] = toSmallDataset_float(data[0], &data_small[0], jmax*kmax);        
+    data_min_send[1] = toSmallDataset_float(data[1], &data_small[1], jmax*kmax);    
+
+    unsigned char* data_bits_send[2] = {NULL, NULL};
+
+    int data_pos[2] = {8, 8}; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise_np(data_small[0], jmax*kmax, &data_bits_send[0], &data_bytes_send[0], &data_pos[0]);
+    myCompress_bitwise_np(data_small[1], jmax*kmax, &data_bits_send[1], &data_bytes_send[1], &data_pos[1]);
+
+    MPI_Isend(&data_bytes_send[0], 1, MPI_INT, npx[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&data_bytes_send[1], 1, MPI_INT, npx[1], 1, mpi_comm_cart, req+3); 
+    MPI_Waitall(4, req, st);  
+
+    // printf("npx %d %d \n", npx[0], npx[1]);  
+    // printf("send %d %d \n", data_bytes_send[0], data_bytes_send[1]);
+    // printf("recv %d %d \n", data_bytes_recv[0], data_bytes_recv[1]);
+
+    cr += data_bytes_send[0]*8.0/(jmax*kmax*sizeof(float)*8);
+    cr += data_bytes_send[1]*8.0/(jmax*kmax*sizeof(float)*8);
+    cr_num += 2;
+
+    unsigned char* data_bits_recv[2];
+    float data_min_recv[2];
+
+    data_bits_recv[0] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[0]);
+    data_bits_recv[1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[1]);
+    MPI_Irecv(&data_min_recv[0], 1, MPI_FLOAT, npx[1], 2, mpi_comm_cart, req_bitwise);
+    MPI_Irecv(data_bits_recv[0], data_bytes_recv[0], MPI_UNSIGNED_CHAR, npx[1], 3, mpi_comm_cart, req_bitwise+1);
+    MPI_Irecv(&data_min_recv[1], 1, MPI_FLOAT, npx[0], 4, mpi_comm_cart, req_bitwise+2);
+    MPI_Irecv(data_bits_recv[1], data_bytes_recv[1], MPI_UNSIGNED_CHAR, npx[0], 5, mpi_comm_cart, req_bitwise+3);  
+    //bitwise compress
+    MPI_Isend(&data_min_send[0], 1, MPI_FLOAT, npx[0], 2, mpi_comm_cart, req_bitwise+4); 
+    MPI_Isend(data_bits_send[0], data_bytes_send[0], MPI_UNSIGNED_CHAR, npx[0], 3, mpi_comm_cart, req_bitwise+5); 
+    MPI_Isend(&data_min_send[1], 1, MPI_FLOAT, npx[1], 4, mpi_comm_cart, req_bitwise+6); 
+    MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npx[1], 5, mpi_comm_cart, req_bitwise+7); 
+    MPI_Waitall(8, req_bitwise, st_bitwise);    
+
+    float* decompressed_data[2];
+    decompressed_data[0] = myDecompress_bitwise_np(data_bits_recv[0], data_bytes_recv[0], jmax*kmax);
+    decompressed_data[1] = myDecompress_bitwise_np(data_bits_recv[1], data_bytes_recv[1], jmax*kmax);
+    int pointer = 0;
+    for(int a=0; a<jmax; a++)
+    {
+      for(int b=0; b<kmax; b++)
+      {
+        p[imax-1][a][b] = decompressed_data[0][pointer] + data_min_recv[0];
+        p[0][a][b] = decompressed_data[1][pointer] + data_min_recv[1];
+        pointer++;
+      }
+    }
+  }  
 
   if(CT == 5)
   {
