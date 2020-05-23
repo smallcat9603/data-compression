@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
   double start_time, end_time;
   double start_time_comp_byte, end_time_comp_byte, start_time_decomp_byte, end_time_decomp_byte;
   double start_time_comp_bit, end_time_comp_bit, start_time_decomp_bit, end_time_decomp_bit;
+  double start_time_comp_bit_np, end_time_comp_bit_np, start_time_decomp_bit_np, end_time_decomp_bit_np;
   
   const int PING_PONG_LIMIT = 10000;
 
@@ -83,6 +84,15 @@ int main(int argc, char** argv) {
   //printf("test %d %d \n", bytes, pos);
   //printf("%.10f %.10f %.10f %.10f\n", data_small[0], data_small[1], data_small[2], data_small[data_num-1]);
 
+  unsigned char* data_bits_np = NULL;
+  //int flag = 0; //0, 1
+  int bytes_np = 0; //total bytes of compressed data
+  int pos_np = 8; //position of filled bit in last byte --> 87654321
+
+  start_time_comp_bit_np = MPI_Wtime();
+  myCompress_bitwise_np(data_small, data_num, &data_bits_np, &bytes_np, &pos_np);
+  end_time_comp_bit_np = MPI_Wtime();  
+
   struct vector msg; 
   int num_p = array_float_len, num_c = data_num-array_float_len;
   // msg.p_data = (float*) malloc(sizeof(float)*num_p);
@@ -129,7 +139,11 @@ int main(int argc, char** argv) {
       if(CT == 5)
       {
         MPI_Send(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD);
-      }   
+      } 
+      if(CT == 6)
+      {
+        MPI_Send(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD);
+      }        
     }
     else {
       MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -150,6 +164,10 @@ int main(int argc, char** argv) {
       {
         MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
+      if(CT == 6)
+      {
+        MPI_Recv(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }      
       if(ping_pong_count == PING_PONG_LIMIT)
       {
         if(CT == 1)
@@ -189,6 +207,20 @@ int main(int argc, char** argv) {
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
         }
+        if(CT == 6)
+        {
+          start_time_decomp_bit_np = MPI_Wtime();
+          float* decompressed_data = myDecompress_bitwise_np(data_bits_np, bytes_np, data_num);
+          end_time_decomp_bit_np = MPI_Wtime();
+          //printf("%.10f %.10f %.10f %.10f\n", decompressed_data[0], decompressed_data[1], decompressed_data[2], decompressed_data[data_num-1]);
+          float gosa = 0;
+          for(int i=0; i<data_num; i++)
+          {
+            gosa += fabs(decompressed_data[i]+min-data[i]);
+          }
+          gosa = gosa/data_num;
+          printf("gosa = %f \n", gosa);          
+        }        
       }
     }
   }
@@ -200,6 +232,7 @@ int main(int argc, char** argv) {
 
     printf("Compression time (bytewise): %f \n", end_time_comp_byte-start_time_comp_byte); 
     printf("Compression time (bitwise): %f \n", end_time_comp_bit-start_time_comp_bit); 
+    printf("Compression time (bitwise_np): %f \n", end_time_comp_bit_np-start_time_comp_bit_np); 
 
     if(CT == 1)
     {
@@ -226,6 +259,13 @@ int main(int argc, char** argv) {
 
       printf("Decompression time (bitwise): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
     }
+    if(CT == 6)
+    {
+      compress_ratio = (float)(bytes_np*8)/(data_num*sizeof(float)*8);
+      printf("Compression rate (bitwise_np, float): %f \n", 1/compress_ratio); 
+
+      printf("Decompression time (bitwise_np): %f \n", end_time_decomp_bit_np-start_time_decomp_bit_np); 
+    }    
   }
 
   MPI_Finalize();
