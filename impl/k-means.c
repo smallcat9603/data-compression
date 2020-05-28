@@ -639,7 +639,7 @@ int main(int argc, char *argv[])
 
 		//char* output_filename = filename output_suffix;
 		char output_filename[32];
-		sprintf(output_filename, "%s%s%d_%g_%d%s", filename, output_suffix, CT, absErrBound, clusters, suffix);
+		sprintf(output_filename, "%s%s%d_%g_%d%s", filename, output_suffix, CT, absErrorBound, clusters, suffix);
 		FILE* fp = fopen(output_filename, "w");
 		for(int i = 0; i < numOfElements; i++)
 		{

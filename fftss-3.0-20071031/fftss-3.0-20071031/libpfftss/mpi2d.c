@@ -48,8 +48,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
-#define absErrBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
-#define absErrBound_binary  20 //bitwise, SZ, equal to above
+#define absErrorBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
+#define absErrorBound_binary  20 //bitwise, SZ, equal to above
 #define CT                  6 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise, 6 bitwise no prediction
 #define byte_or_bit         2 //1 byte, 2 bit
 
@@ -1651,7 +1651,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(diff_min<=absErrBound) 
+      if(diff_min<=absErrorBound) 
       {
         array_char_len++;
         array_char_more = (char*)realloc(*array_char, sizeof(char)*array_char_len);
@@ -1773,7 +1773,7 @@ double* myDecompress_bitwise_double_np(unsigned char* data_bits, int bytes, int 
           }
           expo_value -= 1023;
 
-          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
           {
             mantissa_bits_within_error_bound = 52;
@@ -1969,7 +1969,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
           }
           expo_value -= 1023;
 
-          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
           {
             mantissa_bits_within_error_bound = 52;
@@ -2183,7 +2183,7 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
     if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
     {
       //if(real_value == 0)
-      if(fabs(real_value) < absErrBound)
+      if(fabs(real_value) < absErrorBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
@@ -2238,14 +2238,14 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(fabs(real_value) < absErrBound)
+      if(fabs(real_value) < absErrorBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         d++;
       }
-      else if(diff_min<=absErrBound) 
+      else if(diff_min<=absErrorBound) 
       {
         if(compress_type == 'a')
         {
@@ -2297,7 +2297,7 @@ void compress_bitwise_double(double real_value, unsigned char** data_bits, int* 
   }
   expo_value -= 1023;
 
-  int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+  int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
   if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
   {
@@ -2396,7 +2396,7 @@ float calcCompressionRatio_sz_double(double data[], int num)
       before_value2 = before_value1;
       before_value1 = real_value;
 
-      if(diff_min<=absErrBound) 
+      if(diff_min<=absErrorBound) 
       {
         if(byte_or_bit == 1)
         {
@@ -2444,7 +2444,7 @@ float calcCompressionRatio_sz_double(double data[], int num)
           }  
         }
         expo_value -= 1023;
-        mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+        mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
         if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
         {
           mantissa_bits_within_error_bound = 52;

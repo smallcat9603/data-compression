@@ -72,7 +72,7 @@ double* myDecompress_bitwise_double_np(unsigned char* data_bits, int bytes, int 
           }
           expo_value -= 1023;
 
-          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
           {
             mantissa_bits_within_error_bound = 52;
@@ -243,7 +243,7 @@ float* myDecompress_bitwise_np(unsigned char* data_bits, int bytes, int num)
           }
           expo_value -= 127;
 
-          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
           {
             mantissa_bits_within_error_bound = 23;
@@ -451,7 +451,7 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
           }
           expo_value -= 1023;
 
-          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
           {
             mantissa_bits_within_error_bound = 52;
@@ -715,7 +715,7 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int num)
           }
           expo_value -= 127;
 
-          int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
           {
             mantissa_bits_within_error_bound = 23;
@@ -929,7 +929,7 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
     if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
     {
       //if(real_value == 0)
-      if(fabs(real_value) < absErrBound)
+      if(fabs(real_value) < absErrorBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
@@ -984,14 +984,14 @@ void myCompress_bitwise_double(double data[], int num, unsigned char** data_bits
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(fabs(real_value) < absErrBound)
+      if(fabs(real_value) < absErrorBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         d++;
       }
-      else if(diff_min<=absErrBound) 
+      else if(diff_min<=absErrorBound) 
       {
         if(compress_type == 'a')
         {
@@ -1050,7 +1050,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
     if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
     {
       //if(real_value == 0)
-      if(fabs(real_value) < absErrBound)
+      if(fabs(real_value) < absErrorBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
@@ -1105,14 +1105,14 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(fabs(real_value) < absErrBound)
+      if(fabs(real_value) < absErrorBound)
       {
         add_bit_to_bytes(data_bits, bytes, pos, 1);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         d++;
       }
-      else if(diff_min<=absErrBound) 
+      else if(diff_min<=absErrorBound) 
       {
         if(compress_type == 'a')
         {
@@ -1164,7 +1164,7 @@ void compress_bitwise_double(double real_value, unsigned char** data_bits, int* 
   }
   expo_value -= 1023;
 
-  int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+  int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
   if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
   {
@@ -1195,7 +1195,7 @@ void compress_bitwise_float(float real_value, unsigned char** data_bits, int* by
   }
   expo_value -= 127;
 
-  int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+  int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
   if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
   {
@@ -1278,7 +1278,7 @@ float calCompressRatio_bitwise_double2(float data[], int num)
 
     //printf("%d ", expo_value); 
 
-    int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+    int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
     if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
     {
@@ -1316,7 +1316,7 @@ float calCompressRatio_bitwise_double(double data[], int num)
 
     //printf("%d ", expo_value); 
 
-    int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+    int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
     if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
     {
@@ -1353,7 +1353,7 @@ float calCompressRatio_bitwise_float(float data[], int num)
 
     //printf("%d ", expo_value); 
 
-    int mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+    int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
     if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
     {
@@ -1529,7 +1529,7 @@ int myCompress_double(double data[], double** array_double, char** array_char, i
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(diff_min<=absErrBound) 
+      if(diff_min<=absErrorBound) 
       {
         array_char_len++;
         array_char_more = (char*)realloc(*array_char, sizeof(char)*array_char_len);
@@ -1698,7 +1698,7 @@ int myCompress(float data[], float** array_float, char** array_char, int** array
       before_value2 = before_value1;
       before_value1 = real_value;
       
-      if(diff_min<=absErrBound) 
+      if(diff_min<=absErrorBound) 
       {
         array_char_len++;
         array_char_more = (char*)realloc(*array_char, sizeof(char)*array_char_len);
@@ -1859,7 +1859,7 @@ float calcCompressionRatio_himeno_ij_ik_jk(float data[MIMAX][MJMAX][MKMAX], int 
         before_value2 = before_value1;
         before_value1 = real_value;
 
-        if(diff_min<=absErrBound) 
+        if(diff_min<=absErrorBound) 
         {
           array_char_len++;
           array_char_more = (char*)realloc(array_char, sizeof(char)*array_char_len);
@@ -1989,7 +1989,7 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
         before_value2 = before_value1;
         before_value1 = real_value;
 
-        if(diff_min<=absErrBound) 
+        if(diff_min<=absErrorBound) 
         {
           if(byte_or_bit == 1)
           {
@@ -2037,7 +2037,7 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
             }  
           }
           expo_value -= 127;
-          mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+          mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
           {
             mantissa_bits_within_error_bound = 23;
@@ -2321,7 +2321,7 @@ float calcCompressionRatio_sz_float(float data[], int num)
       before_value2 = before_value1;
       before_value1 = real_value;
 
-      if(diff_min<=absErrBound) 
+      if(diff_min<=absErrorBound) 
       {
         if(byte_or_bit == 1)
         {
@@ -2369,7 +2369,7 @@ float calcCompressionRatio_sz_float(float data[], int num)
           }  
         }
         expo_value -= 127;
-        mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+        mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
         if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
         {
           mantissa_bits_within_error_bound = 23;
@@ -2610,7 +2610,7 @@ float calcCompressionRatio_sz_double(double data[], int num)
       before_value2 = before_value1;
       before_value1 = real_value;
 
-      if(diff_min<=absErrBound) 
+      if(diff_min<=absErrorBound) 
       {
         if(byte_or_bit == 1)
         {
@@ -2658,7 +2658,7 @@ float calcCompressionRatio_sz_double(double data[], int num)
           }  
         }
         expo_value -= 1023;
-        mantissa_bits_within_error_bound = absErrBound_binary + expo_value;
+        mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
         if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
         {
           mantissa_bits_within_error_bound = 52;
