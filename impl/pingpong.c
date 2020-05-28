@@ -9,6 +9,8 @@
 #include <math.h>
 #include "param.h"
 #include "dataCompression.h"
+// #include "/opt/sz191211/include/sz.h"
+// #include "/opt/sz191211/include/rw.h"
 
 struct vector
 {
@@ -24,6 +26,8 @@ int main(int argc, char** argv) {
   double start_time_comp_bit_np, end_time_comp_bit_np, start_time_decomp_bit_np, end_time_decomp_bit_np;
   
   const int PING_PONG_LIMIT = 10000;
+
+  // int iret = system("./sz -z -f -c sz.config -i ./testdata/x86/testfloat_8_8_128.dat -3 8 8 128");
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
