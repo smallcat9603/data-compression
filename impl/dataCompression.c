@@ -2943,6 +2943,23 @@ void writetobinary_double(const char *file, double* data, int count)
     printf("%sに保存しました。\n", file);
 }
 
+void writetobinary_char(const char *file, unsigned char* data, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "wb");
+    //fopen_s(&fp, file, "wb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        return;
+    }
+    
+    fwrite(data, sizeof(char), count, fp);
+    fclose(fp);
+    printf("%sに保存しました。\n", file);
+}
+
 float* readfrombinary_float(const char *file, int count)
 {
     FILE *fp;
@@ -2956,7 +2973,7 @@ float* readfrombinary_float(const char *file, int count)
     }
  
     //float arr[count];
-    float *arr = malloc(sizeof(float) * count);
+    float *arr = (float*)malloc(sizeof(float) * count);
  
     fread(arr, sizeof(float), count, fp);
     fclose(fp);
@@ -2977,7 +2994,7 @@ double* readfrombinary_double(const char *file, int count)
     }
  
     //double arr[count];
-    double *arr = malloc(sizeof(double) * count);
+    double *arr = (double*)malloc(sizeof(double) * count);
  
     fread(arr, sizeof(double), count, fp);
     fclose(fp);
@@ -2985,7 +3002,36 @@ double* readfrombinary_double(const char *file, int count)
     return arr;
 }
 
-void readfrombinary_writetotxt_float(const char *binaryfile, const char *txtfile, int count)
+unsigned char* readfrombinary_char(const char *file, int* bytes_sz)
+{
+    FILE *fp;
+    fp = fopen(file, "rb");
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        exit(0);
+    }
+ 
+    fseek(fp, 0, SEEK_END);
+    *bytes_sz = ftell(fp);
+    fclose(fp);
+
+    fp = fopen(file, "rb");
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        exit(0);
+    }
+
+    unsigned char *arr = (unsigned char*)malloc(sizeof(char) * (*bytes_sz));
+ 
+    fread(arr, sizeof(char), *bytes_sz, fp);
+    fclose(fp);
+
+    return arr;
+}
+
+float* readfrombinary_writetotxt_float(const char *binaryfile, const char *txtfile, int count)
 {
     FILE *fp;
     fp = fopen(binaryfile, "rb");
@@ -3003,9 +3049,11 @@ void readfrombinary_writetotxt_float(const char *binaryfile, const char *txtfile
       fprintf(fp, "%f\n", arr[i]);
     }
     fclose(fp);
+
+    return arr;
 }
 
-void readfrombinary_writetotxt_double(const char *binaryfile, const char *txtfile, int count)
+double* readfrombinary_writetotxt_double(const char *binaryfile, const char *txtfile, int count)
 {
     FILE *fp;
     fp = fopen(binaryfile, "rb");
@@ -3023,6 +3071,8 @@ void readfrombinary_writetotxt_double(const char *binaryfile, const char *txtfil
       fprintf(fp, "%lf\n", arr[i]);
     }
     fclose(fp);
+
+    return arr;
 }
 
 void add_bit_to_bytes(unsigned char** data_bits, int* bytes, int* pos, int flag)

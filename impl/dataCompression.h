@@ -5,13 +5,23 @@
 #define absErrorBound_binary  7 //bitwise, SZ, equal to above
 // #define relBoundRatio       0.01
 // #define pw_relBoundRatio    0.01    
-#define CT                  6 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress, 6 bitwise no prediction
+#define CT                  4 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress, 6 bitwise no prediction
 #define byte_or_bit         2 //1 byte, 2 bit
 #define data_num            8192 //pingpong
 #define filename            "dataset/testfloat_8_8_128" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
 #define suffix              ".txt" //k-means, ".txt"
 #define output_suffix       "_output_" //k-means, "_output_", "_output_s_"
 #define clusters            100 //k-means
+//sz
+#define bin_suffix          ".dat"
+#define sz_suffix           ".sz"
+#define zs_suffix           ".zs"
+#define out_suffix           ".out"
+#define sz_comp_cmd_prefix  "./sz -z -f -c sz.config -M ABS -A "
+#define sz_comp_cmd_suffix1 " -i "
+#define sz_comp_cmd_suffix2 ".dat -1 "
+#define sz_decomp_cmd_prefix  "./sz -x -f -s "
+#define sz_decomp_cmd_suffix ".dat.zs -1 "
 
 double* myDecompress_bitwise_double_np(unsigned char*, int, int);
 double decompress_bitwise_double_np(char*, int);
@@ -64,10 +74,12 @@ float strtofloat(char*);
 double strtodbl(char*);
 void writetobinary_float(const char*, float*, int);
 void writetobinary_double(const char*, double*, int);
+void writetobinary_char(const char *, unsigned char*, int);
 float* readfrombinary_float(const char*, int);
 double* readfrombinary_double(const char*, int);
-void readfrombinary_writetotxt_float(const char*, const char*, int);
-void readfrombinary_writetotxt_double(const char*, const char*, int);
+unsigned char* readfrombinary_char(const char *, int*);
+float* readfrombinary_writetotxt_float(const char*, const char*, int);
+double* readfrombinary_writetotxt_double(const char*, const char*, int);
 
 void add_bit_to_bytes(unsigned char**, int*, int*, int);
 void bit_set(unsigned char*, unsigned char, int);
