@@ -280,6 +280,7 @@ int main(int argc, char** argv) {
     printf("Compression time (bytewise): %f \n", end_time_comp_byte-start_time_comp_byte); 
     printf("Compression time (bitwise): %f \n", end_time_comp_bit-start_time_comp_bit); 
     printf("Compression time (bitwise_np): %f \n", end_time_comp_bit_np-start_time_comp_bit_np); 
+    printf("Compression time (sz): %f \n", end_time_comp_sz-start_time_comp_sz); 
 
     if(CT == 1)
     {
@@ -299,18 +300,22 @@ int main(int argc, char** argv) {
 
       printf("Decompression time (bytewise): %f \n", end_time_decomp_byte-start_time_decomp_byte);  
     } 
+    if(CT == 4)
+    {
+      compress_ratio = (float)(bytes_sz*8)/(data_num*sizeof(float)*8);
+      printf("Compression rate (sz): %f \n", 1/compress_ratio); 
+      printf("Decompression time (sz): %f \n", end_time_decomp_sz-start_time_decomp_sz); 
+    }
     if(CT == 5)
     {
       compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
       printf("Compression rate (bitwise, float): %f \n", 1/compress_ratio); 
-
       printf("Decompression time (bitwise): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
     }
     if(CT == 6)
     {
       compress_ratio = (float)(bytes_np*8)/(data_num*sizeof(float)*8);
       printf("Compression rate (bitwise_np, float): %f \n", 1/compress_ratio); 
-
       printf("Decompression time (bitwise_np): %f \n", end_time_decomp_bit_np-start_time_decomp_bit_np); 
     }    
   }
