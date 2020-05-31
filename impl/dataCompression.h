@@ -7,7 +7,7 @@
 // #define pw_relBoundRatio    0.01    
 #define CT                  4 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress, 6 bitwise no prediction
 #define byte_or_bit         2 //1 byte, 2 bit
-#define data_num            8192 //pingpong
+//#define data_num            8192 //pingpong
 #define filename            "dataset/testfloat_8_8_128" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
 #define suffix              ".txt" //k-means, ".txt"
 #define output_suffix       "_output_" //k-means, "_output_", "_output_s_"
