@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
   for (n=0; !feof(fp); n++) 
   {
     data = (double *)(data?realloc(data,sizeof(double)*(n+1)):malloc(sizeof(double)));
-    fscanf(fp, "%f", data+n);
+    fscanf(fp, "%lf", data+n);
   }
   fclose(fp);
   int num = n-1;
