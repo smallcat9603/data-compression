@@ -15,6 +15,9 @@
 #include "param.h"
 #include "dataCompression.h"
 
+double absErrBound = absErrorBound;
+int absErrorBound_binary = -100;
+
 double* myDecompress_bitwise_double_np(unsigned char* data_bits, int bytes, int num)
 {
   int offset_bits = 0;
@@ -71,6 +74,8 @@ double* myDecompress_bitwise_double_np(unsigned char* data_bits, int bytes, int 
             expo_value += (bits[i]-'0')*pow(2,11-i);
           }
           expo_value -= 1023;
+
+          if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
           int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
@@ -241,7 +246,9 @@ float* myDecompress_bitwise_np(unsigned char* data_bits, int bytes, int num)
           {
             expo_value += (bits[i]-'0')*pow(2,8-i);
           }
-          expo_value -= 127;
+          expo_value -= 127;      
+
+          if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
           int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
@@ -449,7 +456,9 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
           {
             expo_value += (bits[i]-'0')*pow(2,11-i);
           }
-          expo_value -= 1023;
+          expo_value -= 1023;            
+
+          if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
           int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
@@ -713,7 +722,9 @@ float* myDecompress_bitwise(unsigned char* data_bits, int bytes, int num)
           {
             expo_value += (bits[i]-'0')*pow(2,8-i);
           }
-          expo_value -= 127;
+          expo_value -= 127;           
+
+          if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
           int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
@@ -1162,7 +1173,9 @@ void compress_bitwise_double(double real_value, unsigned char** data_bits, int* 
   {
     expo_value += (double_arr[i]-'0')*pow(2,11-i);
   }
-  expo_value -= 1023;
+  expo_value -= 1023;  
+
+  if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound); 
 
   int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
@@ -1193,7 +1206,9 @@ void compress_bitwise_float(float real_value, unsigned char** data_bits, int* by
   {
     expo_value += (float_arr[i]-'0')*pow(2,8-i);
   }
-  expo_value -= 127;
+  expo_value -= 127;  
+
+  if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
   int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
@@ -1276,7 +1291,9 @@ float calCompressRatio_bitwise_double2(float data[], int num)
     }
     expo_value -= 1023;
 
-    //printf("%d ", expo_value); 
+    //printf("%d ", expo_value);        
+
+    if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
     int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
@@ -1314,7 +1331,9 @@ float calCompressRatio_bitwise_double(double data[], int num)
     }
     expo_value -= 1023;
 
-    //printf("%d ", expo_value); 
+    //printf("%d ", expo_value);  
+
+    if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);     
 
     int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
@@ -1351,7 +1370,9 @@ float calCompressRatio_bitwise_float(float data[], int num)
     }
     expo_value -= 127;
 
-    //printf("%d ", expo_value); 
+    //printf("%d ", expo_value);   
+
+    if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
     int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
@@ -2036,7 +2057,10 @@ float calcCompressionRatio_himeno_sz(float data[MIMAX][MJMAX][MKMAX], int ijk, i
               expo_value += pow(2, 8-i);
             }  
           }
-          expo_value -= 127;
+          expo_value -= 127;   
+
+          if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
           mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
           {
@@ -2368,7 +2392,10 @@ float calcCompressionRatio_sz_float(float data[], int num)
             expo_value += pow(2, 8-i);
           }  
         }
-        expo_value -= 127;
+        expo_value -= 127;  
+
+        if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
         mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
         if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
         {
@@ -2657,7 +2684,10 @@ float calcCompressionRatio_sz_double(double data[], int num)
             expo_value += pow(2, 11-i);
           }  
         }
-        expo_value -= 1023;
+        expo_value -= 1023; 
+
+        if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
         mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
         if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
         {
@@ -3129,4 +3159,16 @@ void bit_set(unsigned char *p_data, unsigned char position, int flag)
 	// 	printf("%d", (*p_data >> i) & 1);
 	// }
 	// printf("\n");
+}
+
+int to_absErrorBound_binary(double absErrBound)
+{
+  int n;
+  for(n=0; n<100; n++)
+  {
+    if(absErrBound >= pow(2, -n))
+    {
+      return n;
+    }
+  }
 }

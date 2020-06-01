@@ -2,7 +2,7 @@
  *
  */
 #define absErrorBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
-#define absErrorBound_binary  20 //bitwise, SZ, equal to above
+// #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 // #define relBoundRatio       0.01
 // #define pw_relBoundRatio    0.01    
 #define CT                  4 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress, 6 bitwise no prediction
@@ -83,3 +83,5 @@ double* readfrombinary_writetotxt_double(const char*, const char*, int);
 
 void add_bit_to_bytes(unsigned char**, int*, int*, int);
 void bit_set(unsigned char*, unsigned char, int);
+
+int to_absErrorBound_binary(double absErrBound);
