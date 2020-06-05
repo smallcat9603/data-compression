@@ -215,11 +215,11 @@ int main(int argc, char** argv) {
         {
           start_time_decomp_sz = MPI_Wtime();
           char* binfile_zs = filename bin_suffix zs_suffix;
-          writetobinary_char(binfile_zs, data_bits_sz, bytes_sz); //.sz
+          writetobinary_char(binfile_zs, data_bits_sz, bytes_sz); //.dat.zs
           char sz_decomp_cmd[64];
           sprintf(sz_decomp_cmd, "%s%s%s%d", sz_decomp_cmd_prefix, filename, sz_decomp_cmd_suffix, data_num);
           //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
-          int iret_decomp = system(sz_decomp_cmd); //.dat.sz --> .dat.sz.out
+          int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
           char* binfile_out = filename bin_suffix zs_suffix out_suffix;
           char* txtfile = filename bin_suffix zs_suffix out_suffix suffix;  
           float* decompressed_data = readfrombinary_writetotxt_float(binfile_out, txtfile, data_num);
