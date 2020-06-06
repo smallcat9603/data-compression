@@ -465,6 +465,9 @@ sendp3()
   MPI_Status   st_bitwise[8];
   MPI_Request  req_bitwise[8];  
 
+  MPI_Status   st_sz[4];
+  MPI_Request  req_sz[4];  
+
   if(CT == 6)
   {
     int data_bytes_send[2] = {0, 0};
@@ -596,6 +599,87 @@ sendp3()
       }
     }
   }
+
+  if(CT == 4)
+  {
+    int data_bytes_send[2] = {0, 0};
+    int data_bytes_recv[2] = {0, 0};
+
+    MPI_Irecv(&data_bytes_recv[0], 1, MPI_INT, npz[1], 0, mpi_comm_cart, req);
+    MPI_Irecv(&data_bytes_recv[1], 1, MPI_INT, npz[0], 1, mpi_comm_cart, req+1);
+    
+    float* data[2];
+    data[0] = transform_3d_array_to_1d_array(p, 3, 1, imax, jmax, kmax);
+    data[1] = transform_3d_array_to_1d_array(p, 3, kmax-2, imax, jmax, kmax);   
+
+    unsigned char* data_bits_send[2] = {NULL, NULL};
+
+    char* binfile0 = "dataset/data0.dat"; 
+    char* binfile1 = "dataset/data1.dat"; 
+    writetobinary_float(binfile0, data[0], imax*jmax); //.txt --> .dat
+    writetobinary_float(binfile1, data[1], imax*jmax); //.txt --> .dat    
+    char sz_comp_cmd0[64];
+    char sz_comp_cmd1[64];
+    sprintf(sz_comp_cmd0, "%s%g%sdataset/data0%s%d", sz_comp_cmd_prefix, absErrorBound, 
+    sprintf(sz_comp_cmd1, "%s%g%sdataset/data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*jmax);
+    sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*jmax);
+    //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+    int iret_comp0 = system(sz_comp_cmd0); //.dat --> .dat.sz
+    int iret_comp1 = system(sz_comp_cmd1); //.dat --> .dat.sz
+    char* binfile_sz0 = "dataset/data0.dat.sz";
+    char* binfile_sz1 = "dataset/data1.dat.sz";
+    data_bits_send[0] = readfrombinary_char(binfile_sz0, &data_bytes_send[0]);  
+    data_bits_send[1] = readfrombinary_char(binfile_sz1, &data_bytes_send[1]);   
+
+    MPI_Isend(&data_bytes_send[0], 1, MPI_INT, npz[0], 0, mpi_comm_cart, req+2); 
+    MPI_Isend(&data_bytes_send[1], 1, MPI_INT, npz[1], 1, mpi_comm_cart, req+3); 
+    MPI_Waitall(4, req, st);  
+
+    cr += data_bytes_send[0]*8.0/(imax*jmax*sizeof(float)*8);
+    cr += data_bytes_send[1]*8.0/(imax*jmax*sizeof(float)*8);
+    cr_num += 2;
+
+    unsigned char* data_bits_recv[2];
+
+    data_bits_recv[0] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[0]);
+    data_bits_recv[1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[1]);
+    MPI_Irecv(data_bits_recv[0], data_bytes_recv[0], MPI_UNSIGNED_CHAR, npz[1], 2, mpi_comm_cart, req_sz);
+    MPI_Irecv(data_bits_recv[1], data_bytes_recv[1], MPI_UNSIGNED_CHAR, npz[0], 3, mpi_comm_cart, req_sz+1);  
+    MPI_Isend(data_bits_send[0], data_bytes_send[0], MPI_UNSIGNED_CHAR, npz[0], 2, mpi_comm_cart, req_sz+2); 
+    MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npz[1], 3, mpi_comm_cart, req_sz+3); 
+    MPI_Waitall(4, req_sz, st_sz);    
+
+    char* binfile_zs0 = "dataset/data0.dat.zs";
+    char* binfile_zs1 = "dataset/data1.dat.zs";
+    writetobinary_char(binfile_zs0, data_bits_recv[0], data_bytes_recv[0]); //.dat.zs
+    writetobinary_char(binfile_zs1, data_bits_recv[1], data_bytes_recv[1]); //.dat.zs
+    char sz_decomp_cmd0[64];
+    char sz_decomp_cmd1[64];
+    sprintf(sz_decomp_cmd0, "%sdataset/data0%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, imax*jmax);
+    sprintf(sz_decomp_cmd1, "%sdataset/data1%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, imax*jmax);
+    //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+    int iret_decomp0 = system(sz_decomp_cmd0); //.dat.zs --> .dat.zs.out
+    int iret_decomp1 = system(sz_decomp_cmd1); //.dat.zs --> .dat.zs.out
+    char* binfile_out0 = "dataset/data0.dat.zs.out";
+    char* binfile_out1 = "dataset/data1.dat.zs.out";
+    char* txtfile0 = "dataset/data0.dat.zs.out.txt";  
+    char* txtfile1 = "dataset/data1.dat.zs.out.txt";  
+
+    float* decompressed_data[2];
+    decompressed_data[0] = readfrombinary_writetotxt_float(binfile_out0, txtfile0, imax*jmax);
+    decompressed_data[1] = readfrombinary_writetotxt_float(binfile_out1, txtfile1, imax*jmax);
+    
+    int pointer = 0;
+    for(int a=0; a<imax; a++)
+    {
+      for(int b=0; b<jmax; b++)
+      {
+        p[a][b][kmax-1] = decompressed_data[0][pointer] + data_min_recv[0];
+        p[a][b][0] = decompressed_data[1][pointer] + data_min_recv[1];
+        pointer++;
+      }
+    }
+  }  
 
   //revised
   if(CT == 1)
