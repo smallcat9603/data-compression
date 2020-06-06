@@ -614,19 +614,23 @@ sendp3()
 
     unsigned char* data_bits_send[2] = {NULL, NULL};
 
-    char* binfile0 = "dataset/p3data0.dat"; 
-    char* binfile1 = "dataset/p3data1.dat"; 
+    char binfile0[64];
+    sprintf(binfile0, "dataset/r%dp3data0.dat", id); 
+    char binfile1[64];
+    sprintf(binfile1, "dataset/r%dp3data1.dat", id); 
     writetobinary_float(binfile0, data[0], imax*jmax); //.txt --> .dat
     writetobinary_float(binfile1, data[1], imax*jmax); //.txt --> .dat    
     char sz_comp_cmd0[64];
     char sz_comp_cmd1[64];
-    sprintf(sz_comp_cmd0, "%s%g%sdataset/p3data0%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*jmax);
-    sprintf(sz_comp_cmd1, "%s%g%sdataset/p3data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*jmax);
+    sprintf(sz_comp_cmd0, "%s%g%sdataset/r%dp3data0%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, imax*jmax);
+    sprintf(sz_comp_cmd1, "%s%g%sdataset/r%dp3data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, imax*jmax);
     //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
     int iret_comp0 = system(sz_comp_cmd0); //.dat --> .dat.sz
     int iret_comp1 = system(sz_comp_cmd1); //.dat --> .dat.sz
-    char* binfile_sz0 = "dataset/p3data0.dat.sz";
-    char* binfile_sz1 = "dataset/p3data1.dat.sz";
+    char binfile_sz0[64];
+    sprintf(binfile_sz0, "dataset/r%dp3data0.dat.sz", id);
+    char binfile_sz1[64];
+    sprintf(binfile_sz1, "dataset/r%dp3data1.dat.sz", id);
     data_bits_send[0] = readfrombinary_char(binfile_sz0, &data_bytes_send[0]);  
     data_bits_send[1] = readfrombinary_char(binfile_sz1, &data_bytes_send[1]);   
 
@@ -648,21 +652,27 @@ sendp3()
     MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npz[1], 3, mpi_comm_cart, req_sz+3); 
     MPI_Waitall(4, req_sz, st_sz);    
 
-    char* binfile_zs0 = "dataset/p3data0.dat.zs";
-    char* binfile_zs1 = "dataset/p3data1.dat.zs";
+    char binfile_zs0[64];
+    sprintf(binfile_zs0, "dataset/r%dp3data0.dat.zs", id);
+    char binfile_zs1[64];
+    sprintf(binfile_zs1, "dataset/r%dp3data1.dat.zs", id);
     writetobinary_char(binfile_zs0, data_bits_recv[0], data_bytes_recv[0]); //.dat.zs
     writetobinary_char(binfile_zs1, data_bits_recv[1], data_bytes_recv[1]); //.dat.zs
     char sz_decomp_cmd0[64];
     char sz_decomp_cmd1[64];
-    sprintf(sz_decomp_cmd0, "%sdataset/p3data0%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, imax*jmax);
-    sprintf(sz_decomp_cmd1, "%sdataset/p3data1%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, imax*jmax);
+    sprintf(sz_decomp_cmd0, "%sdataset/r%dp3data0%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, imax*jmax);
+    sprintf(sz_decomp_cmd1, "%sdataset/r%dp3data1%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, imax*jmax);
     //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
     int iret_decomp0 = system(sz_decomp_cmd0); //.dat.zs --> .dat.zs.out
     int iret_decomp1 = system(sz_decomp_cmd1); //.dat.zs --> .dat.zs.out
-    char* binfile_out0 = "dataset/p3data0.dat.zs.out";
-    char* binfile_out1 = "dataset/p3data1.dat.zs.out";
-    char* txtfile0 = "dataset/p3data0.dat.zs.out.txt";  
-    char* txtfile1 = "dataset/p3data1.dat.zs.out.txt";  
+    char binfile_out0[64];
+    sprintf(binfile_out0, "dataset/r%dp3data0.dat.zs.out", id);
+    char binfile_out1[64];
+    sprintf(binfile_out1, "dataset/r%dp3data1.dat.zs.out", id);
+    char txtfile0[64];
+    sprintf(txtfile0, "dataset/r%dp3data0.dat.zs.out.txt", id);  
+    char txtfile1[64];
+    sprintf(txtfile1, "dataset/r%dp3data1.dat.zs.out.txt", id);  
 
     float* decompressed_data[2];
     decompressed_data[0] = readfrombinary_writetotxt_float(binfile_out0, txtfile0, imax*jmax);
@@ -997,19 +1007,23 @@ sendp2()
 
     unsigned char* data_bits_send[2] = {NULL, NULL};
 
-    char* binfile0 = "dataset/p2data0.dat"; 
-    char* binfile1 = "dataset/p2data1.dat"; 
+    char binfile0[64];
+    sprintf(binfile0, "dataset/r%dp2data0.dat", id); 
+    char binfile1[64];
+    sprintf(binfile1, "dataset/r%dp2data1.dat", id);     
     writetobinary_float(binfile0, data[0], imax*kmax); //.txt --> .dat
     writetobinary_float(binfile1, data[1], imax*kmax); //.txt --> .dat    
     char sz_comp_cmd0[64];
     char sz_comp_cmd1[64];
-    sprintf(sz_comp_cmd0, "%s%g%sdataset/p2data0%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*kmax);
-    sprintf(sz_comp_cmd1, "%s%g%sdataset/p2data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*kmax);
+    sprintf(sz_comp_cmd0, "%s%g%sdataset/r%dp2data0%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, imax*kmax);
+    sprintf(sz_comp_cmd1, "%s%g%sdataset/r%dp2data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, imax*kmax);
     //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
     int iret_comp0 = system(sz_comp_cmd0); //.dat --> .dat.sz
     int iret_comp1 = system(sz_comp_cmd1); //.dat --> .dat.sz
-    char* binfile_sz0 = "dataset/p2data0.dat.sz";
-    char* binfile_sz1 = "dataset/p2data1.dat.sz";
+    char binfile_sz0[64];
+    sprintf(binfile_sz0, "dataset/r%dp2data0.dat.sz", id);
+    char binfile_sz1[64];
+    sprintf(binfile_sz1, "dataset/r%dp2data1.dat.sz", id);    
     data_bits_send[0] = readfrombinary_char(binfile_sz0, &data_bytes_send[0]);  
     data_bits_send[1] = readfrombinary_char(binfile_sz1, &data_bytes_send[1]);   
 
@@ -1031,21 +1045,27 @@ sendp2()
     MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npy[1], 3, mpi_comm_cart, req_sz+3); 
     MPI_Waitall(4, req_sz, st_sz);    
 
-    char* binfile_zs0 = "dataset/p2data0.dat.zs";
-    char* binfile_zs1 = "dataset/p2data1.dat.zs";
+    char binfile_zs0[64];
+    sprintf(binfile_zs0, "dataset/r%dp2data0.dat.zs", id);
+    char binfile_zs1[64];
+    sprintf(binfile_zs1, "dataset/r%dp2data1.dat.zs", id);    
     writetobinary_char(binfile_zs0, data_bits_recv[0], data_bytes_recv[0]); //.dat.zs
     writetobinary_char(binfile_zs1, data_bits_recv[1], data_bytes_recv[1]); //.dat.zs
     char sz_decomp_cmd0[64];
     char sz_decomp_cmd1[64];
-    sprintf(sz_decomp_cmd0, "%sdataset/p2data0%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, imax*kmax);
-    sprintf(sz_decomp_cmd1, "%sdataset/p2data1%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, imax*kmax);
+    sprintf(sz_decomp_cmd0, "%sdataset/r%dp2data0%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, imax*kmax);
+    sprintf(sz_decomp_cmd1, "%sdataset/r%dp2data1%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, imax*kmax);
     //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
     int iret_decomp0 = system(sz_decomp_cmd0); //.dat.zs --> .dat.zs.out
     int iret_decomp1 = system(sz_decomp_cmd1); //.dat.zs --> .dat.zs.out
-    char* binfile_out0 = "dataset/p2data0.dat.zs.out";
-    char* binfile_out1 = "dataset/p2data1.dat.zs.out";
-    char* txtfile0 = "dataset/p2data0.dat.zs.out.txt";  
-    char* txtfile1 = "dataset/p2data1.dat.zs.out.txt";  
+    char binfile_out0[64];
+    sprintf(binfile_out0, "dataset/r%dp2data0.dat.zs.out", id);
+    char binfile_out1[64];
+    sprintf(binfile_out1, "dataset/r%dp2data1.dat.zs.out", id);
+    char txtfile0[64];
+    sprintf(txtfile0, "dataset/r%dp2data0.dat.zs.out.txt", id);  
+    char txtfile1[64];
+    sprintf(txtfile1, "dataset/r%dp2data1.dat.zs.out.txt", id);      
 
     float* decompressed_data[2];
     decompressed_data[0] = readfrombinary_writetotxt_float(binfile_out0, txtfile0, imax*kmax);
@@ -1375,19 +1395,23 @@ sendp1()
 
     unsigned char* data_bits_send[2] = {NULL, NULL};
 
-    char* binfile0 = "dataset/p1data0.dat"; 
-    char* binfile1 = "dataset/p1data1.dat"; 
+    char binfile0[64];
+    sprintf(binfile0, "dataset/r%dp1data0.dat", id); 
+    char binfile1[64];
+    sprintf(binfile1, "dataset/r%dp1data1.dat", id);     
     writetobinary_float(binfile0, data[0], jmax*kmax); //.txt --> .dat
     writetobinary_float(binfile1, data[1], jmax*kmax); //.txt --> .dat    
     char sz_comp_cmd0[64];
     char sz_comp_cmd1[64];
-    sprintf(sz_comp_cmd0, "%s%g%sdataset/p1data0%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, jmax*kmax);
-    sprintf(sz_comp_cmd1, "%s%g%sdataset/p1data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, jmax*kmax);
+    sprintf(sz_comp_cmd0, "%s%g%sdataset/r%dp1data0%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, jmax*kmax);
+    sprintf(sz_comp_cmd1, "%s%g%sdataset/r%dp1data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, jmax*kmax);
     //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
     int iret_comp0 = system(sz_comp_cmd0); //.dat --> .dat.sz
     int iret_comp1 = system(sz_comp_cmd1); //.dat --> .dat.sz
-    char* binfile_sz0 = "dataset/p1data0.dat.sz";
-    char* binfile_sz1 = "dataset/p1data1.dat.sz";
+    char binfile_sz0[64];
+    sprintf(binfile_sz0, "dataset/r%dp1data0.dat.sz", id);
+    char binfile_sz1[64];
+    sprintf(binfile_sz1, "dataset/r%dp1data1.dat.sz", id);    
     data_bits_send[0] = readfrombinary_char(binfile_sz0, &data_bytes_send[0]);  
     data_bits_send[1] = readfrombinary_char(binfile_sz1, &data_bytes_send[1]);   
 
@@ -1409,21 +1433,27 @@ sendp1()
     MPI_Isend(data_bits_send[1], data_bytes_send[1], MPI_UNSIGNED_CHAR, npx[1], 3, mpi_comm_cart, req_sz+3); 
     MPI_Waitall(4, req_sz, st_sz);    
 
-    char* binfile_zs0 = "dataset/p1data0.dat.zs";
-    char* binfile_zs1 = "dataset/p1data1.dat.zs";
+    char binfile_zs0[64];
+    sprintf(binfile_zs0, "dataset/r%dp1data0.dat.zs", id);
+    char binfile_zs1[64];
+    sprintf(binfile_zs1, "dataset/r%dp1data1.dat.zs", id);    
     writetobinary_char(binfile_zs0, data_bits_recv[0], data_bytes_recv[0]); //.dat.zs
     writetobinary_char(binfile_zs1, data_bits_recv[1], data_bytes_recv[1]); //.dat.zs
     char sz_decomp_cmd0[64];
     char sz_decomp_cmd1[64];
-    sprintf(sz_decomp_cmd0, "%sdataset/p1data0%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, jmax*kmax);
-    sprintf(sz_decomp_cmd1, "%sdataset/p1data1%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, jmax*kmax);
+    sprintf(sz_decomp_cmd0, "%sdataset/r%dp1data0%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, jmax*kmax);
+    sprintf(sz_decomp_cmd1, "%sdataset/r%dp1data1%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, jmax*kmax);
     //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
     int iret_decomp0 = system(sz_decomp_cmd0); //.dat.zs --> .dat.zs.out
-    int iret_decomp1 = system(sz_decomp_cmd1); //.dat.zs --> .dat.zs.out
-    char* binfile_out0 = "dataset/p1data0.dat.zs.out";
-    char* binfile_out1 = "dataset/p1data1.dat.zs.out";
-    char* txtfile0 = "dataset/p1data0.dat.zs.out.txt";  
-    char* txtfile1 = "dataset/p1data1.dat.zs.out.txt";  
+    int iret_decomp1 = system(sz_decomp_cmd1); //.dat.zs --> .dat.zs.out 
+    char binfile_out0[64];
+    sprintf(binfile_out0, "dataset/r%dp1data0.dat.zs.out", id);
+    char binfile_out1[64];
+    sprintf(binfile_out1, "dataset/r%dp1data1.dat.zs.out", id);
+    char txtfile0[64];
+    sprintf(txtfile0, "dataset/r%dp1data0.dat.zs.out.txt", id);  
+    char txtfile1[64];
+    sprintf(txtfile1, "dataset/r%dp1data1.dat.zs.out.txt", id);       
 
     float* decompressed_data[2];
     decompressed_data[0] = readfrombinary_writetotxt_float(binfile_out0, txtfile0, jmax*kmax);
