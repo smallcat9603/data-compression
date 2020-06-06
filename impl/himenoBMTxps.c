@@ -620,9 +620,8 @@ sendp3()
     writetobinary_float(binfile1, data[1], imax*jmax); //.txt --> .dat    
     char sz_comp_cmd0[64];
     char sz_comp_cmd1[64];
-    sprintf(sz_comp_cmd0, "%s%g%sdataset/data0%s%d", sz_comp_cmd_prefix, absErrorBound, 
+    sprintf(sz_comp_cmd0, "%s%g%sdataset/data0%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*jmax);
     sprintf(sz_comp_cmd1, "%s%g%sdataset/data1%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*jmax);
-    sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, imax*jmax);
     //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
     int iret_comp0 = system(sz_comp_cmd0); //.dat --> .dat.sz
     int iret_comp1 = system(sz_comp_cmd1); //.dat --> .dat.sz
