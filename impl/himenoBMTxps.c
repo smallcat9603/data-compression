@@ -668,14 +668,14 @@ sendp3()
     float* decompressed_data[2];
     decompressed_data[0] = readfrombinary_writetotxt_float(binfile_out0, txtfile0, imax*jmax);
     decompressed_data[1] = readfrombinary_writetotxt_float(binfile_out1, txtfile1, imax*jmax);
-    
+
     int pointer = 0;
     for(int a=0; a<imax; a++)
     {
       for(int b=0; b<jmax; b++)
       {
-        p[a][b][kmax-1] = decompressed_data[0][pointer] + data_min_recv[0];
-        p[a][b][0] = decompressed_data[1][pointer] + data_min_recv[1];
+        p[a][b][kmax-1] = decompressed_data[0][pointer];
+        p[a][b][0] = decompressed_data[1][pointer];
         pointer++;
       }
     }
