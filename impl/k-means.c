@@ -502,13 +502,15 @@ int main(int argc, char *argv[])
 			//y
 			if(world_rank == 0)
 			{
-				char* binfile = "dataset/y.dat";
+				char binfile[64];
+				sprintf(binfile, "dataset/y%d.dat", count);
 				writetobinary_double(binfile, k_means_y, numOfClusters); //.txt --> .dat
 				char sz_comp_cmd[64];
-				sprintf(sz_comp_cmd, "%s%g%sdataset/y%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, numOfClusters);
+				sprintf(sz_comp_cmd, "%s%g%sdataset/y%d%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, count, sz_comp_cmd_suffix2, numOfClusters);
 				//int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
 				int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
-				char* binfile_sz = "dataset/y.dat.sz";
+				char binfile_sz[64];
+				sprintf(binfile_sz, "dataset/y%d.dat.sz", count);
 				data_bits_y = readfrombinary_char(binfile_sz, &data_bytes_y);				
 			}
 
@@ -521,24 +523,30 @@ int main(int argc, char *argv[])
 			}
 			MPI_Bcast(data_bits_y, data_bytes_y, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
 
-			char* binfile_zs_x = "dataset/x.dat.zs";
+			char binfile_zs_x[64];
+			sprintf(binfile_zs_x, "dataset/x%d.dat.zs", count);
 			writetobinary_char(binfile_zs_x, data_bits_x, data_bytes_x); //.dat.zs
-			char sz_decomp_cmd[64];
-			sprintf(sz_decomp_cmd, "%sdataset/x%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, numOfClusters);
+			char sz_decomp_cmd_x[64];
+			sprintf(sz_decomp_cmd_x, "%sdataset/x%d%s%d", sz_decomp_cmd_prefix, count, sz_decomp_cmd_suffix, numOfClusters);
 			//int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
-			int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
-			char* binfile_out_x = "dataset/x.dat.zs.out";
-			char* txtfile_x = "dataset/x.dat.zs.out.txt";  
+			int iret_decomp_x = system(sz_decomp_cmd_x); //.dat.zs --> .dat.zs.out
+			char binfile_out_x[64];
+			sprintf(binfile_out_x, "dataset/x%d.dat.zs.out", count);
+			char txtfile_x[64];
+			sprintf(txtfile_x, "dataset/x%d.dat.zs.out.txt", count); 
 			double* decompressed_data_x = readfrombinary_writetotxt_double(binfile_out_x, txtfile_x, numOfClusters);			
 
-			char* binfile_zs_y = "dataset/y.dat.zs";
+			char binfile_zs_y[64];
+			sprintf(binfile_zs_y, "dataset/y%d.dat.zs", count);
 			writetobinary_char(binfile_zs_y, data_bits_y, data_bytes_y); //.dat.zs
-			char sz_decomp_cmd[64];
-			sprintf(sz_decomp_cmd, "%sdataset/y%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, numOfClusters);
+			char sz_decomp_cmd_y[64];
+			sprintf(sz_decomp_cmd_y, "%sdataset/y%d%s%d", sz_decomp_cmd_prefix, count, sz_decomp_cmd_suffix, numOfClusters);
 			//int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
-			int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
-			char* binfile_out_y = "dataset/y.dat.zs.out";
-			char* txtfile_y = "dataset/y.dat.zs.out.txt";  
+			int iret_decomp_y = system(sz_decomp_cmd_y); //.dat.zs --> .dat.zs.out
+			char binfile_out_y[64];
+			sprintf(binfile_out_y, "dataset/y%d.dat.zs.out", count);
+			char txtfile_y[64];
+			sprintf(txtfile_y, "dataset/y%d.dat.zs.out.txt", count);  
 			double* decompressed_data_y = readfrombinary_writetotxt_double(binfile_out_y, txtfile_y, numOfClusters);	
 
 			for(int i=0; i<numOfClusters; i++)
