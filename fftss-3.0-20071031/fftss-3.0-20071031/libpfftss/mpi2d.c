@@ -77,6 +77,11 @@ float calcCompressionRatio_nolossy_performance_double(double[], int);
 float calcCompressionRatio_nolossy_area_double(double[], int);
 void getDoubleBin(double,char[]);
 int to_absErrorBound_binary(double absErrBound);
+void writetobinary_double(const char*, double*, int);
+void writetobinary_char(const char *, unsigned char*, int);
+double* readfrombinary_double(const char*, int);
+unsigned char* readfrombinary_char(const char *, int*);
+double* readfrombinary_writetotxt_double(const char*, const char*, int);
 
 typedef struct _pfftss_plan_s {
   void (*fp)(struct _pfftss_plan_s *, double *);
@@ -288,6 +293,124 @@ static void alltoalls0c(pfftss_plan p)
   {
     printf("compress ratio (s0c) = %f \n", 1/(compress_ratio/(p->npe - 1)));
     printf("compress time, total time (s0c) = %f, %f \n", time_compress, end_time0 - start_time0);
+  }
+}
+
+static void alltoalls0z(pfftss_plan p)
+{
+  long i;
+  int bsize;
+
+  double time_compress = 0;
+  double start_time;
+  double end_time;
+  double start_time0 = fftss_get_wtime();
+  double end_time0;
+
+  bsize = p->plx * p->ly * 2;
+
+  float compress_ratio = 0;
+
+  int data_bytes_send[p->npe - 1];
+  int data_bytes_recv[p->npe - 1];
+
+  unsigned char* data_bits_send[p->npe - 1];
+
+  MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms0 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    MPI_Irecv(&data_bytes_recv[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2]);
+    double send_data[bsize];
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      send_data[j] = p->sb[first_index++];
+    }        
+
+    data_bits_send[i - 1] = NULL;
+    data_bytes_send[i - 1] = 0;
+
+    char binfile[64];
+    sprintf(binfile, "dataset/s0r%di%d.dat", p->id, i);
+    writetobinary_double(binfile, send_data, bsize); //.txt --> .dat
+    char sz_comp_cmd[64];
+    sprintf(sz_comp_cmd, "%s%g%sdataset/s0r%di%d%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, p->id, i, sz_comp_cmd_suffix2, bsize);
+    //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+    int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
+    char binfile_sz[64];
+    sprintf(binfile_sz, "dataset/s0r%di%d.dat.sz", p->id, i);
+    data_bits_send[i - 1] = readfrombinary_char(binfile_sz, &data_bytes_send[i - 1]);	    
+
+    compress_ratio += data_bytes_send[i - 1]*8.0/(bsize*sizeof(double)*8); 
+    MPI_Isend(&data_bytes_send[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2 + 1]); 
+  }
+  MPI_Waitall((p->npe - 1) * 2, mr0, ms0);
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+
+  unsigned char* data_bits_recv[p->npe - 1];
+
+  MPI_Request* mr1 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1)); 
+  MPI_Status* ms1 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1)); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    data_bits_recv[i - 1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[i - 1]);
+    MPI_Irecv(data_bits_recv[i - 1], data_bytes_recv[i - 1], MPI_UNSIGNED_CHAR, d, 1, p->comm, &mr1[i - 1]);
+  }
+
+  MPI_Request* mr2 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1)); 
+  MPI_Status* ms2 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1)); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    MPI_Isend(data_bits_send[i - 1], data_bytes_send[i - 1], MPI_UNSIGNED_CHAR, d, 1, p->comm, &mr2[i - 1]); 
+  }
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (i = 0; i < bsize; i++) 
+    p->rb[bsize * p->id + i] = p->sb[bsize * p->id + i];
+
+  MPI_Waitall((p->npe - 1), mr1, ms1);
+  MPI_Waitall((p->npe - 1), mr2, ms2);  
+
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+
+    char binfile_zs[64];
+    sprintf(binfile_zs, "dataset/s0r%di%d.dat.zs", p->id, i);
+    writetobinary_char(binfile_zs, data_bits_recv[i - 1], data_bytes_recv[i - 1]); //.dat.zs
+    char sz_decomp_cmd[64];
+    sprintf(sz_decomp_cmd, "%sdataset/s0r%di%d%s%d", sz_decomp_cmd_prefix, p->id, i, sz_decomp_cmd_suffix, bsize);
+    //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+    int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
+    char binfile_out[64];
+    sprintf(binfile_out, "dataset/s0r%di%d.dat.zs.out", p->id, i);
+    char txtfile[64];
+    sprintf(txtfile, "dataset/s0r%di%d.dat.zs.out.txt", p->id, i); 
+    double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, bsize);
+
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      p->rb[first_index++] = decompressed_data[j];
+    }
+  }
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+  end_time0 = fftss_get_wtime();
+
+  if(p->id == 0) 
+  {
+    printf("compress ratio (s0z) = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress time, total time (s0z) = %f, %f \n", time_compress, end_time0 - start_time0);
   }
 }
 
@@ -752,6 +875,124 @@ static void alltoalls1c(pfftss_plan p)
   }  
 }
 
+static void alltoalls1z(pfftss_plan p)
+{
+  long i;
+  int bsize;
+
+  double time_compress = 0;
+  double start_time;
+  double end_time;
+  double start_time0 = fftss_get_wtime();
+  double end_time0;
+
+  bsize = p->plx * p->ly * 2;
+
+  float compress_ratio = 0;
+
+  int data_bytes_send[p->npe - 1];
+  int data_bytes_recv[p->npe - 1];
+
+  unsigned char* data_bits_send[p->npe - 1];
+
+  MPI_Request* mr0 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1) * 2); 
+  MPI_Status* ms0 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1) * 2); 
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    MPI_Irecv(&data_bytes_recv[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2]);
+    double send_data[bsize];
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      send_data[j] = p->rb[first_index++];
+    }        
+
+    data_bits_send[i - 1] = NULL;
+    data_bytes_send[i - 1] = 0;
+
+    char binfile[64];
+    sprintf(binfile, "dataset/s1r%di%d.dat", p->id, i);
+    writetobinary_double(binfile, send_data, bsize); //.txt --> .dat
+    char sz_comp_cmd[64];
+    sprintf(sz_comp_cmd, "%s%g%sdataset/s1r%di%d%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, p->id, i, sz_comp_cmd_suffix2, bsize);
+    //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+    int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
+    char binfile_sz[64];
+    sprintf(binfile_sz, "dataset/s1r%di%d.dat.sz", p->id, i);
+    data_bits_send[i - 1] = readfrombinary_char(binfile_sz, &data_bytes_send[i - 1]);	    
+
+    compress_ratio += data_bytes_send[i - 1]*8.0/(bsize*sizeof(double)*8); 
+    MPI_Isend(&data_bytes_send[i - 1], 1, MPI_INT, d, 0, p->comm, &mr0[(i - 1) * 2 + 1]); 
+  }
+  MPI_Waitall((p->npe - 1) * 2, mr0, ms0);
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+
+  unsigned char* data_bits_recv[p->npe - 1];
+
+  MPI_Request* mr1 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1)); 
+  MPI_Status* ms1 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1)); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    data_bits_recv[i - 1] = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_recv[i - 1]);
+    MPI_Irecv(data_bits_recv[i - 1], data_bytes_recv[i - 1], MPI_UNSIGNED_CHAR, d, 1, p->comm, &mr1[i - 1]);
+  }
+
+  MPI_Request* mr2 = (MPI_Request *)malloc(sizeof(MPI_Request) * (p->npe - 1)); 
+  MPI_Status* ms2 = (MPI_Status *)malloc(sizeof(MPI_Status) * (p->npe - 1)); 
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+    MPI_Isend(data_bits_send[i - 1], data_bytes_send[i - 1], MPI_UNSIGNED_CHAR, d, 1, p->comm, &mr2[i - 1]); 
+  }
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (i = 0; i < bsize; i++) 
+    p->sb[bsize * p->id + i] = p->rb[bsize * p->id + i];
+
+  MPI_Waitall((p->npe - 1), mr1, ms1);
+  MPI_Waitall((p->npe - 1), mr2, ms2);  
+
+  start_time = fftss_get_wtime();
+  for (i = 1; i < p->npe; i++) {
+    int d;
+    d = (p->id + i) % p->npe;
+
+    char binfile_zs[64];
+    sprintf(binfile_zs, "dataset/s1r%di%d.dat.zs", p->id, i);
+    writetobinary_char(binfile_zs, data_bits_recv[i - 1], data_bytes_recv[i - 1]); //.dat.zs
+    char sz_decomp_cmd[64];
+    sprintf(sz_decomp_cmd, "%sdataset/s1r%di%d%s%d", sz_decomp_cmd_prefix, p->id, i, sz_decomp_cmd_suffix, bsize);
+    //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+    int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
+    char binfile_out[64];
+    sprintf(binfile_out, "dataset/s1r%di%d.dat.zs.out", p->id, i);
+    char txtfile[64];
+    sprintf(txtfile, "dataset/s1r%di%d.dat.zs.out.txt", p->id, i); 
+    double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, bsize);
+
+    int first_index = bsize * d;
+    for(int j = 0; j < bsize; j++)
+    {
+      p->sb[first_index++] = decompressed_data[j];
+    }
+  }
+  end_time = fftss_get_wtime();
+  time_compress += end_time - start_time;
+  end_time0 = fftss_get_wtime();
+
+  if(p->id == 0) 
+  {
+    printf("compress ratio (s1z) = %f \n", 1/(compress_ratio/(p->npe - 1)));
+    printf("compress time, total time (s1z) = %f, %f \n", time_compress, end_time0 - start_time0);
+  }
+}
+
 static void alltoalls1cb(pfftss_plan p)
 {
   long i;
@@ -1186,6 +1427,18 @@ void pfftss_execute_pdft_2d_sc(pfftss_plan p, double *inout)
   return;
 }
 
+void pfftss_execute_pdft_2d_sz(pfftss_plan p, double *inout)
+{
+  trans_x(p, inout);
+  pack0(p, inout);
+  alltoalls0z(p);
+  trans_y(p);
+  alltoalls1z(p);
+  unpack1(p, inout);
+
+  return;
+}
+
 void pfftss_execute_pdft_2d_scb(pfftss_plan p, double *inout)
 {
   trans_x(p, inout);
@@ -1442,6 +1695,11 @@ pfftss_plan_dft_2d(long nx, long ny, long py, long oy, long ly,
       p->fp = pfftss_execute_pdft_2d_sc;
       test_run(p, pfftss_execute_pdft_2d_sc);    
     }
+    else if(CT == 4)
+    {
+      p->fp = pfftss_execute_pdft_2d_sz;
+      test_run(p, pfftss_execute_pdft_2d_sz);    
+    }    
     else if(CT == 5)
     {
       p->fp = pfftss_execute_pdft_2d_scb;
@@ -2711,4 +2969,110 @@ int to_absErrorBound_binary(double absErrBound)
       return n;
     }
   }
+}
+
+void writetobinary_double(const char *file, double* data, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "wb");
+    //fopen_s(&fp, file, "wb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        return;
+    }
+    
+    fwrite(data, sizeof(double), count, fp);
+    fclose(fp);
+    printf("%sに保存しました。\n", file);
+}
+
+void writetobinary_char(const char *file, unsigned char* data, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "wb");
+    //fopen_s(&fp, file, "wb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        return;
+    }
+    
+    fwrite(data, sizeof(char), count, fp);
+    fclose(fp);
+    printf("%sに保存しました。\n", file);
+}
+
+double* readfrombinary_double(const char *file, int count)
+{
+    FILE *fp;
+    fp = fopen(file, "rb");
+    //fopen_s(&fp, file, "rb");
+ 
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        exit(0);
+    }
+ 
+    //double arr[count];
+    double *arr = (double*)malloc(sizeof(double) * count);
+ 
+    fread(arr, sizeof(double), count, fp);
+    fclose(fp);
+
+    return arr;
+}
+
+unsigned char* readfrombinary_char(const char *file, int* bytes_sz)
+{
+    FILE *fp;
+    fp = fopen(file, "rb");
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        exit(0);
+    }
+ 
+    fseek(fp, 0, SEEK_END);
+    *bytes_sz = ftell(fp);
+    fclose(fp);
+
+    fp = fopen(file, "rb");
+    if (fp == NULL)
+    {
+        printf("%sのオープンに失敗しました。\n", file);
+        exit(0);
+    }
+
+    unsigned char *arr = (unsigned char*)malloc(sizeof(char) * (*bytes_sz));
+ 
+    fread(arr, sizeof(char), *bytes_sz, fp);
+    fclose(fp);
+
+    return arr;
+}
+
+double* readfrombinary_writetotxt_double(const char *binaryfile, const char *txtfile, int count)
+{
+    FILE *fp;
+    fp = fopen(binaryfile, "rb");
+    assert(fp);
+
+    double *arr = malloc(sizeof(double) * count);
+    fread(arr, sizeof(double), count, fp);
+    fclose(fp);
+
+    fp = fopen(txtfile, "w");
+    assert(fp);
+
+    for(int i=0; i<count; i++)
+    {
+      fprintf(fp, "%lf\n", arr[i]);
+    }
+    fclose(fp);
+
+    return arr;
 }
