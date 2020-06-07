@@ -52,6 +52,16 @@
 // #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 #define CT                  6 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise, 6 bitwise no prediction
 #define byte_or_bit         2 //1 byte, 2 bit
+//sz
+#define bin_suffix          ".dat"
+#define sz_suffix           ".sz"
+#define zs_suffix           ".zs"
+#define out_suffix           ".out"
+#define sz_comp_cmd_prefix  "./sz -z -f -c sz.config -M ABS -A "
+#define sz_comp_cmd_suffix1 " -i "
+#define sz_comp_cmd_suffix2 ".dat -1 "
+#define sz_decomp_cmd_prefix  "./sz -x -f -s "
+#define sz_decomp_cmd_suffix ".dat.zs -1 "
 
 double absErrBound = absErrorBound;
 int absErrorBound_binary = -100;
