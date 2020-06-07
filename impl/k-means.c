@@ -468,6 +468,103 @@ int main(int argc, char *argv[])
 			free(data_bits_y);
 		}
 
+		if(CT == 4)
+		{
+			int data_bytes_x = 0, data_bytes_y = 0;
+
+			unsigned char* data_bits_x = NULL;
+			unsigned char* data_bits_y = NULL;
+			
+			//x
+			if(world_rank == 0)
+			{
+				char binfile[64];
+    			sprintf(binfile, "dataset/x%d.dat", count);
+				writetobinary_double(binfile, k_means_x, numOfClusters); //.txt --> .dat
+				char sz_comp_cmd[64];
+				sprintf(sz_comp_cmd, "%s%g%sdataset/x%d%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, count, sz_comp_cmd_suffix2, numOfClusters);
+				//int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+				int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
+				char binfile_sz[64];
+				sprintf(binfile_sz, "dataset/x%d.dat.sz", count);
+				data_bits_x = readfrombinary_char(binfile_sz, &data_bytes_x);		
+			}
+
+			MPI_Bcast(&data_bytes_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			compress_ratio += data_bytes_x*8.0/(numOfClusters*sizeof(double)*8);
+		
+			if(world_rank != 0)
+			{
+				data_bits_x = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_x);
+			}
+			MPI_Bcast(data_bits_x, data_bytes_x, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+
+			//y
+			if(world_rank == 0)
+			{
+				char* binfile = "dataset/y.dat";
+				writetobinary_double(binfile, k_means_y, numOfClusters); //.txt --> .dat
+				char sz_comp_cmd[64];
+				sprintf(sz_comp_cmd, "%s%g%sdataset/y%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, sz_comp_cmd_suffix2, numOfClusters);
+				//int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+				int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
+				char* binfile_sz = "dataset/y.dat.sz";
+				data_bits_y = readfrombinary_char(binfile_sz, &data_bytes_y);				
+			}
+
+			MPI_Bcast(&data_bytes_y, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			compress_ratio += data_bytes_y*8.0/(numOfClusters*sizeof(double)*8);
+		
+			if(world_rank != 0)
+			{
+				data_bits_y = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_y);
+			}
+			MPI_Bcast(data_bits_y, data_bytes_y, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+
+			char* binfile_zs_x = "dataset/x.dat.zs";
+			writetobinary_char(binfile_zs_x, data_bits_x, data_bytes_x); //.dat.zs
+			char sz_decomp_cmd[64];
+			sprintf(sz_decomp_cmd, "%sdataset/x%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, numOfClusters);
+			//int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+			int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
+			char* binfile_out_x = "dataset/x.dat.zs.out";
+			char* txtfile_x = "dataset/x.dat.zs.out.txt";  
+			double* decompressed_data_x = readfrombinary_writetotxt_double(binfile_out_x, txtfile_x, numOfClusters);			
+
+			char* binfile_zs_y = "dataset/y.dat.zs";
+			writetobinary_char(binfile_zs_y, data_bits_y, data_bytes_y); //.dat.zs
+			char sz_decomp_cmd[64];
+			sprintf(sz_decomp_cmd, "%sdataset/y%s%d", sz_decomp_cmd_prefix, sz_decomp_cmd_suffix, numOfClusters);
+			//int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+			int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
+			char* binfile_out_y = "dataset/y.dat.zs.out";
+			char* txtfile_y = "dataset/y.dat.zs.out.txt";  
+			double* decompressed_data_y = readfrombinary_writetotxt_double(binfile_out_y, txtfile_y, numOfClusters);	
+
+			for(int i=0; i<numOfClusters; i++)
+			{
+				if(world_rank == 0)
+				{
+					gosa += fabs(decompressed_data_x[i] - k_means_x[i]);
+					gosa += fabs(decompressed_data_y[i] - k_means_y[i]);
+				}
+				else
+				{
+					k_means_x[i] = decompressed_data_x[i];
+					k_means_y[i] = decompressed_data_y[i];
+				}
+			}
+			
+			if(count == MAX_ITERATIONS - 1)
+			{
+				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
+			}
+
+			//todo
+			free(data_bits_x);
+			free(data_bits_y);
+		}		
+
 		if(CT == 1)
 		{
 			int array_double_len_x, array_double_len_y;
