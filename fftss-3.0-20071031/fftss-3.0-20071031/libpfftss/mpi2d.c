@@ -49,10 +49,12 @@
 #include <math.h>
 #include <assert.h>
 #define absErrorBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
-#define absErrorBound_binary  20 //bitwise, SZ, equal to above
+// #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 #define CT                  6 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise, 6 bitwise no prediction
 #define byte_or_bit         2 //1 byte, 2 bit
 
+double absErrBound = absErrorBound;
+int absErrorBound_binary = -100;
 
 double* myDecompress_bitwise_double_np(unsigned char*, int, int);
 double decompress_bitwise_double_np(char*, int);
@@ -74,6 +76,7 @@ float calcCompressionRatio_sz_double(double[], int);
 float calcCompressionRatio_nolossy_performance_double(double[], int);
 float calcCompressionRatio_nolossy_area_double(double[], int);
 void getDoubleBin(double,char[]);
+int to_absErrorBound_binary(double absErrBound);
 
 typedef struct _pfftss_plan_s {
   void (*fp)(struct _pfftss_plan_s *, double *);
@@ -1773,6 +1776,8 @@ double* myDecompress_bitwise_double_np(unsigned char* data_bits, int bytes, int 
           }
           expo_value -= 1023;
 
+          if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
           int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
           {
@@ -1968,6 +1973,8 @@ double* myDecompress_bitwise_double(unsigned char* data_bits, int bytes, int num
             expo_value += (bits[i]-'0')*pow(2,11-i);
           }
           expo_value -= 1023;
+
+          if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
 
           int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
           if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
@@ -2297,6 +2304,8 @@ void compress_bitwise_double(double real_value, unsigned char** data_bits, int* 
   }
   expo_value -= 1023;
 
+  if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
   int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
 
   if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
@@ -2444,6 +2453,7 @@ float calcCompressionRatio_sz_double(double data[], int num)
           }  
         }
         expo_value -= 1023;
+        if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
         mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
         if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
         {
@@ -2689,4 +2699,16 @@ void getDoubleBin(double num,char bin[])
     {
         bin[i] = (*f)&(t<<63-i)?1:0;
     }
+}
+
+int to_absErrorBound_binary(double absErrBound)
+{
+  int n;
+  for(n=0; n<100; n++)
+  {
+    if(absErrBound >= pow(2, -n))
+    {
+      return n;
+    }
+  }
 }
