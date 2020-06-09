@@ -1067,6 +1067,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         d++;
+        //printf("100\n");
       }
       else
       {
@@ -1122,6 +1123,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         d++;
+        //printf("100\n");
       }
       else if(diff_min<=absErrorBound) 
       {
@@ -1131,6 +1133,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
           add_bit_to_bytes(data_bits, bytes, pos, 0);
           add_bit_to_bytes(data_bits, bytes, pos, 1);   
           a++;     
+          //printf("101\n");
         }
         else if(compress_type == 'b')
         {
@@ -1138,6 +1141,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 0);  
           b++;
+          //printf("110\n");
         }
         else if(compress_type == 'c')
         {
@@ -1145,6 +1149,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
           add_bit_to_bytes(data_bits, bytes, pos, 1);
           add_bit_to_bytes(data_bits, bytes, pos, 1);  
           c++;
+          //printf("111\n");
         }
         else
         {
@@ -1226,7 +1231,9 @@ void compress_bitwise_float(float real_value, unsigned char** data_bits, int* by
   for(int i=0; i<bits_after_compress; i++)
   {
     add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+    //printf("%d", float_arr[i]-'0');
   }
+  //printf("\n");
 }
 
 double toSmallDataset_double(double data[], double** data_small, int num)
