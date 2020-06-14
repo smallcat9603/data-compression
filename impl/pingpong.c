@@ -58,20 +58,6 @@ int main(int argc, char** argv) {
   // free(data);
   int data_num = n - 1;
 
-  // fp = fopen("bit.txt", "w");
-  // for(int i=0; i<data_num; i++)
-  // {
-  //   float float10 = data[i];
-  //   char float_arr[32+1];
-  //   floattostr(&float10, float_arr);
-  //   for(int j=0; j<32; j++)
-  //   {
-  //     fprintf(fp, "%d ", float_arr[j]-'0');
-  //   }
-  //   fprintf(fp, "\n");
-  // }
-  // fclose(fp);
-
   float compress_ratio;
 
   // float sz_comp_ratio = calcCompressionRatio_sz_float(data, data_num);
@@ -126,6 +112,20 @@ int main(int argc, char** argv) {
   // my compress bitwise
   float* data_small = NULL;
   float min = toSmallDataset_float(data, &data_small, data_num);
+
+  // fp = fopen("bit.txt", "w");
+  // for(int i=0; i<data_num; i++)
+  // {
+  //   float float10 = data[i] - min;
+  //   char float_arr[32+1];
+  //   floattostr(&float10, float_arr);
+  //   for(int j=0; j<32; j++)
+  //   {
+  //     fprintf(fp, "%d ", float_arr[j]-'0');
+  //   }
+  //   fprintf(fp, "\n");
+  // }
+  // fclose(fp);  
 
   unsigned char* data_bits = NULL;
   //int flag = 0; //0, 1
