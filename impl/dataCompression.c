@@ -1054,6 +1054,10 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
   // int bytes = 0; //total bytes of compressed data
   // int pos = 8; //position of filled bit in last byte --> 87654321
 
+  // FILE *fp;
+  // fp = fopen("bitcomp.txt", "w");
+  // assert(fp);
+
   for(int n=0; n<num; n++)
   {
     real_value = data[n];
@@ -1068,6 +1072,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         d++;
         //printf("100\n");
+        // fprintf(fp, "1 0 0\n");
       }
       else
       {
@@ -1124,6 +1129,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
         add_bit_to_bytes(data_bits, bytes, pos, 0);
         d++;
         //printf("100\n");
+        // fprintf(fp, "1 0 0\n");
       }
       else if(diff_min<=absErrorBound) 
       {
@@ -1134,6 +1140,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
           add_bit_to_bytes(data_bits, bytes, pos, 1);   
           a++;     
           //printf("101\n");
+          // fprintf(fp, "1 0 1\n");
         }
         else if(compress_type == 'b')
         {
@@ -1142,6 +1149,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
           add_bit_to_bytes(data_bits, bytes, pos, 0);  
           b++;
           //printf("110\n");
+          // fprintf(fp, "1 1 0\n");
         }
         else if(compress_type == 'c')
         {
@@ -1150,6 +1158,7 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
           add_bit_to_bytes(data_bits, bytes, pos, 1);  
           c++;
           //printf("111\n");
+          // fprintf(fp, "1 1 1\n");
         }
         else
         {
@@ -1163,6 +1172,8 @@ void myCompress_bitwise(float data[], int num, unsigned char** data_bits, int* b
       }
     }
   }
+
+  // fclose(fp);
 
   //printf("compression pattern: a = %d (%f), b = %d (%f), c = %d (%f), d = %d (%f), num = %d\n", a, (float)a/num, b, (float)b/num, c, (float)c/num, d, (float)d/num, num);
 }
@@ -1228,12 +1239,19 @@ void compress_bitwise_float(float real_value, unsigned char** data_bits, int* by
 
   int bits_after_compress = 1+8+mantissa_bits_within_error_bound;  
 
+  // FILE *fp;
+  // fp = fopen("bitcomp.txt", "a");
+  // assert(fp);
+
   for(int i=0; i<bits_after_compress; i++)
   {
     add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
     //printf("%d", float_arr[i]-'0');
+    // fprintf(fp, "%d ", float_arr[i]-'0');
   }
   //printf("\n");
+  // fprintf(fp, "\n");
+  // fclose(fp);
 }
 
 double toSmallDataset_double(double data[], double** data_small, int num)
