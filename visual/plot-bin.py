@@ -6,7 +6,7 @@ import os
 RG = nx.Graph()  
 # RG = nx.grid_graph(dim=[4,4,4], periodic=True)
 folder = "../impl/dataset/"
-base = "bit" # "bit", "bitcomp"
+base = "bitcomp" # "bit", "bitcomp"
 filename = base + ".txt"
 filename_output = base + "_output.txt"
 
@@ -27,6 +27,21 @@ node = 0
 position = {}
 colorlist = []
 num = 1024 #len(data)
+
+zero = 0
+zero_one = 0
+zero_one_one = 0
+for i in range(num):
+    if data[0][i] == 0:
+        zero += 1
+        if data[1][i] == 1:
+            zero_one += 1
+            if data[2][i] == 1:
+                zero_one_one += 1
+print "zero: ", zero
+print "zero_one: ", zero_one
+print "zero_one_one: ", zero_one_one
+
 for i in range(32):
     for j in range(num):
         if data[i][j] == 1:
