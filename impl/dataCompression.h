@@ -5,7 +5,7 @@
 // #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 // #define relBoundRatio       0.01
 // #define pw_relBoundRatio    0.01    
-#define CT                  5 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress, 6 bitwise no prediction
+#define CT                  5 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress, 6 bitwise no prediction, 7 bitmask-based bitwise
 #define byte_or_bit         2 //1 byte, 2 bit
 //#define data_num            8192 //pingpong
 #define filename            "dataset/testfloat_8_8_128" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
@@ -22,6 +22,9 @@
 #define sz_comp_cmd_suffix2 ".dat -1 "
 #define sz_decomp_cmd_prefix  "./sz -x -f -s "
 #define sz_decomp_cmd_suffix ".dat.zs -1 "
+
+void compress_bitwise_float_mask(float, unsigned char**, int*, int*, char[1+8+8]);
+void myCompress_bitwise_mask(float[], int, unsigned char**, int*, int*, char[1+8+8]);
 
 double* myDecompress_bitwise_double_np(unsigned char*, int, int);
 double decompress_bitwise_double_np(char*, int);

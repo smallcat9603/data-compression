@@ -18,6 +18,76 @@
 double absErrBound = absErrorBound;
 int absErrorBound_binary = -100;
 
+//bitmask-based bitwise myCompress for ping-pong & himeno (float)
+void myCompress_bitwise_mask(float data[], int num, unsigned char** data_bits, int* bytes, int* pos, char mask[1+8+8])
+{
+  float real_value;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+    compress_bitwise_float_mask(real_value, data_bits, bytes, pos, mask);
+  }
+}
+
+void compress_bitwise_float_mask(float real_value, unsigned char** data_bits, int* bytes, int* pos, char mask[1+8+8])
+{
+  float float10 = real_value;
+  char float_arr[32+1];
+  floattostr(&float10, float_arr);
+  bool masked = true;
+
+  for(int i=0; i<7; i++)
+  {
+    if(float_arr[i] != mask[i])
+    {
+      masked = false;
+      break;
+    }
+  }
+
+  if(masked == true)
+  {
+    
+  }
+
+  int expo_value = 0;
+  for(int i=1; i<9; i++)
+  {
+    expo_value += (float_arr[i]-'0')*pow(2,8-i);
+  }
+  expo_value -= 127;  
+
+  if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
+  int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
+
+  if(mantissa_bits_within_error_bound > 23) //23 mantissa part of float (52 in the case of double)
+  {
+    mantissa_bits_within_error_bound = 23;
+  }
+  else if(mantissa_bits_within_error_bound < 0)
+  {
+    mantissa_bits_within_error_bound = 0;
+  }
+
+  int bits_after_compress = 1+8+mantissa_bits_within_error_bound;  
+
+  // FILE *fp;
+  // fp = fopen("bitcomp.txt", "a");
+  // assert(fp);
+
+  for(int i=0; i<bits_after_compress; i++)
+  {
+    add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+    //printf("%d", float_arr[i]-'0');
+    // fprintf(fp, "%d ", float_arr[i]-'0');
+  }
+  //printf("\n");
+  // fprintf(fp, "\n");
+  // fclose(fp);
+}
+
 double* myDecompress_bitwise_double_np(unsigned char* data_bits, int bytes, int num)
 {
   int offset_bits = 0;
