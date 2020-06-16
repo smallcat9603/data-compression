@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "param.h"
 #include "dataCompression.h"
 // #include "/opt/sz191211/include/sz.h"
@@ -147,6 +148,22 @@ int main(int argc, char** argv) {
   start_time_comp_bit_np = MPI_Wtime();
   myCompress_bitwise_np(data_small, data_num, &data_bits_np, &bytes_np, &pos_np);
   end_time_comp_bit_np = MPI_Wtime();    
+
+  // my compress bitmask-based bitwise
+  unsigned char* data_bits_mask = NULL;
+  //int flag = 0; //0, 1
+  int bytes_mask = 0; //total bytes of compressed data
+  int pos_mask = 8; //position of filled bit in last byte --> 87654321
+  int type = 0;
+
+  float medium = med_dataset_float(data_small, data_num, &type);
+  char float_arr[32+1];
+  floattostr(&medium, float_arr);
+  char mask[1+8+8];
+  strncpy(mask, float_arr, 1+8+8);
+  start_time_comp_bit_np = MPI_Wtime();
+  myCompress_bitwise_mask(data_small, data_num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask);
+  end_time_comp_bit_np = MPI_Wtime();     
 
   int ping_pong_count = 0;
   int partner_rank = (world_rank + 1) % 2;

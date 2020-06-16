@@ -1856,6 +1856,56 @@ float toSmallDataset_float(float data[], float** data_small, int num)
   return min;
 }
 
+double med_dataset_double(double* data, int num, int* type)
+{
+  double total = 0;
+  double max = data[0];
+  for(int i=0; i<num; i++)
+  {
+    total += data[i];
+    if(data[i] > max)
+    {
+      max = data[i];
+    }
+  }
+  int add = 0;
+  for(int i=10; i>0; i--)
+  {
+    add += pow(2, i);
+    if(max < add - 1023)
+    {
+      *type = 11 - i;
+      break;
+    }
+  }  
+  return total/num;
+}
+
+float med_dataset_float(float* data, int num, int* type)
+{
+  float total = 0;
+  float max = data[0];
+  for(int i=0; i<num; i++)
+  {
+    total += data[i];
+    if(data[i] > max)
+    {
+      max = data[i];
+    }
+  }
+  int add = 0;
+  for(int i=7; i>0; i--)
+  {
+    add += pow(2, i);
+    if(max < add - 127)
+    {
+      *type = 8 - i;
+      break;
+    }
+  }
+  return total/num;
+}
+
 float calCompressRatio_bitwise_double2(float data[], int num)
 {
   int bits_after_compress = 0;

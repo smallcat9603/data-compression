@@ -49,6 +49,9 @@ void compress_bitwise_float(float, unsigned char**, int*, int*);
 double toSmallDataset_double(double[], double**, int);
 float toSmallDataset_float(float[], float**, int);
 
+double med_dataset_double(double*, int, int*);
+float med_dataset_float(float*, int, int*);
+
 float calCompressRatio_bitwise_float(float[], int);
 float calCompressRatio_bitwise_double(double[], int);
 float calCompressRatio_bitwise_double2(float[], int);
