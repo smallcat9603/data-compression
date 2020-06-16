@@ -23,8 +23,10 @@
 #define sz_decomp_cmd_prefix  "./sz -x -f -s "
 #define sz_decomp_cmd_suffix ".dat.zs -1 "
 
-void compress_bitwise_float_mask(float, unsigned char**, int*, int*, char[1+8+8]);
-void myCompress_bitwise_mask(float[], int, unsigned char**, int*, int*, char[1+8+8]);
+float* myDecompress_bitwise_mask(unsigned char*, int, int, int, char[1+8+8]);
+float decompress_bitwise_float_mask(char*, int, float, float, float, int, char[1+8+8]);
+void compress_bitwise_float_mask(float, unsigned char**, int*, int*, int, char[1+8+8]);
+void myCompress_bitwise_mask(float[], int, unsigned char**, int*, int*, int, char[1+8+8]);
 
 double* myDecompress_bitwise_double_np(unsigned char*, int, int);
 double decompress_bitwise_double_np(char*, int);
