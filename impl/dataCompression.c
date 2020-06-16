@@ -116,11 +116,11 @@ float* myDecompress_bitwise_mask(unsigned char* data_bits, int bytes, int num, i
               {
                 if(bits[bits_num-1] == '0')
                 {
-                  offset_bits -= 8 //8 --> 0
+                  offset_bits -= 8; //8 --> 0
                 }
                 else if(bits[bits_num-1] == '1')
                 {
-                  offset_bits -= 4 //8 --> 4
+                  offset_bits -= 4; //8 --> 4
                 }
               }
             }
