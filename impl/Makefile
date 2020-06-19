@@ -1,6 +1,7 @@
 OBJS = pingpong.o himenoBMTxps.o k-means.o dataCompression.o
-
-CC = mpicc
+#mac: mpicc.mpich
+#wsl: mpicc
+CC = mpicc.mpich
 RM = /bin/rm
 PROG = pingpong bmt k-means
 
