@@ -157,12 +157,20 @@ int main(int argc, char** argv) {
   int type = 0;
 
   float medium = med_dataset_float(data_small, data_num, &type);
+  printf("medium = %f\n", medium);
+  printf("type = %d\n", type);
   char float_arr[32+1];
   floattostr(&medium, float_arr);
   char mask[1+8+8];
   strncpy(mask, float_arr, 1+8+8);
+  for(int n=0; n<17; n++)
+  {
+    printf("%c", mask[n]);
+  }
+  printf("\n");
   start_time_comp_bit_np = MPI_Wtime();
   myCompress_bitwise_mask(data_small, data_num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask);
+  printf("bytes_mask = %d, improvement = %f\n", bytes_mask, (float)bytes_mask/bytes);
   end_time_comp_bit_np = MPI_Wtime();     
 
   int ping_pong_count = 0;
