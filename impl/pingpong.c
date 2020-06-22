@@ -368,7 +368,7 @@ int main(int argc, char** argv) {
     {
       printf("Decompression time (bitwise_mask): %f \n", end_time_decomp_bit_mask-start_time_decomp_bit_mask); 
       compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(float)*8);
-      printf("Compression rate (bitwise_mask, float): %f \n", 1/compress_ratio); 
+      printf("Compression rate (bitwise_mask, float): %f (improvement = %f) \n", 1/compress_ratio, (float)bytes/bytes_mask); 
     }     
   }
 
