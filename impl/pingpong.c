@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
   double start_time_comp_bit, end_time_comp_bit, start_time_decomp_bit, end_time_decomp_bit;
   double start_time_comp_bit_np, end_time_comp_bit_np, start_time_decomp_bit_np, end_time_decomp_bit_np;
   double start_time_comp_sz, end_time_comp_sz, start_time_decomp_sz, end_time_decomp_sz;
+  double start_time_comp_bit_mask, end_time_comp_bit_mask, start_time_decomp_bit_mask, end_time_decomp_bit_mask;
   
   const int PING_PONG_LIMIT = 10000;
 
@@ -157,21 +158,21 @@ int main(int argc, char** argv) {
   int type = 0;
 
   float medium = med_dataset_float(data_small, data_num, &type);
-  printf("medium = %f\n", medium);
-  printf("type = %d\n", type);
+  // printf("medium = %f\n", medium);
+  // printf("type = %d\n", type);
   char float_arr[32+1];
   floattostr(&medium, float_arr);
   char mask[1+8+8];
   strncpy(mask, float_arr, 1+8+8);
-  for(int n=0; n<17; n++)
-  {
-    printf("%c", mask[n]);
-  }
-  printf("\n");
-  start_time_comp_bit_np = MPI_Wtime();
+  // for(int n=0; n<17; n++)
+  // {
+  //   printf("%c", mask[n]);
+  // }
+  // printf("\n");
+  start_time_comp_bit_mask = MPI_Wtime();
   myCompress_bitwise_mask(data_small, data_num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask);
-  printf("bytes_mask = %d, improvement = %f\n", bytes_mask, (float)bytes_mask/bytes);
-  end_time_comp_bit_np = MPI_Wtime();     
+  // printf("bytes_mask = %d, improvement = %f\n", bytes_mask, (float)bytes_mask/bytes);
+  end_time_comp_bit_mask = MPI_Wtime();     
 
   int ping_pong_count = 0;
   int partner_rank = (world_rank + 1) % 2;
@@ -206,6 +207,10 @@ int main(int argc, char** argv) {
       {
         MPI_Send(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD);
       }        
+      if(CT == 7)
+      {
+        MPI_Send(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 7, MPI_COMM_WORLD);
+      }   
     }
     else {
       MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -233,7 +238,11 @@ int main(int argc, char** argv) {
       if(CT == 6)
       {
         MPI_Recv(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }      
+      }    
+      if(CT == 7)
+      {
+        MPI_Recv(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 7, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }           
       if(ping_pong_count == PING_PONG_LIMIT)
       {
         if(CT == 1)
@@ -299,7 +308,21 @@ int main(int argc, char** argv) {
           }
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
-        }        
+        } 
+        if(CT == 7)
+        {
+          start_time_decomp_bit_mask = MPI_Wtime();
+          float* decompressed_data = myDecompress_bitwise_mask(data_bits_mask, bytes_mask, data_num, type, mask);
+          end_time_decomp_bit_mask = MPI_Wtime();
+          //printf("%.10f %.10f %.10f %.10f\n", decompressed_data[0], decompressed_data[1], decompressed_data[2], decompressed_data[data_num-1]);
+          float gosa = 0;
+          for(int i=0; i<data_num; i++)
+          {
+            gosa += fabs(decompressed_data[i]+min-data[i]);
+          }
+          gosa = gosa/data_num;
+          printf("gosa = %f \n", gosa);          
+        }                
       }
     }
   }
@@ -313,6 +336,7 @@ int main(int argc, char** argv) {
     printf("Compression time (bitwise): %f \n", end_time_comp_bit-start_time_comp_bit); 
     printf("Compression time (bitwise_np): %f \n", end_time_comp_bit_np-start_time_comp_bit_np); 
     printf("Compression time (sz): %f \n", end_time_comp_sz-start_time_comp_sz); 
+    printf("Compression time (bitwise_mask): %f \n", end_time_comp_bit_mask-start_time_comp_bit_mask); 
 
     if(CT == 1)
     {    
@@ -340,6 +364,12 @@ int main(int argc, char** argv) {
       compress_ratio = (float)(bytes_np*8)/(data_num*sizeof(float)*8);
       printf("Compression rate (bitwise_np, float): %f \n", 1/compress_ratio); 
     }    
+    if(CT == 7)
+    {
+      printf("Decompression time (bitwise_mask): %f \n", end_time_decomp_bit_mask-start_time_decomp_bit_mask); 
+      compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(float)*8);
+      printf("Compression rate (bitwise_mask, float): %f \n", 1/compress_ratio); 
+    }     
   }
 
   MPI_Finalize();

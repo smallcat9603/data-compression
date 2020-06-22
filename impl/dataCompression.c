@@ -181,7 +181,7 @@ float* myDecompress_bitwise_mask(unsigned char* data_bits, int bytes, int num, i
       }   
 
       offset_bits--;
-      if(offset_bits == 0 && bits_num != 1+8 && bits_num != 1+type+1)
+      if(offset_bits == 0 && bits_num != 1+8 && bits_num != 1+type+1 && pending == false)
       {
         decompressed_num++;
         decompressed[decompressed_num-1] = decompress_bitwise_float_mask(bits, bits_num, before_value1, before_value2, before_value3, type, mask);
@@ -241,6 +241,7 @@ float decompress_bitwise_float_mask(char* bits, int bits_num, float before_value
     else
     {
       printf("Error start bit of 3 bits is 0\n");
+      printf("%c%c%c\n", bits[0], bits[1], bits[2]);
       exit(1);
     }
   }
@@ -264,7 +265,12 @@ float decompress_bitwise_float_mask(char* bits, int bits_num, float before_value
       }
       if(masked == true)
       {
-        bits32 = (char*)realloc(mask, sizeof(float)*8);
+        // bits32 = (char*)realloc(mask, sizeof(float)*8);
+        bits32 = malloc(sizeof(float)*8);
+        for(int i=0; i<1+8+8; i++)
+        {
+          bits32[i] = mask[i];
+        }
         if(bits[type+1] == '0')
         {
           for(int i=17, j=1+type+1; j<bits_num; i++, j++)
@@ -1879,6 +1885,10 @@ double med_dataset_double(double* data, int num, int* type)
     }
   }  
   return total/num;
+  // double medium = total/num; //min = 0
+  // if(medium > max/2) return medium + (max - medium)/2;
+  // else if(medium < max/2) return medium/2;
+  // else return medium;
 }
 
 float med_dataset_float(float* data, int num, int* type)
@@ -1904,6 +1914,10 @@ float med_dataset_float(float* data, int num, int* type)
     }
   }
   return total/num;
+  // float medium = total/num; //min = 0
+  // if(medium > max/2) return medium + (max - medium)/2;
+  // else if(medium < max/2) return medium/2;
+  // else return medium;
 }
 
 float calCompressRatio_bitwise_double2(float data[], int num)
