@@ -118,10 +118,10 @@ float* myDecompress_bitwise_mask(unsigned char* data_bits, int bytes, int num, i
                 {
                   offset_bits -= 8; //8 --> 0
                 }
-                else if(bits[bits_num-1] == '1')
-                {
-                  offset_bits -= 4; //8 --> 4
-                }
+                // else if(bits[bits_num-1] == '1')
+                // {
+                //   offset_bits -= 4; //8 --> 4
+                // }
               }
             }
             else //no mantissa bit
@@ -289,39 +289,51 @@ float decompress_bitwise_float_mask(char* bits, int bits_num, float before_value
         }
         else if(bits[type+1] == '1')
         {
-          if(bits[type+2] == '0' && bits[type+3] == '0')
-          {
-            bits32[9] = bits[type+4];
-            bits32[10] = bits[type+5];
-          }
-          else if(bits[type+2] == '0' && bits[type+3] == '1')
-          {
-            bits32[11] = bits[type+4];
-            bits32[12] = bits[type+5];
-          }   
-          else if(bits[type+2] == '1' && bits[type+3] == '0')
-          {
-            bits32[13] = bits[type+4];
-            bits32[14] = bits[type+5];
-          }     
-          else if(bits[type+2] == '1' && bits[type+3] == '1')
-          {
-            bits32[15] = bits[type+4];
-            bits32[16] = bits[type+5];
-          }
-          for(int i=17, j=1+type+1+4; j<bits_num; i++, j++)
+          // if(bits[type+2] == '0' && bits[type+3] == '0')
+          // {
+          //   bits32[9] = bits[type+4];
+          //   bits32[10] = bits[type+5];
+          // }
+          // else if(bits[type+2] == '0' && bits[type+3] == '1')
+          // {
+          //   bits32[11] = bits[type+4];
+          //   bits32[12] = bits[type+5];
+          // }   
+          // else if(bits[type+2] == '1' && bits[type+3] == '0')
+          // {
+          //   bits32[13] = bits[type+4];
+          //   bits32[14] = bits[type+5];
+          // }     
+          // else if(bits[type+2] == '1' && bits[type+3] == '1')
+          // {
+          //   bits32[15] = bits[type+4];
+          //   bits32[16] = bits[type+5];
+          // }
+          // for(int i=17, j=1+type+1+4; j<bits_num; i++, j++)
+          // {
+          //   bits32[i] = bits[j];
+          // }
+          for(int i=9, j=1+type+1; j<bits_num; i++, j++)
           {
             bits32[i] = bits[j];
-          }
+          }          
 
-          bits32[17+bits_num-(1+type+1+4)] = '1';
-          if(17+bits_num-(1+type+1+4)+1 < sizeof(float)*8)     
+          // bits32[17+bits_num-(1+type+1+4)] = '1';
+          // if(17+bits_num-(1+type+1+4)+1 < sizeof(float)*8)     
+          // {
+          //   for(int i=17+bits_num-(1+type+1+4)+1; i< sizeof(float)*8; i++)
+          //   {
+          //     bits32[i] = '0';
+          //   }
+          // }    
+          bits32[9+bits_num-(1+type+1)] = '1';
+          if(9+bits_num-(1+type+1)+1 < sizeof(float)*8)     
           {
-            for(int i=17+bits_num-(1+type+1+4)+1; i< sizeof(float)*8; i++)
+            for(int i=9+bits_num-(1+type+1)+1; i< sizeof(float)*8; i++)
             {
               bits32[i] = '0';
             }
-          }                                   
+          }                                          
         }
       }
       else
@@ -498,19 +510,27 @@ void compress_bitwise_float_mask(float real_value, unsigned char** data_bits, in
   {
     int error = 0;
     int index = -1;
-    for(int i=9; i<17; i=i+2)
+    // for(int i=9; i<17; i=i+2)
+    // {
+    //   if(float_arr[i] != mask[i] || float_arr[i+1] != mask[i+1])
+    //   {
+    //     error++;
+    //     index = i; //9, 11, 13, 15
+    //     if(error > 1)
+    //     {
+    //       index = -1;
+    //       break;
+    //     }
+    //   }
+    // }
+    for(int i=9; i<17; i++)
     {
-      if(float_arr[i] != mask[i] || float_arr[i+1] != mask[i+1])
+      if(float_arr[i] != mask[i])
       {
         error++;
-        index = i; //9, 11, 13, 15
-        if(error > 1)
-        {
-          index = -1;
-          break;
-        }
-      }
-    }
+        break;
+      }  
+    }  
 
     if(error == 0)
     {
@@ -535,44 +555,50 @@ void compress_bitwise_float_mask(float real_value, unsigned char** data_bits, in
         add_bit_to_bytes(data_bits, bytes, pos, 1);
       }
       add_bit_to_bytes(data_bits, bytes, pos, 1);
-      if(index == 9)
-      {
-        add_bit_to_bytes(data_bits, bytes, pos, 0);
-        add_bit_to_bytes(data_bits, bytes, pos, 0);
-      }
-      else if(index == 11)
-      {
-        add_bit_to_bytes(data_bits, bytes, pos, 0);
-        add_bit_to_bytes(data_bits, bytes, pos, 1);
-      }
-      else if(index == 13)
-      {
-        add_bit_to_bytes(data_bits, bytes, pos, 1);
-        add_bit_to_bytes(data_bits, bytes, pos, 0);          
-      }
-      else if(index == 15)
-      {
-        add_bit_to_bytes(data_bits, bytes, pos, 1);
-        add_bit_to_bytes(data_bits, bytes, pos, 1);             
-      }
-      else
-      {
-        printf("index error");
-        exit(0);
-      }
-      add_bit_to_bytes(data_bits, bytes, pos, float_arr[index]-'0');
-      add_bit_to_bytes(data_bits, bytes, pos, float_arr[index+1]-'0');          
-      for(int i=17; i<bits_after_compress; i++)
+      // if(index == 9)
+      // {
+      //   add_bit_to_bytes(data_bits, bytes, pos, 0);
+      //   add_bit_to_bytes(data_bits, bytes, pos, 0);
+      // }
+      // else if(index == 11)
+      // {
+      //   add_bit_to_bytes(data_bits, bytes, pos, 0);
+      //   add_bit_to_bytes(data_bits, bytes, pos, 1);
+      // }
+      // else if(index == 13)
+      // {
+      //   add_bit_to_bytes(data_bits, bytes, pos, 1);
+      //   add_bit_to_bytes(data_bits, bytes, pos, 0);          
+      // }
+      // else if(index == 15)
+      // {
+      //   add_bit_to_bytes(data_bits, bytes, pos, 1);
+      //   add_bit_to_bytes(data_bits, bytes, pos, 1);             
+      // }
+      // else
+      // {
+      //   printf("index error");
+      //   exit(0);
+      // }
+      // add_bit_to_bytes(data_bits, bytes, pos, float_arr[index]-'0');
+      // add_bit_to_bytes(data_bits, bytes, pos, float_arr[index+1]-'0');          
+      // for(int i=17; i<bits_after_compress; i++)
+      // {
+      //   add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+      // }        
+      for(int i=9; i<bits_after_compress; i++)
       {
         add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
-      }        
+      }    
     }
     else
     {
-      for(int i=0; i<bits_after_compress; i++)
-      {
-        add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
-      }
+      // for(int i=0; i<bits_after_compress; i++)
+      // {
+      //   add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+      // }
+      printf("error error");
+      exit(0);      
     }  
   }
   else
