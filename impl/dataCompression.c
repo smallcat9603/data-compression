@@ -18,6 +18,519 @@
 double absErrBound = absErrorBound;
 int absErrorBound_binary = -100;
 
+double* myDecompress_bitwise_double_mask(unsigned char* data_bits, int bytes, int num, int type, char mask[1+11+8])
+{
+  int offset_bits = 0;
+  char* bits = NULL;
+  char* bits_more = NULL;
+  int bits_num = 0;
+  int min_shift = 0;
+  bool pending = false;
+
+  double before_value1=-1, before_value2=-1, before_value3=-1;
+  double* decompressed = (double*) malloc(sizeof(double)*num);
+  int decompressed_num = 0;
+
+  for(int i=0; i<bytes; i++)
+  {
+    for (int j=7; j>=min_shift; j--) //each bit of byte
+    {
+      int bit = (data_bits[i] >> j) & 1;
+
+      if(offset_bits == 0) //start bit
+      {
+        if(bits_num == 0) //not start bit of mantissa
+        {
+          if(bit == 0)
+          {
+            pending = true;
+            offset_bits = 1+type;
+            //offset_bits = 1+8;          
+          }
+          else if(bit == 1)
+          {
+            offset_bits = 3; //100, 101, 110, 111            
+          }          
+        }
+        else 
+        {
+          if(pending == true)
+          {
+            pending = false;
+            bool masked = true;
+            for (int n = 1; n < type+1; n++)
+            {
+              if(bits[n] != '1')
+              {
+                masked = false;
+                break;
+              }
+            }
+            if(masked == true)
+            {
+              offset_bits = 1;
+            }
+            else
+            {
+              offset_bits = 11 - type;
+            }          
+          }
+          else //start bit of mantissa
+          {
+            int expo_value = 0;
+            for(int n=1; n<12; n++)
+            {
+              if(bits_num == 1+11)
+              {
+                expo_value += (bits[n]-'0')*pow(2,11-n);
+              }
+              else if(bits_num = 1+type+1)
+              {
+                expo_value += (mask[n]-'0')*pow(2,11-n);
+              }
+              else
+              {
+                printf("bits_num error");
+                exit(1);
+              }
+            }
+            expo_value -= 1023;           
+
+            if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
+            int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
+            if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+            {
+              mantissa_bits_within_error_bound = 52;
+            }
+            else if(mantissa_bits_within_error_bound < 0)
+            {
+              mantissa_bits_within_error_bound = 0;
+            }
+
+            offset_bits = mantissa_bits_within_error_bound;
+
+            if(offset_bits > 0) //has mantissa bits
+            {
+              if(bits_num == 1 + type + 1) //0 11 0/1
+              {
+                if(bits[bits_num-1] == '0')
+                {
+                  offset_bits -= 8; //8 --> 0
+                }
+                // else if(bits[bits_num-1] == '1')
+                // {
+                //   offset_bits -= 4; //8 --> 4
+                // }
+              }
+            }
+            else //no mantissa bit
+            {
+              decompressed_num++;
+              decompressed[decompressed_num-1] = decompress_bitwise_double_mask(bits, bits_num, before_value1, before_value2, before_value3, type, mask);
+
+              if(before_value3 == -1) 
+              {
+                before_value3 = decompressed[decompressed_num-1]; 
+              }
+              else if(before_value2 == -1) 
+              {
+                before_value2 = decompressed[decompressed_num-1];
+              }
+              else if(before_value1 == -1) 
+              {
+                before_value1 = decompressed[decompressed_num-1];
+              }
+              else
+              {
+                before_value3 = before_value2;
+                before_value2 = before_value1;
+                before_value1 = decompressed[decompressed_num-1];
+              }
+
+              bits = NULL;
+              bits_num = 0;
+              pending = false;
+
+              if(bit == 0)
+              {
+                pending = true;
+                offset_bits = 1+type;              
+                //offset_bits = 1+8;            
+              }
+              else if(bit == 1)
+              {
+                offset_bits = 3;             
+              }                           
+            }                        
+          }          
+        }      
+      }
+      bits_num++;
+      bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+      if (bits_more != NULL) 
+      {
+        bits = bits_more;
+        bits[bits_num-1] = bit + '0';
+      }
+      else 
+      {
+        free(bits);
+        printf("Error (re)allocating memory\n");
+        exit(1);
+      }   
+
+      offset_bits--;
+      if(offset_bits == 0 && bits_num != 1+11 && bits_num != 1+type+1 && pending == false)
+      {
+        decompressed_num++;
+        decompressed[decompressed_num-1] = decompress_bitwise_double_mask(bits, bits_num, before_value1, before_value2, before_value3, type, mask);
+        // printf("%f ", decompressed[decompressed_num-1]);
+        
+        if(before_value3 == -1) 
+        {
+          before_value3 = decompressed[decompressed_num-1]; 
+        }
+        else if(before_value2 == -1) 
+        {
+          before_value2 = decompressed[decompressed_num-1];
+        }
+        else if(before_value1 == -1) 
+        {
+          before_value1 = decompressed[decompressed_num-1];
+        }
+        else
+        {
+          before_value3 = before_value2;
+          before_value2 = before_value1;
+          before_value1 = decompressed[decompressed_num-1];
+        }
+
+        bits = NULL;
+        bits_num = 0;
+        pending = false;
+      }
+    }       
+  }
+  return decompressed;
+}
+
+double decompress_bitwise_double_mask(char* bits, int bits_num, double before_value1, double before_value2, double before_value3, int type, char mask[1+11+8])
+{
+  if(bits_num == 3)
+  {
+    if(bits[0] == '1')
+    {
+      if(bits[1] == '0' && bits[2] == '0')
+      {
+        return 0.0;
+      }
+      else if(bits[1] == '0' && bits[2] == '1')
+      {
+        return before_value1;
+      }
+      else if(bits[1] == '1' && bits[2] == '0')
+      {
+        return 2*before_value1 - before_value2;
+      }
+      else if(bits[1] == '1' && bits[2] == '1')
+      {
+        return 3*before_value1 - 3*before_value2 + before_value3;
+      }
+    }
+    else
+    {
+      printf("Error start bit of 3 bits is 0\n");
+      printf("%c%c%c\n", bits[0], bits[1], bits[2]);
+      exit(1);
+    }
+  }
+  else
+  {
+    if(bits_num == sizeof(double)*8)
+    {
+      return strtodbl(bits);
+    }
+    else
+    {
+      bool masked = true;
+      char* bits64 = NULL;
+      for(int n=1; n<type+1; n++)
+      {
+        if(bits[n] != '1')
+        {
+          masked = false;
+          break;
+        }
+      }
+      if(masked == true)
+      {
+        // bits32 = (char*)realloc(mask, sizeof(float)*8);
+        bits64 = malloc(sizeof(double)*8);
+        for(int i=0; i<1+11+8; i++)
+        {
+          bits64[i] = mask[i];
+        }
+        if(bits[type+1] == '0')
+        {
+          for(int i=20, j=1+type+1; j<bits_num; i++, j++)
+          {
+            bits64[i] = bits[j];
+          }
+
+          bits64[20+bits_num-(1+type+1)] = '1';
+          if(20+bits_num-(1+type+1)+1 < sizeof(double)*8)     
+          {
+            for(int i=20+bits_num-(1+type+1)+1; i< sizeof(double)*8; i++)
+            {
+              bits64[i] = '0';
+            }
+          }          
+        }
+        else if(bits[type+1] == '1')
+        {
+          for(int i=12, j=1+type+1; j<bits_num; i++, j++)
+          {
+            bits64[i] = bits[j];
+          }          
+   
+          bits64[12+bits_num-(1+type+1)] = '1';
+          if(12+bits_num-(1+type+1)+1 < sizeof(double)*8)     
+          {
+            for(int i=12+bits_num-(1+type+1)+1; i< sizeof(double)*8; i++)
+            {
+              bits64[i] = '0';
+            }
+          }                                          
+        }
+      }
+      else
+      {
+        bits64 = (char*)realloc(bits, sizeof(double)*8);
+        bits64[bits_num] = '1';
+        if(bits_num+1 < sizeof(double)*8)     
+        {
+          for(int i=bits_num+1; i< sizeof(double)*8; i++)
+          {
+            bits64[i] = '0';
+          }
+        }
+      }
+      return strtodbl(bits64);   
+    }
+  }
+}
+
+void compress_bitwise_double_mask(double real_value, unsigned char** data_bits, int* bytes, int* pos, int type, char mask[1+11+8])
+{
+  double double10 = real_value;
+  char double_arr[64+1];
+  doubletostr(&double10, double_arr);
+
+  int expo_value = 0;
+  for(int i=1; i<12; i++)
+  {
+    expo_value += (double_arr[i]-'0')*pow(2,11-i);
+  }
+  expo_value -= 1023;  
+
+  if(absErrorBound_binary == -100) absErrorBound_binary = to_absErrorBound_binary(absErrBound);
+
+  int mantissa_bits_within_error_bound = absErrorBound_binary + expo_value;
+
+  if(mantissa_bits_within_error_bound > 52) //23 mantissa part of float (52 in the case of double)
+  {
+    mantissa_bits_within_error_bound = 52;
+  }
+  else if(mantissa_bits_within_error_bound < 0)
+  {
+    mantissa_bits_within_error_bound = 0;
+  }
+
+  int bits_after_compress = 1+11+mantissa_bits_within_error_bound;  
+
+  //bitmask
+  bool masked = true;
+  for(int i=0; i<12; i++)
+  {
+    if(double_arr[i] != mask[i])
+    {
+      masked = false;
+      break;
+    }
+  }
+
+  if(masked == true)
+  {
+    int error = 0;
+    int index = -1;
+
+    for(int i=12; i<20; i++)
+    {
+      if(double_arr[i] != mask[i])
+      {
+        error++;
+        break;
+      }  
+    }  
+
+    if(error == 0)
+    {
+      //type=1 --> 01, type=2 --> 011, type=3 --> 0111, ...
+      add_bit_to_bytes(data_bits, bytes, pos, 0);
+      for(int i=0; i<type; i++)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+      }
+      add_bit_to_bytes(data_bits, bytes, pos, 0);   
+      for(int i=20; i<bits_after_compress; i++)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, double_arr[i]-'0');
+      }       
+    }
+    else if(error == 1)
+    {
+      //type=1 --> 01, type=2 --> 011, type=3 --> 0111, ...
+      add_bit_to_bytes(data_bits, bytes, pos, 0);
+      for(int i=0; i<type; i++)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+      }
+      add_bit_to_bytes(data_bits, bytes, pos, 1);
+       
+      for(int i=12; i<bits_after_compress; i++)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, double_arr[i]-'0');
+      }    
+    }
+    else
+    {
+      printf("error error");
+      exit(0);      
+    }  
+  }
+  else
+  {
+    for(int i=0; i<bits_after_compress; i++)
+    {
+      add_bit_to_bytes(data_bits, bytes, pos, double_arr[i]-'0');
+    }
+  }
+}
+
+void myCompress_bitwise_double_mask(double data[], int num, unsigned char** data_bits, int* bytes, int* pos, int type, char mask[1+11+8])
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  double diff1, diff2, diff3, diff_min, selected_predict_value;
+  char compress_type;
+  int a=0, b=0, c=0, d=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      //if(real_value == 0)
+      if(fabs(real_value) < absErrorBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else
+      {
+        compress_bitwise_double_mask(real_value, data_bits, bytes, pos, type, mask);
+      }       
+      
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a'; //101
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b'; //110
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c'; //111
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+      
+      if(fabs(real_value) < absErrorBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else if(diff_min<=absErrorBound) 
+      {
+        if(compress_type == 'a')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);   
+          a++;     
+        }
+        else if(compress_type == 'b')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);  
+          b++;
+        }
+        else if(compress_type == 'c')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);  
+          c++;
+        }
+        else
+        {
+          printf("Error compress_type\n");
+          exit(1);
+        }
+      }
+      else 
+      {
+        compress_bitwise_double_mask(real_value, data_bits, bytes, pos, type, mask);            
+      }
+    }
+  }   
+}
+
 float* myDecompress_bitwise_mask(unsigned char* data_bits, int bytes, int num, int type, char mask[1+8+8])
 {
   int offset_bits = 0;
