@@ -18,9 +18,11 @@
 #define zs_suffix           ".zs"
 #define out_suffix           ".out"
 #define sz_comp_cmd_prefix  "./sz -z -f -c sz.config -M ABS -A "
+#define sz_comp_cmd_prefix_double  "./sz -z -d -c sz.config -M ABS -A "
 #define sz_comp_cmd_suffix1 " -i "
 #define sz_comp_cmd_suffix2 ".dat -1 "
 #define sz_decomp_cmd_prefix  "./sz -x -f -s "
+#define sz_decomp_cmd_prefix_double  "./sz -x -d -s "
 #define sz_decomp_cmd_suffix ".dat.zs -1 "
 
 double* myDecompress_bitwise_double_mask(unsigned char*, int, int, int, char[1+11+8]);
