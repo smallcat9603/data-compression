@@ -33,6 +33,8 @@
 #endif
 #include <stdio.h>
 #include <malloc.h>
+#include <string.h>
+#include <stdbool.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
