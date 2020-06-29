@@ -2339,7 +2339,7 @@ double* myDecompress_bitwise_double_mask(unsigned char* data_bits, int bytes, in
               {
                 expo_value += (bits[n]-'0')*pow(2,11-n);
               }
-              else if(bits_num = 1+type+1)
+              else if(bits_num == 1+type+1)
               {
                 expo_value += (mask[n]-'0')*pow(2,11-n);
               }
@@ -2472,32 +2472,23 @@ double* myDecompress_bitwise_double_mask(unsigned char* data_bits, int bytes, in
 
 double decompress_bitwise_double_mask(char* bits, int bits_num, double before_value1, double before_value2, double before_value3, int type, char mask[1+11+8])
 {
-  if(bits_num == 3)
+  if(bits_num == 3 && bits[0] == '1')
   {
-    if(bits[0] == '1')
+    if(bits[1] == '0' && bits[2] == '0')
     {
-      if(bits[1] == '0' && bits[2] == '0')
-      {
-        return 0.0;
-      }
-      else if(bits[1] == '0' && bits[2] == '1')
-      {
-        return before_value1;
-      }
-      else if(bits[1] == '1' && bits[2] == '0')
-      {
-        return 2*before_value1 - before_value2;
-      }
-      else if(bits[1] == '1' && bits[2] == '1')
-      {
-        return 3*before_value1 - 3*before_value2 + before_value3;
-      }
+      return 0.0;
     }
-    else
+    else if(bits[1] == '0' && bits[2] == '1')
     {
-      printf("Error start bit of 3 bits is 0\n");
-      printf("%c%c%c\n", bits[0], bits[1], bits[2]);
-      exit(1);
+      return before_value1;
+    }
+    else if(bits[1] == '1' && bits[2] == '0')
+    {
+      return 2*before_value1 - before_value2;
+    }
+    else if(bits[1] == '1' && bits[2] == '1')
+    {
+      return 3*before_value1 - 3*before_value2 + before_value3;
     }
   }
   else
