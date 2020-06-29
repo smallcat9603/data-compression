@@ -52,7 +52,7 @@
 #include <assert.h>
 #define absErrorBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 // #define absErrorBound_binary  20 //bitwise, SZ, equal to above
-#define CT                  6 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise, 6 bitwise no prediction
+#define CT                  7 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise, 6 bitwise no prediction
 #define byte_or_bit         2 //1 byte, 2 bit
 //sz
 #define bin_suffix          ".dat"
