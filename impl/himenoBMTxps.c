@@ -77,6 +77,7 @@ MPI_Datatype ijvec,ikvec,jkvec;
 //todo
 static float cr = 0; //compression rate
 static int cr_num = 0;
+static double time = 0;
 
 int
 main(int argc,char *argv[])
@@ -173,6 +174,7 @@ main(int argc,char *argv[])
            mflops(nn,cpu,flop)/82.84);
     //todo
     printf("Compression rate: %f \n", 1/(cr/cr_num));
+    printf("Execution time: %f \n", time/nn);
   }
 
   MPI_Finalize();
@@ -278,6 +280,7 @@ jacobi(int nn)
     sendp(ndx,ndy,ndz);
     double end_time = MPI_Wtime();
     //printf("execution time: %f\n", end_time-start_time);
+    time += end_time-start_time;
 
     MPI_Allreduce(&wgosa,
                   &gosa,
