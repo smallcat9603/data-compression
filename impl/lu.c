@@ -242,14 +242,14 @@ int main(int argc, char *argv[])
             if(id == root)
             {
                char binfile[64];
-               sprintf(binfile, "dataset/id%d.dat", id);
+               sprintf(binfile, "dataset/id%d.dat", root);
                writetobinary_double(binfile, save, size); //.txt --> .dat
                char sz_comp_cmd[64];
-               sprintf(sz_comp_cmd, "%s%g%sdataset/id%d%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, size);
+               sprintf(sz_comp_cmd, "%s%g%sdataset/id%d%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, root, sz_comp_cmd_suffix2, size);
                //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
                int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
                char binfile_sz[64];
-               sprintf(binfile_sz, "dataset/id%d.dat.sz", id);
+               sprintf(binfile_sz, "dataset/id%d.dat.sz", root);
                data_bits = readfrombinary_char(binfile_sz, &data_bytes);		
             }
 
@@ -263,16 +263,16 @@ int main(int argc, char *argv[])
             MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
 
             char binfile_zs[64];
-            sprintf(binfile_zs, "dataset/%d.dat.zs", root);
+            sprintf(binfile_zs, "dataset/id%d.dat.zs", root);
             writetobinary_char(binfile_zs, data_bits, data_bytes); //.dat.zs
             char sz_decomp_cmd[64];
-            sprintf(sz_decomp_cmd, "%sdataset/id%d%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, size);
+            sprintf(sz_decomp_cmd, "%sdataset/id%d%s%d", sz_decomp_cmd_prefix, root, sz_decomp_cmd_suffix, size);
             //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
             int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
             char binfile_out[64];
-            sprintf(binfile_out, "dataset/id%d.dat.zs.out", id);
+            sprintf(binfile_out, "dataset/id%d.dat.zs.out", root);
             char txtfile[64];
-            sprintf(txtfile, "dataset/id%d.dat.zs.out.txt", id); 
+            sprintf(txtfile, "dataset/id%d.dat.zs.out.txt", root); 
             double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, size);			
 
             double gs = 0;
