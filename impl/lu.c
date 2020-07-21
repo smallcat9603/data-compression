@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
          if(CT == 7)
          {
             int data_bytes = 0;
-            double min;
+            double min = 0;
 
             unsigned char* data_bits = NULL;
 
