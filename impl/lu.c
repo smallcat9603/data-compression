@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <mpi.h>
+#include <math.h>
 #include "param.h"
 #include "dataCompression.h"
 
@@ -255,7 +256,7 @@ int main(int argc, char *argv[])
             MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
             compress_ratio += data_bytes*8.0/(size*sizeof(double)*8);
          
-            if(rank != 0)
+            if(id != root)
             {
                   data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
             }
@@ -382,7 +383,7 @@ int main(int argc, char *argv[])
 		printf("FINAL RESULTS:\n");	
 
 		//printf("id = %d, elapsed = %f = %f - %f\n", id, end_time-start_time, end_time, start_time);
-      int loop = mx_size*(mx_size-1)/2
+      int loop = mx_size*(mx_size-1)/2;
 		printf("gosa = %f \n", gosa/loop);
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/loop), 1/(nolossy_performance/loop), 1/(nolossy_area/loop));
 		printf("compress ratio = %f \n", 1/(compress_ratio/loop));              
