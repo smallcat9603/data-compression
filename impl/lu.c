@@ -3,9 +3,19 @@
 #include <string.h>
 #include <time.h>
 #include <mpi.h>
+#include "param.h"
+#include "dataCompression.h"
 
 #define ln() putchar('\n')
 // #define GENERIC_TAG (0)
+
+//todo
+struct vector
+{
+  double* p_data; //precise data
+  char* c_data; //compressed data
+  int* disp; //displacement of compressed data
+};
 
 double *gen_mx (size_t dim);
 double *gen_row(size_t dim);
@@ -39,6 +49,11 @@ int main(int argc, char *argv[])
    int i, j, tmp_size = mx_size - 1, diag_ref = 0;
    double start = MPI_Wtime();
 
+   double gosa = 0;
+   float compress_ratio = 0;
+   float sz_comp_ratio = 0;
+   float nolossy_performance = 0;
+   float nolossy_area = 0;  
    for (i = 0; i < tmp_size; i++, diag_ref++) {
       double *diag_row = &A[diag_ref * mx_size + diag_ref];
       for (j = diag_ref + 1; j < mx_size; j++) {
@@ -52,7 +67,301 @@ int main(int argc, char *argv[])
 
       for (j = diag_ref + 1; j < mx_size; j++) {
          double *save = &A[j * mx_size + diag_ref];
-         MPI_Bcast(save, mx_size - diag_ref, MPI_DOUBLE, j % p, MPI_COMM_WORLD);
+
+         int size = mx_size - diag_ref;   
+         int root = j % p;    
+         if(CT == 7)
+         {
+            int data_bytes = 0;
+            double min;
+
+            unsigned char* data_bits = NULL;
+
+            int type = 0;
+            double medium = 0;
+            
+            if(id == root)
+            {
+               //mycommpress
+               double* small = NULL;
+               min = toSmallDataset_double(save, &small, size);
+
+               int data_pos = 8; //position of filled bit in last byte --> 87654321
+
+               medium = med_dataset_double(small, size, &type);
+               char double_arr[64+1];
+               doubletostr(&medium, double_arr);
+               char mask[1+11+8];
+               strncpy(mask, double_arr, 1+11+8);			
+
+               myCompress_bitwise_double_mask(small, size, &data_bits, &data_bytes, &data_pos, type, mask);			
+            }
+
+            MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
+            MPI_Bcast(&min, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            compress_ratio += data_bytes*8.0/(size*sizeof(double)*8);
+         
+            if(id != root)
+            {
+                  data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
+            }
+            MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
+
+            MPI_Bcast(&medium, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            MPI_Bcast(&type, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+            char double_arr_recv[64+1];
+            doubletostr(&medium, double_arr_recv);
+            char mask_recv[1+11+8];
+            strncpy(mask_recv, double_arr_recv, 1+11+8);			
+
+            double* decompressed_data = myDecompress_bitwise_double_mask(data_bits, data_bytes, size, type, mask_recv);
+            double gs = 0;
+            for(int i=0; i<size; i++)
+            {
+                  if(id == root)
+                  {
+                     gs += fabs(decompressed_data[i] + min - save[i]);
+                  }
+                  else
+                  {
+                     save[i] = decompressed_data[i] + min;
+                  }
+            }      
+            gs = gs/size;
+            gosa += gs;
+
+            //todo
+            free(data_bits);
+         }
+         else if(CT == 6)
+         {
+            int data_bytes = 0;
+            double min = 0;
+
+            unsigned char* data_bits = NULL;
+            
+            if(id == root)
+            {
+                  //mycommpress
+                  double* small = NULL;
+                  min = toSmallDataset_double(save, &small, size);
+
+                  int data_pos = 8; //position of filled bit in last byte --> 87654321
+
+                  myCompress_bitwise_double_np(small, size, &data_bits, &data_bytes, &data_pos);			
+            }
+
+            MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
+            MPI_Bcast(&min, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            compress_ratio += data_bytes*8.0/(size*sizeof(double)*8);
+         
+            if(id != root)
+            {
+                  data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
+            }
+            MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
+
+            double* decompressed_data = myDecompress_bitwise_double_np(data_bits, data_bytes, size);
+            double gs = 0;
+            for(int i=0; i<size; i++)
+            {
+                  if(id == root)
+                  {
+                     gs += fabs(decompressed_data[i] + min - save[i]);
+                  }
+                  else
+                  {
+                     save[i] = decompressed_data[i] + min;
+                  }
+            }        
+            gs = gs/size;
+            gosa += gs;
+
+            //todo
+            free(data_bits);
+         }
+         else if(CT == 5)
+         {
+            int data_bytes = 0;
+            double min = 0;
+
+            unsigned char* data_bits = NULL;
+            
+            if(id == root)
+            {
+               // sz_comp_ratio += calcCompressionRatio_sz_double(save, size);
+               // nolossy_performance += calcCompressionRatio_nolossy_performance_double(save, size);
+               // nolossy_area += calcCompressionRatio_nolossy_area_double(save, size);
+
+               //mycommpress
+               double* small = NULL;
+               min = toSmallDataset_double(save, &small, size);
+
+               int data_pos = 8; //position of filled bit in last byte --> 87654321
+
+               myCompress_bitwise_double(small, size, &data_bits, &data_bytes, &data_pos);			
+            }
+
+            MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
+            MPI_Bcast(&min, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            compress_ratio += data_bytes*8.0/(size*sizeof(double)*8);
+         
+            if(id != root)
+            {
+                  data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
+            }
+            MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
+
+            double* decompressed_data = myDecompress_bitwise_double(data_bits, data_bytes, size);
+            double gs = 0;
+            for(int i=0; i<size; i++)
+            {
+                  if(id == root)
+                  {
+                     gs += fabs(decompressed_data[i] + min - save[i]);
+                  }
+                  else
+                  {
+                     save[i] = decompressed_data[i] + min;
+                  }
+            }
+            gs = gs/size;
+            gosa += gs;
+
+            //todo
+            free(data_bits);
+         }
+         else if(CT == 4)
+         {
+            int data_bytes = 0;
+
+            unsigned char* data_bits = NULL;
+            
+            if(id == root)
+            {
+               char binfile[64];
+               sprintf(binfile, "dataset/id%d.dat", id);
+               writetobinary_double(binfile, save, size); //.txt --> .dat
+               char sz_comp_cmd[64];
+               sprintf(sz_comp_cmd, "%s%g%sdataset/id%d%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, id, sz_comp_cmd_suffix2, size);
+               //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+               int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
+               char binfile_sz[64];
+               sprintf(binfile_sz, "dataset/id%d.dat.sz", id);
+               data_bits = readfrombinary_char(binfile_sz, &data_bytes);		
+            }
+
+            MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
+            compress_ratio += data_bytes*8.0/(size*sizeof(double)*8);
+         
+            if(rank != 0)
+            {
+                  data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
+            }
+            MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
+
+            char binfile_zs[64];
+            sprintf(binfile_zs, "dataset/%d.dat.zs", root);
+            writetobinary_char(binfile_zs, data_bits, data_bytes); //.dat.zs
+            char sz_decomp_cmd[64];
+            sprintf(sz_decomp_cmd, "%sdataset/id%d%s%d", sz_decomp_cmd_prefix, id, sz_decomp_cmd_suffix, size);
+            //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+            int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
+            char binfile_out[64];
+            sprintf(binfile_out, "dataset/id%d.dat.zs.out", id);
+            char txtfile[64];
+            sprintf(txtfile, "dataset/id%d.dat.zs.out.txt", id); 
+            double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, size);			
+
+            double gs = 0;
+            for(int i=0; i<size; i++)
+            {
+                  if(id == root)
+                  {
+                     gs += fabs(decompressed_data[i] - save[i]);
+                  }
+                  else
+                  {
+                     save[i] = decompressed_data[i];
+                  }
+            }     
+            gs = gs/size;
+            gosa += gs;
+
+            //todo
+            free(data_bits);
+         }		
+         else if(CT == 1)
+         {
+            int array_double_len;
+            struct vector msg; 
+
+            if(id == root)
+            {
+                  //mycommpress
+                  double* array_double = NULL;
+                  char* array_char = NULL;
+                  int* array_char_displacement = NULL;
+                  array_double_len = myCompress_double(save, &array_double, &array_char, &array_char_displacement, size);
+                  msg.p_data = array_double;
+                  msg.c_data = array_char;
+                  msg.disp = array_char_displacement;
+            }
+
+            MPI_Bcast(&array_double_len, 1, MPI_INT, root, MPI_COMM_WORLD);
+            int num_p = array_double_len, num_c = size - array_double_len;
+            compress_ratio += (float)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double));
+         
+            if(id != root)
+            {
+                  msg.p_data = (double*) malloc(sizeof(double)*num_p);
+                  if(num_c > 0)
+                  {
+                     msg.c_data = (char*) malloc(sizeof(char)*num_c);
+                     msg.disp = (int*) malloc(sizeof(int)*num_c);					
+                  }
+            }
+            MPI_Bcast(msg.p_data, num_p, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            if(num_c == 0)
+            {
+                  msg.c_data = (char*) malloc(sizeof(char)*1);
+                  msg.disp = (int*) malloc(sizeof(int)*1);
+                  msg.c_data[0] = 'z';
+                  msg.disp[0] = -1;
+            }	
+            else
+            {
+                  MPI_Bcast(msg.c_data, num_c, MPI_CHAR, root, MPI_COMM_WORLD);
+                  MPI_Bcast(msg.disp, num_c, MPI_INT, root, MPI_COMM_WORLD);	
+            }
+
+            double* decompressed_data = myDecompress_double(msg.p_data, msg.c_data, msg.disp, size);
+            double gs = 0;
+            for(int i=0; i<size; i++)
+            {
+                  if(id == root)
+                  {
+                     gs += fabs(decompressed_data[i]-save[i]);
+                  }
+                  else
+                  {
+                     save[i] = decompressed_data[i];
+                  }
+            }
+            
+            gs = gs/size;
+            gosa += gs;
+
+            //todo
+            free(msg.p_data);
+            free(msg.c_data);
+            free(msg.disp);
+         }
+         else if(CT == 0)
+         {
+            MPI_Bcast(save, mx_size - diag_ref, MPI_DOUBLE, j % p, MPI_COMM_WORLD);
+         }         
       }
    }
 
@@ -67,6 +376,16 @@ int main(int argc, char *argv[])
       U_print(A, mx_size);
       ln();
       printf("mpi: %f s\n", end - start);
+      ln();
+
+		printf("--------------------------------------------------\n");
+		printf("FINAL RESULTS:\n");	
+
+		//printf("id = %d, elapsed = %f = %f - %f\n", id, end_time-start_time, end_time, start_time);
+      int loop = mx_size*(mx_size-1)/2
+		printf("gosa = %f \n", gosa/loop);
+		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/loop), 1/(nolossy_performance/loop), 1/(nolossy_area/loop));
+		printf("compress ratio = %f \n", 1/(compress_ratio/loop));              
    }
    free(A);
 
