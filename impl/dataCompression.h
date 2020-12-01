@@ -99,3 +99,5 @@ void add_bit_to_bytes(unsigned char**, int*, int*, int);
 void bit_set(unsigned char*, unsigned char, int);
 
 int to_absErrorBound_binary(double absErrBound);
+
+uint32_t do_crc32(unsigned char *data_bits, int bytes);

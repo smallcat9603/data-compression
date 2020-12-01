@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
   double start_time_comp_bit_np, end_time_comp_bit_np, start_time_decomp_bit_np, end_time_decomp_bit_np;
   double start_time_comp_sz, end_time_comp_sz, start_time_decomp_sz, end_time_decomp_sz;
   double start_time_comp_bit_mask, end_time_comp_bit_mask, start_time_decomp_bit_mask, end_time_decomp_bit_mask;
+  double start_time_comp_bit_crc, end_time_comp_bit_crc, start_time_decomp_bit_crc, end_time_decomp_bit_crc;
   
   const int PING_PONG_LIMIT = 10000;
 
@@ -153,6 +154,10 @@ int main(int argc, char** argv) {
   end_time_comp_bit = MPI_Wtime();
   //printf("test %d %d \n", bytes, pos);
   //printf("%.10f %.10f %.10f %.10f\n", data_small[0], data_small[1], data_small[2], data_small[data_num-1]);
+  start_time_comp_bit_crc = MPI_Wtime();
+  uint32_t crc = do_crc32(data_bits, bytes);
+  end_time_comp_bit_crc = MPI_Wtime();
+  printf("CRC32 value is: %lu\n", crc);
 
   // my compress bitwise with no prediction
   unsigned char* data_bits_np = NULL;
@@ -225,6 +230,7 @@ int main(int argc, char** argv) {
       if(CT == 5)
       {
         MPI_Send(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD);
+        MPI_Send(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD);
       } 
       if(CT == 6)
       {
@@ -258,7 +264,8 @@ int main(int argc, char** argv) {
       }        
       if(CT == 5)
       {
-        MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);    
+        MPI_Recv(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
       if(CT == 6)
       {
@@ -311,6 +318,20 @@ int main(int argc, char** argv) {
         }         
         if(CT == 5)
         {
+          start_time_decomp_bit_crc = MPI_Wtime();
+          uint32_t crc_check = do_crc32(data_bits, bytes);
+          end_time_decomp_bit_crc = MPI_Wtime();
+          printf("check CRC32 value is: %lu\n", crc_check);   
+          printf("recv CRC32 value is: %lu\n", crc);  
+          if (crc == crc_check)
+          {
+            printf("CRC passed\n");
+          }  
+          else
+          {
+            printf("CRC NOT passed\n");
+          }
+          
           start_time_decomp_bit = MPI_Wtime();
           float* decompressed_data = myDecompress_bitwise(data_bits, bytes, data_num);
           //double* decompressed_data = myDecompress_bitwise_double(data_bits, bytes, data_num); //switch to double
@@ -368,6 +389,7 @@ int main(int argc, char** argv) {
     printf("Compression time (bitwise_np): %f \n", end_time_comp_bit_np-start_time_comp_bit_np); 
     printf("Compression time (sz): %f \n", end_time_comp_sz-start_time_comp_sz); 
     printf("Compression time (bitwise_mask): %f \n", end_time_comp_bit_mask-start_time_comp_bit_mask); 
+    printf("CRC time (bitwise): %f \n", end_time_comp_bit_crc-start_time_comp_bit_crc); 
 
     if(CT == 1)
     {    
@@ -390,6 +412,7 @@ int main(int argc, char** argv) {
       compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
       //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (bitwise): %f \n", 1/compress_ratio); 
+      printf("CRC time (bitwise): %f \n", end_time_decomp_bit_crc-start_time_decomp_bit_crc); 
     }
     if(CT == 6)
     {

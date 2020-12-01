@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <zlib.h>
 #include "mpi.h"
 #include "param.h"
 #include "dataCompression.h"
@@ -4341,4 +4342,16 @@ int to_absErrorBound_binary(double absErrBound)
       return n;
     }
   }
+}
+
+uint32_t do_crc32(unsigned char *data_bits, int bytes)
+{
+    uint32_t crc = crc32(0L, Z_NULL, 0);
+
+    for (int i = 0; i < bytes; i++)
+    {
+        crc = crc32(crc, data_bits + i, 1);
+    }
+
+    return crc;
 }
