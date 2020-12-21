@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   char* binfile = filename bin_suffix; 
   writetobinary_float(binfile, data, data_num); //.txt --> .dat
   //writetobinary_double(binfile, data, data_num); //switch to double
-  char sz_comp_cmd[64];
+  char sz_comp_cmd[128];
   sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num);
   //sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix_double, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num); //switch to double
   //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
   start_time_comp_bit_crc = MPI_Wtime();
   uint32_t crc = do_crc32(data_bits, bytes);
   end_time_comp_bit_crc = MPI_Wtime();
-  printf("CRC32 value is: %lu\n", crc);
+  printf("CRC32 value is: %u\n", crc);
 
   // my compress bitwise with no prediction
   unsigned char* data_bits_np = NULL;
@@ -321,8 +321,8 @@ int main(int argc, char** argv) {
           start_time_decomp_bit_crc = MPI_Wtime();
           uint32_t crc_check = do_crc32(data_bits, bytes);
           end_time_decomp_bit_crc = MPI_Wtime();
-          printf("check CRC32 value is: %lu\n", crc_check);   
-          printf("recv CRC32 value is: %lu\n", crc);  
+          printf("check CRC32 value is: %u\n", crc_check);   
+          printf("recv CRC32 value is: %u\n", crc);  
           if (crc == crc_check)
           {
             printf("CRC passed\n");
