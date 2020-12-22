@@ -6,6 +6,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+// #include <unistd.h> 
 #include <math.h>
 #include <string.h>
 #include "param.h"
@@ -21,6 +22,26 @@ struct vector
 };
 
 int main(int argc, char** argv) {
+
+  // int ch;  
+  // opterr = 0;  
+  // while ((ch = getopt(argc, argv, "c:e:")) != -1)  
+  // {  
+  //   switch(ch)  
+  //   {  
+  //     case 'c':  
+  //       CT = (int)optarg; 
+  //       break;  
+  //     case 'e':  
+  //       absErrorBound = (double)optarg;
+  //       break;  
+  //     default:  
+  //       printf("not valid parameter: %c\n", ch); 
+  //       exit(0);
+
+  //   }  
+  // }
+  printf("CT = %d, absErrorBound = %f\n", CT, absErrorBound);  
 
   double start_time, end_time;
   double start_time_comp_byte, end_time_comp_byte, start_time_decomp_byte, end_time_decomp_byte;
