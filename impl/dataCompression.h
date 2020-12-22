@@ -1,6 +1,7 @@
 /*
  *
  */
+#define BER 1e-8    //0
 #define absErrorBound         0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 // #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 // #define relBoundRatio       0.01
@@ -101,3 +102,4 @@ void bit_set(unsigned char*, unsigned char, int);
 int to_absErrorBound_binary(double absErrBound);
 
 uint32_t do_crc32(unsigned char *data_bits, int bytes);
+uint64_t get_random_int(uint64_t from, uint64_t to);

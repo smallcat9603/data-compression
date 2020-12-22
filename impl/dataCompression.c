@@ -4355,3 +4355,10 @@ uint32_t do_crc32(unsigned char *data_bits, int bytes)
 
     return crc;
 }
+
+uint64_t get_random_int(uint64_t from, uint64_t to)
+{
+  uint64_t n;
+  n = rand() % (to - from + 1) + from;
+  return n;
+}
