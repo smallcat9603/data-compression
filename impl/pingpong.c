@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
 
   //   }  
   // }
-  printf("CT = %d, absErrorBound = %f\n", CT, absErrorBound);  
+  printf("CT = %d, absErrorBound = %.2e, BER = %.2e\n", CT, absErrorBound, BER);  
 
   double start_time, end_time;
   double start_time_comp_byte, end_time_comp_byte, start_time_decomp_byte, end_time_decomp_byte;
@@ -252,10 +252,10 @@ int main(int argc, char** argv) {
       }       
       if(CT == 5)
       {
-        start_time_comp_bit_crc = MPI_Wtime();
+        // start_time_comp_bit_crc = MPI_Wtime();
         crc = do_crc32(data_bits, bytes);
-        end_time_comp_bit_crc = MPI_Wtime();
-        printf("CRC32 value is: %u, time is %f\n", crc, end_time_comp_bit_crc-start_time_comp_bit_crc);  
+        // end_time_comp_bit_crc = MPI_Wtime();
+        // printf("CRC32 value is: %u, time is %f\n", crc, end_time_comp_bit_crc-start_time_comp_bit_crc);  
 
         MPI_Send(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD);
         MPI_Send(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD);
@@ -300,32 +300,32 @@ int main(int argc, char** argv) {
         MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);    
         MPI_Recv(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        start_time_decomp_bit_crc = MPI_Wtime();
+        // start_time_decomp_bit_crc = MPI_Wtime();
         crc_check = do_crc32(data_bits, bytes);
-        end_time_decomp_bit_crc = MPI_Wtime();
+        // end_time_decomp_bit_crc = MPI_Wtime();
 
         if(BER > 0)
         {
           double ber = BER;
           uint64_t to = 1/ber;
           uint64_t r = get_random_int(0, to);
-          printf("to = %lu, r = %lu, b = %d\n", to, r, bytes);
+          // printf("to = %lu, r = %lu, b = %d\n", to, r, bytes);
           if(r < bytes * 8)
           {
             crc_check = 0;
           }
         }
         
-        printf("check CRC32 value is: %u, time is %f\n", crc_check, end_time_decomp_bit_crc - start_time_decomp_bit_crc);   
-        printf("recv CRC32 value is: %u\n", crc);  
+        // printf("check CRC32 value is: %u, time is %f\n", crc_check, end_time_decomp_bit_crc - start_time_decomp_bit_crc);   
+        // printf("recv CRC32 value is: %u\n", crc);  
         if (crc == crc_check)
         {
-          printf("CRC passed\n");
+          // printf("CRC passed\n");
           crc_ok = 'y';
         }  
         else
         {
-          printf("CRC NOT passed\n");
+          // printf("CRC NOT passed\n");
           crc_ok = 'n';
           ping_pong_count--;
           resent++;
@@ -462,7 +462,7 @@ int main(int argc, char** argv) {
       compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
       //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (bitwise): %f \n", 1/compress_ratio); 
-      printf("resent = %d \n", resent);
+      printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
     }
     if(CT == 6)
     {
