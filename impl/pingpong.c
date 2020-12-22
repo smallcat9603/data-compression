@@ -238,7 +238,7 @@ int main(int argc, char** argv) {
         //MPI_Send(data, data_num, MPI_DOUBLE, partner_rank, 3, MPI_COMM_WORLD); //switch to double
         //printf("%d sent data to %d\n", world_rank, partner_rank);
       }      
-      if(CT == 1)
+      else if(CT == 1)
       {
         MPI_Send(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD);
         //MPI_Send(msg.p_data, num_p, MPI_DOUBLE, partner_rank, 1, MPI_COMM_WORLD); //switch to double
@@ -246,11 +246,23 @@ int main(int argc, char** argv) {
         MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
         //printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
       }
-      if(CT == 4)
+      else if(CT == 4)
       {
         MPI_Send(data_bits_sz, bytes_sz, MPI_UNSIGNED_CHAR, partner_rank, 6, MPI_COMM_WORLD);
       }       
-      if(CT == 5)
+      else if(CT == 5)
+      { 
+        MPI_Send(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD);      
+      } 
+      else if(CT == 6)
+      {
+        MPI_Send(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD);
+      }        
+      else if(CT == 7)
+      {
+        MPI_Send(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 7, MPI_COMM_WORLD);
+      } 
+      else if(CT == 8)
       {
         // start_time_comp_bit_crc = MPI_Wtime();
         crc = do_crc32(data_bits, bytes);
@@ -264,15 +276,7 @@ int main(int argc, char** argv) {
         {
           ping_pong_count--;
         }       
-      } 
-      if(CT == 6)
-      {
-        MPI_Send(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD);
       }        
-      if(CT == 7)
-      {
-        MPI_Send(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 7, MPI_COMM_WORLD);
-      }   
     }
     else {
       MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -283,7 +287,7 @@ int main(int argc, char** argv) {
         //MPI_Recv(data, data_num, MPI_DOUBLE, partner_rank, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE); //switch to double
         //printf("%d received data from %d\n", world_rank, partner_rank);
       }      
-      if(CT == 1)
+      else if(CT == 1)
       {
         MPI_Recv(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         //MPI_Recv(msg.p_data, num_p, MPI_DOUBLE, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE); //switch to double
@@ -291,11 +295,23 @@ int main(int argc, char** argv) {
         MPI_Recv(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         //printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
       }
-      if(CT == 4)
+      else if(CT == 4)
       {
         MPI_Recv(data_bits_sz, bytes_sz, MPI_UNSIGNED_CHAR, partner_rank, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }        
-      if(CT == 5)
+      else if(CT == 5)
+      {
+        MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);          
+      }
+      else if(CT == 6)
+      {
+        MPI_Recv(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }    
+      else if(CT == 7)
+      {
+        MPI_Recv(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 7, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      } 
+      else if(CT == 8)
       {
         MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);    
         MPI_Recv(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -331,15 +347,7 @@ int main(int argc, char** argv) {
           resent++;
         }
         MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);
-      }
-      if(CT == 6)
-      {
-        MPI_Recv(data_bits_np, bytes_np, MPI_CHAR, partner_rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }    
-      if(CT == 7)
-      {
-        MPI_Recv(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 7, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }           
+      }                
       if(ping_pong_count == PING_PONG_LIMIT)
       {
         if(CT == 1)
@@ -357,7 +365,7 @@ int main(int argc, char** argv) {
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);
         }
-        if(CT == 4)
+        else if(CT == 4)
         {
           start_time_decomp_sz = MPI_Wtime();
           char* binfile_zs = filename bin_suffix zs_suffix;
@@ -381,7 +389,7 @@ int main(int argc, char** argv) {
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);        
         }         
-        if(CT == 5)
+        else if(CT == 5 || CT == 8)
         {         
           start_time_decomp_bit = MPI_Wtime();
           float* decompressed_data = myDecompress_bitwise(data_bits, bytes, data_num);
@@ -396,7 +404,7 @@ int main(int argc, char** argv) {
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
         }
-        if(CT == 6)
+        else if(CT == 6)
         {
           start_time_decomp_bit_np = MPI_Wtime();
           float* decompressed_data = myDecompress_bitwise_np(data_bits_np, bytes_np, data_num);
@@ -411,7 +419,7 @@ int main(int argc, char** argv) {
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
         } 
-        if(CT == 7)
+        else if(CT == 7)
         {
           start_time_decomp_bit_mask = MPI_Wtime();
           float* decompressed_data = myDecompress_bitwise_mask(data_bits_mask, bytes_mask, data_num, type, mask);
@@ -449,35 +457,42 @@ int main(int argc, char** argv) {
       // compress_ratio = (3.0/(sizeof(double)*8))*((float)num_c/(num_c+num_p)) + calCompressRatio_bitwise_double2(msg.p_data, num_p)*((float)num_p/(num_c+num_p));
       // printf("Compression rate (bitwise, double): %f \n", 1/compress_ratio); 
     } 
-    if(CT == 4)
+    else if(CT == 4)
     {
       printf("Decompression time (sz): %f \n", end_time_decomp_sz-start_time_decomp_sz); 
       compress_ratio = (float)(bytes_sz*8)/(data_num*sizeof(float)*8);
       //compress_ratio = (float)(bytes_sz*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (sz): %f \n", 1/compress_ratio); 
     }
-    if(CT == 5)
+    else if(CT == 5)
     {
       printf("Decompression time (bitwise): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
       compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
       //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (bitwise): %f \n", 1/compress_ratio); 
-      printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
     }
-    if(CT == 6)
+    else if(CT == 6)
     {
       printf("Decompression time (bitwise_np): %f \n", end_time_decomp_bit_np-start_time_decomp_bit_np); 
       compress_ratio = (float)(bytes_np*8)/(data_num*sizeof(float)*8);
       //compress_ratio = (float)(bytes_np*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (bitwise_np): %f \n", 1/compress_ratio); 
     }    
-    if(CT == 7)
+    else if(CT == 7)
     {
       printf("Decompression time (bitwise_mask): %f \n", end_time_decomp_bit_mask-start_time_decomp_bit_mask); 
       compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(float)*8);
       //compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (bitwise_mask): %f (improvement = %f) \n", 1/compress_ratio, (float)bytes/bytes_mask); 
-    }     
+    } 
+    else if(CT == 8)
+    {
+      printf("Decompression time (bitwise): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
+      compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
+      //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
+      printf("Compression rate (bitwise): %f \n", 1/compress_ratio); 
+      printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
+    }        
   }
 
   MPI_Finalize();
