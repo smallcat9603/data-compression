@@ -10,15 +10,15 @@ $ mpirun -np 2 ./pingpong
 ## Compile (one by one)
 ### Pingpong
 ```shell
-$ mpicc pingpong.c dataCompression.c -o pingpong -lm
+$ mpicc pingpong.c dataCompression.c -o pingpong -lm -lz
 ```
 ### Himeno
 ```shell
-$ mpicc himenoBMTxps.c dataCompression.c -o bmt -lm
+$ mpicc himenoBMTxps.c dataCompression.c -o bmt -lm -lz
 ```
 ### K-means
 ```shell
-$ mpicc k-means.c dataCompression.c -o k-means -lm
+$ mpicc k-means.c dataCompression.c -o k-means -lm -lz
 ```
 
 ## Execution 
@@ -44,7 +44,7 @@ This file is the head file of dataCompression.c. The most important parameter to
 
 | Parameter | Note | Value |
 | --- | --- | --- |
-| **CT** | Compression type |  0: no compress, <br> 1: byte-wise compression, <br> 2: no-lossy-performance compression, <br> 3: no-lossy-area compression, <br> 4: sz, <br> 5: bit-wise compression, <br> 6: bit-wise compression with no prediction, <br> 7 bitmask-based bit-wise compression |
+| **CT** | Compression type |  0: no compress, <br> 1: byte-wise compression, <br> 2: no-lossy-performance compression, <br> 3: no-lossy-area compression, <br> 4: sz, <br> 5: bit-wise compression, <br> 6: bit-wise compression with no prediction, <br> 7 bitmask-based bit-wise compression, <br> 8 bit-wise compression with CRC |
 | **absErrorBound** | Absolute error bound | Any |
 | **clusters** | Number of clusters in K-means clustering | Integer (defaultly 100) |
 | **filename** | file of raw data | dataset/ |
