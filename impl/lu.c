@@ -4,6 +4,7 @@
 #include <time.h>
 #include <mpi.h>
 #include <math.h>
+#include <unistd.h>
 #include "param.h"
 #include "dataCompression.h"
 
@@ -495,8 +496,18 @@ int main(int argc, char *argv[])
 		printf("gosa = %f \n", gosa/loop);
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/loop), 1/(nolossy_performance/loop), 1/(nolossy_area/loop));
 		printf("compress ratio = %f \n", 1/(compress_ratio/loop));   
-      printf("resent = %d (percentage = %f)\n", resent, resent/((p-1)*mx_size*(mx_size-1)/2.0));  
-      //printf("p=%d, tmp_size=%d, mx_size=%d, diag_ref=%d\n", p, tmp_size, mx_size, diag_ref);          
+      printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/((p-1)*loop));  
+      //printf("p=%d, tmp_size=%d, mx_size=%d, diag_ref=%d\n", p, tmp_size, mx_size, diag_ref); 
+
+      char fn[] = "lu.csv";
+      int fexist = access(fn, 0);
+      FILE* fp = fopen(fn, "a"); 
+      if(fexist == -1)
+      {
+         fprintf(fp, "nprocs, matrix size, CT, absErrorBound, BER, compression ratio, time, gosa, resent, resent ratio\n"); 
+      }    
+      fprintf(fp, "%d, %d, %d, %e, %e, %f, %f, %f, %d, %f\n", p, mx_size, CT, absErrorBound, BER, 1/(compress_ratio/loop), end - start, gosa/loop, resent, 1.0*resent/((p-1)*loop));    
+      fclose(fp);    
    }
    free(A);
 
