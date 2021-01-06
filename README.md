@@ -42,6 +42,13 @@ This file includes various floating-point data compression methods and other rel
 ### dataCompression.h
 This file is the head file of dataCompression.c. The most important parameter to be used is CT.
 
+### set-parameter.sh
+This file is used to set the parameters of **CT**, **absErrorBound** and **BER** in dataCompression.h.
+#### Usage
+```shell
+$ sh ./set-parameter.sh dataCompression.h 8 0.01 1e-6 // CT = 8, absErrorBound = 0.01, BER = 1e-6
+```
+
 | Parameter | Note | Value |
 | --- | --- | --- |
 | **CT** | Compression type |  0: no compress, <br> 1: byte-wise compression, <br> 2: no-lossy-performance compression, <br> 3: no-lossy-area compression, <br> 4: sz, <br> 5: bit-wise compression, <br> 6: bit-wise compression with no prediction, <br> 7 bitmask-based bit-wise compression, <br> 8 bit-wise compression with CRC |
