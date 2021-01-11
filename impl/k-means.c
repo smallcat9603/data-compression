@@ -1078,7 +1078,7 @@ int main(int argc, char *argv[])
 		if(fexist == -1)
 		{
 			fprintf(fp, "nprocs, max iterations, CT, absErrorBound, BER, compression ratio, time, gosa, resent, resent ratio\n"); 
-		}    
+		}  
 		fprintf(fp, "%d, %d, %d, %e, %e, %f, %f, %f, %d, %f\n", world_size, MAX_ITERATIONS, CT, absErrorBound, BER, 1/(compress_ratio/(2*MAX_ITERATIONS)), end_time - start_time, gosa, resent, resent/(2.0*(world_size-1)*MAX_ITERATIONS));    
 		fclose(fp); 		
 	}
