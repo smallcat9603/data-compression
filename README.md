@@ -1,5 +1,5 @@
 # data-compression
-This repo contains the work on MPI lossy floating-point data compression on the applications of Pingpong, Himeno, K-means, etc. 
+This repo contains the work on MPI lossy floating-point data compression on the applications of Pingpong, Himeno, K-means, FFT, MM, LU, etc. 
 
 ## Usage: 
 ```shell
@@ -21,6 +21,16 @@ $ mpicc himenoBMTxps.c dataCompression.c -o bmt -lm -lz
 $ mpicc k-means.c dataCompression.c -o k-means -lm -lz
 ```
 
+### MM
+```shell
+$ mpicc mm.c dataCompression.c -o mm -lm -lz
+```
+
+### LU
+```shell
+$ mpicc lu.c dataCompression.c -o lu -lm -lz
+```
+
 ## Execution 
 ### Pingpong
 ```shell
@@ -33,6 +43,16 @@ $ mpirun -np 2 ./bmt
 ### K-means
 ```shell
 $ mpirun -np 2 ./k-means 2
+```
+
+### MM
+```shell
+$ mpirun -np 4 ./mm testdata/mat_1000_1000_a.txt testdata/mat_1000_1000_b.txt
+```
+
+### LU
+```shell
+$ mpirun -np 4 ./lu 16
 ```
 
 ## Source Files

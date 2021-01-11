@@ -293,10 +293,208 @@ int main(int argc, char *argv[])
 	float sz_comp_ratio = 0;
 	float nolossy_performance = 0;
 	float nolossy_area = 0;
+    uint32_t crc_x = 0;
+    uint32_t crc_check_x = 0;
+    unsigned char crc_ok_x = 'y';
+    unsigned char* crc_ok_recv_x = NULL;
+    uint32_t crc_y = 0;
+    uint32_t crc_check_y = 0;
+    unsigned char crc_ok_y = 'y';
+    unsigned char* crc_ok_recv_y = NULL;    
+    int resent = 0;
+    srand((unsigned)time(NULL));  	
 	start_time = MPI_Wtime();
 	while(count < MAX_ITERATIONS)
 	{
-		if(CT == 7)
+		if(CT == 8)
+		{
+			int data_bytes_x = 0, data_bytes_y = 0;
+			double k_means_x_min = 0, k_means_y_min = 0;
+
+			unsigned char* data_bits_x = NULL;
+			unsigned char* data_bits_y = NULL;
+			
+			//x
+			if(world_rank == 0)
+			{
+				// sz_comp_ratio += calcCompressionRatio_sz_double(k_means_x, numOfClusters);
+				// nolossy_performance += calcCompressionRatio_nolossy_performance_double(k_means_x, numOfClusters);
+				// nolossy_area += calcCompressionRatio_nolossy_area_double(k_means_x, numOfClusters);
+
+				//mycommpress
+				double* k_means_x_small = NULL;
+				k_means_x_min = toSmallDataset_double(k_means_x, &k_means_x_small, numOfClusters);
+
+				int data_pos_x = 8; //position of filled bit in last byte --> 87654321
+
+				myCompress_bitwise_double(k_means_x_small, numOfClusters, &data_bits_x, &data_bytes_x, &data_pos_x);
+				crc_x = do_crc32(data_bits_x, data_bytes_x);				
+			}
+
+			MPI_Bcast(&data_bytes_x, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_Bcast(&k_means_x_min, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			compress_ratio += data_bytes_x*8.0/(numOfClusters*sizeof(double)*8);
+		
+			if(world_rank != 0)
+			{
+				data_bits_x = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_x);
+			}
+			MPI_Bcast(data_bits_x, data_bytes_x, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+			MPI_Bcast(&crc_x, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+
+			if(world_rank != 0)
+			{
+				crc_check_x = do_crc32(data_bits_x, data_bytes_x);
+
+				if(BER > 0)
+				{
+					double ber = BER;
+					uint64_t to = 1/ber;
+					uint64_t r = get_random_int(0, to);
+					if(r < data_bytes_x * 8)
+					{
+						crc_check_x = 0;
+					}
+				}
+				
+				if (crc_x == crc_check_x)
+				{
+					// printf("CRC passed\n");
+					crc_ok_x = 'y';
+				}  
+				else
+				{
+					// printf("CRC NOT passed\n");
+					crc_ok_x = 'n';
+				}            
+			}
+			else
+			{
+				crc_ok_recv_x = (unsigned char *)malloc(world_size*1*sizeof(unsigned char));
+			}
+
+			MPI_Gather(&crc_ok_x, 1, MPI_UNSIGNED_CHAR, crc_ok_recv_x, 1, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+			
+			if(world_rank == 0)
+			{
+				for(int i = 1; i < world_size; i++)
+				{
+					if(crc_ok_recv_x[i] == 'n')
+					{
+						MPI_Send(data_bits_x, data_bytes_x, MPI_UNSIGNED_CHAR, i, i, MPI_COMM_WORLD);
+						resent++;
+					}
+				}
+			}
+			else if(crc_ok_x == 'n')
+			{
+				MPI_Recv(data_bits_x, data_bytes_x, MPI_UNSIGNED_CHAR, 0, world_rank, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			}
+
+			//y
+			if(world_rank == 0)
+			{
+				// sz_comp_ratio += calcCompressionRatio_sz_double(k_means_y, numOfClusters);
+				// nolossy_performance += calcCompressionRatio_nolossy_performance_double(k_means_y, numOfClusters);
+				// nolossy_area += calcCompressionRatio_nolossy_area_double(k_means_y, numOfClusters);
+
+				//mycommpress
+				double* k_means_y_small = NULL;
+				k_means_y_min = toSmallDataset_double(k_means_y, &k_means_y_small, numOfClusters);
+
+				int data_pos_y = 8; //position of filled bit in last byte --> 87654321
+
+				myCompress_bitwise_double(k_means_y_small, numOfClusters, &data_bits_y, &data_bytes_y, &data_pos_y);	
+				crc_y = do_crc32(data_bits_y, data_bytes_y);		
+			}
+
+			MPI_Bcast(&data_bytes_y, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_Bcast(&k_means_y_min, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			compress_ratio += data_bytes_y*8.0/(numOfClusters*sizeof(double)*8);
+		
+			if(world_rank != 0)
+			{
+				data_bits_y = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes_y);
+			}
+			MPI_Bcast(data_bits_y, data_bytes_y, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+			MPI_Bcast(&crc_y, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+
+			if(world_rank != 0)
+			{
+				crc_check_y = do_crc32(data_bits_y, data_bytes_y);
+
+				if(BER > 0)
+				{
+					double ber = BER;
+					uint64_t to = 1/ber;
+					uint64_t r = get_random_int(0, to);
+					if(r < data_bytes_y * 8)
+					{
+						crc_check_y = 0;
+					}
+				}
+				
+				if (crc_y == crc_check_y)
+				{
+					// printf("CRC passed\n");
+					crc_ok_y = 'y';
+				}  
+				else
+				{
+					// printf("CRC NOT passed\n");
+					crc_ok_y = 'n';
+				}            
+			}
+			else
+			{
+				crc_ok_recv_y = (unsigned char *)malloc(world_size*1*sizeof(unsigned char));
+			}
+
+			MPI_Gather(&crc_ok_y, 1, MPI_UNSIGNED_CHAR, crc_ok_recv_y, 1, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+			
+			if(world_rank == 0)
+			{
+				for(int i = 1; i < world_size; i++)
+				{
+					if(crc_ok_recv_y[i] == 'n')
+					{
+						MPI_Send(data_bits_y, data_bytes_y, MPI_UNSIGNED_CHAR, i, i, MPI_COMM_WORLD);
+						resent++;
+					}
+				}
+			}
+			else if(crc_ok_y == 'n')
+			{
+				MPI_Recv(data_bits_y, data_bytes_y, MPI_UNSIGNED_CHAR, 0, world_rank, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			}
+
+			double* decompressed_data_x = myDecompress_bitwise_double(data_bits_x, data_bytes_x, numOfClusters);
+			double* decompressed_data_y = myDecompress_bitwise_double(data_bits_y, data_bytes_y, numOfClusters);
+			for(int i=0; i<numOfClusters; i++)
+			{
+				if(world_rank == 0)
+				{
+					gosa += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
+					gosa += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
+				}
+				else
+				{
+					k_means_x[i] = decompressed_data_x[i] + k_means_x_min;
+					k_means_y[i] = decompressed_data_y[i] + k_means_y_min;
+				}
+			}
+			
+			if(count == MAX_ITERATIONS - 1)
+			{
+				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
+			}
+
+			//todo
+			free(data_bits_x);
+			free(data_bits_y);
+		}
+
+		else if(CT == 7)
 		{
 			int data_bytes_x = 0, data_bytes_y = 0;
 			double k_means_x_min = 0, k_means_y_min = 0;
@@ -404,7 +602,7 @@ int main(int argc, char *argv[])
 			free(data_bits_y);
 		}
 
-		if(CT == 6)
+		else if(CT == 6)
 		{
 			int data_bytes_x = 0, data_bytes_y = 0;
 			double k_means_x_min = 0, k_means_y_min = 0;
@@ -490,7 +688,7 @@ int main(int argc, char *argv[])
 			free(data_bits_y);
 		}
 
-		if(CT == 5)
+		else if(CT == 5)
 		{
 			int data_bytes_x = 0, data_bytes_y = 0;
 			double k_means_x_min = 0, k_means_y_min = 0;
@@ -576,7 +774,7 @@ int main(int argc, char *argv[])
 			free(data_bits_y);
 		}
 
-		if(CT == 4)
+		else if(CT == 4)
 		{
 			int data_bytes_x = 0, data_bytes_y = 0;
 
@@ -681,7 +879,7 @@ int main(int argc, char *argv[])
 			free(data_bits_y);
 		}		
 
-		if(CT == 1)
+		else if(CT == 1)
 		{
 			int array_double_len_x, array_double_len_y;
 			struct vector msg_x, msg_y; 
@@ -805,7 +1003,7 @@ int main(int argc, char *argv[])
 			free(msg_y.disp);
 		}		
 
-		if(CT == 0)
+		else if(CT == 0)
 		{
 			// broadcast k-means arrays
 			MPI_Bcast(k_means_x, numOfClusters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -851,7 +1049,7 @@ int main(int argc, char *argv[])
 		// printf("\n--------------------------------------------------\n");
 
 		//char* output_filename = filename output_suffix;
-		char output_filename[32];
+		char output_filename[64];
 		sprintf(output_filename, "%s%s%d_%g_%d%s", filename, output_suffix, CT, absErrorBound, clusters, suffix);
 		FILE* fp = fopen(output_filename, "w");
 		for(int i = 0; i < numOfElements; i++)
@@ -872,6 +1070,17 @@ int main(int argc, char *argv[])
 		printf("gosa = %f \n", gosa);
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/(2*MAX_ITERATIONS)), 1/(nolossy_performance/(2*MAX_ITERATIONS)), 1/(nolossy_area/(2*MAX_ITERATIONS)));
 		printf("compress ratio = %f \n", 1/(compress_ratio/(2*MAX_ITERATIONS)));
+		printf("resent = %d (percentage = %f)\n", resent, resent/(2.0*(world_size-1)*MAX_ITERATIONS));  
+
+		char fn[] = "k-means.csv";
+		int fexist = access(fn, 0);
+		fp = fopen(fn, "a"); 
+		if(fexist == -1)
+		{
+			fprintf(fp, "nprocs, max iterations, CT, absErrorBound, BER, compression ratio, time, gosa, resent, resent ratio\n"); 
+		}    
+		fprintf(fp, "%d, %d, %d, %e, %e, %f, %f, %f, %d, %f\n", world_size, MAX_ITERATIONS, CT, absErrorBound, BER, 1/(compress_ratio/(2*MAX_ITERATIONS)), end_time - start_time, gosa, resent, resent/(2.0*(world_size-1)*MAX_ITERATIONS));    
+		fclose(fp); 		
 	}
 
 	// deallocate memory and clean up
