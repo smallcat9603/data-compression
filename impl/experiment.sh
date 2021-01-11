@@ -9,9 +9,9 @@ do
     do
         for BER in 1e-16 1e-10 1e-9 1e-8 1e-7 1e-6 1e-5
         do
-            sh ./set-parameter.sh dataCompression.h $CT $AEB $BER
-            mpicc $prog.c dataCompression.c -o $prog -lm -lz
-            mpirun -np $procs ./$prog $procs
+            sh ./set-parameter.sh dataCompression.h ${CT} ${AEB} ${BER}
+            mpicc ${prog}.c dataCompression.c -o ${prog} -lm -lz
+            mpirun -np ${procs} ./${prog} ${procs}
         done
     done 
 done
