@@ -9,6 +9,7 @@
 #include<errno.h>
 #include<mpi.h>
 #include<string.h>
+#include <stdint.h>
 #include "param.h"
 #include "dataCompression.h"
 
