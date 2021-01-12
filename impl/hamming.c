@@ -4,16 +4,16 @@
 //N is the max number of data bits
 #define N 100
 
-int HmLength(int k); //hamming check bits
-void Encode(char* data, char* c, int k, int r); //value of each hamming check bit
+int hmLength(int k); //hamming check bits
+void hamming_code(char* data, char* c, int k, int r); //value of each hamming check bit
 
 void main()
 {
-  int k = 0, r = 0, dnum = 0, cnum = 0;
+  int k = 0, r = 0, dnum = 0, cnum = 0; //1100 -> 0111100, k = 4, r = 3
   char data[N];
   char c[N];
 
-  printf("Input data to encode: \n");
+  printf("Input data to encode: ");
 
   for(k = 0; k < N; k++)
   {
@@ -21,10 +21,9 @@ void main()
     if(data[k] != '0' && data[k] != '1') break;
   }
 
-  r = HmLength(k);
-  printf("k = %d, r = %d, length of hamming code is %d \n", k, r, k+r);
-  Encode(data, c, k, r); //check c, data bits k, check bits r
-  printf("hamming code is ");
+  r = hmLength(k);
+  hamming_code(data, c, k, r);
+  printf("Hamming code is ");
   for(int j = 1; j < r+k+1; j++)
   {
     if(j == (int)pow(2, cnum))
@@ -38,10 +37,10 @@ void main()
       dnum++;
     }
   }
-  getchar();
+  printf(" (%d bits, k = %d, r = %d)\n", k+r, k, r);
 }
 
-void Encode(char* data, char* c, int k, int r)
+void hamming_code(char* data, char* c, int k, int r)
 {
   for(int i=0; i<r; i++)
   {
@@ -54,26 +53,23 @@ void Encode(char* data, char* c, int k, int r)
       }
       else
       {
-        int x = 0, y = 0;
-        x = pow(2, i);
-        y = j%(x*2);
+        int x = pow(2, i);
+        int y = j%(x*2);
         x = y/x;
         sum += data[dnum]*x;
         dnum++;
       }
-      
     }
     c[i] = sum%2 == 0?'0':'1';
   }
 }
 
-int HmLength(int k)
+int hmLength(int k)
 {
   int r = 0, flag = 1;
-  while(flag != 0)
+  while(flag)
   {
-    int temp = 0;
-    temp = pow(2, r);
+    int temp = pow(2, r);
     temp = temp - 1;
     flag = (temp-r-k<0);
     r++;
