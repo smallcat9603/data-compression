@@ -189,7 +189,15 @@ int main(int argc, char *argv[]) {
     int resent = 0;
     srand((unsigned)time(NULL));      
 	start_time = MPI_Wtime();
-    if(CT == 8)
+    
+    if(CT == 9)
+    {
+        // send 1D matrices to workers
+        MPI_Bcast_bitwise_mask_crc_hamming(m_a, size_a, 0, rank, num_worker, &compress_ratio, &gosa, &resent);
+        MPI_Bcast_bitwise_mask_crc_hamming(m_b, size_b, 0, rank, num_worker, &compress_ratio, &gosa, &resent);   
+
+    }
+    else if(CT == 8)
     {
         int data_bytes_a = 0, data_bytes_b = 0;
         double a_min = 0, b_min = 0;
@@ -376,8 +384,6 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        gosa = gosa/(size_a+size_b);
-
         //todo
         free(data_bits_a);
         free(data_bits_b);
@@ -488,7 +494,6 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
         }        
-        gosa = gosa/(size_a+size_b);
 
         //todo
         free(data_bits_a);
@@ -570,8 +575,6 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
         }        
-        
-        gosa = gosa/(size_a+size_b);
 
         //todo
         free(data_bits_a);
@@ -661,8 +664,6 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
         }
-
-        gosa = gosa/(size_a+size_b);
 
         //todo
         free(data_bits_a);
@@ -771,8 +772,6 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i];
             }
         }        
-        
-        gosa = gosa/(size_a+size_b);
 
         //todo
         free(data_bits_a);
@@ -887,8 +886,6 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i];
             }				
         }
-        
-        gosa = gosa/(size_a+size_b);
 
         //todo
         free(msg_a.p_data);
@@ -950,7 +947,7 @@ int main(int argc, char *argv[]) {
 		printf("FINAL RESULTS:\n");	
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", rank, end_time-start_time, end_time, start_time);
-		printf("gosa = %f \n", gosa);
+		printf("gosa = %f \n", gosa/(size_a+size_b));
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/2), 1/(nolossy_performance/2), 1/(nolossy_area/2));
 		printf("compress ratio = %f \n", 1/(compress_ratio/2));    
         printf("resent = %d (percentage = %f)\n", resent, resent/(2.0*(num_worker-1)));    
