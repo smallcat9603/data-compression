@@ -485,6 +485,8 @@ int main(int argc, char *argv[]) {
                 m_a[i] = decompressed_data_a[i] + a_min;
             }
         }
+        gosa += gs/size_a;
+        gs = 0;
         for(int i=0; i<size_b; i++)
         {
             if(rank == 0)
@@ -496,7 +498,7 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
         }
-        gosa += gs/(size_a+size_b);        
+        gosa += gs/size_b;        
 
         //todo
         free(data_bits_a);
@@ -568,6 +570,8 @@ int main(int argc, char *argv[]) {
                 m_a[i] = decompressed_data_a[i] + a_min;
             }
         }
+        gosa += gs/size_a; 
+        gs = 0;
         for(int i=0; i<size_b; i++)
         {
             if(rank == 0)
@@ -579,7 +583,7 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
         }
-        gosa += gs/(size_a+size_b);          
+        gosa += gs/size_b;          
 
         //todo
         free(data_bits_a);
@@ -659,6 +663,8 @@ int main(int argc, char *argv[]) {
                 m_a[i] = decompressed_data_a[i] + a_min;
             }
         }
+        gosa += gs/size_a; 
+        gs = 0;
         for(int i=0; i<size_b; i++)
         {
             if(rank == 0)
@@ -670,7 +676,7 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
         }
-        gosa += gs/(size_a+size_b);  
+        gosa += gs/size_b; 
 
         //todo
         free(data_bits_a);
@@ -769,6 +775,8 @@ int main(int argc, char *argv[]) {
                 m_a[i] = decompressed_data_a[i];
             }
         }
+        gosa += gs/size_a; 
+        gs = 0;
         for(int i=0; i<size_b; i++)
         {
             if(rank == 0)
@@ -780,7 +788,7 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i];
             }
         }
-        gosa += gs/(size_a+size_b);          
+        gosa += gs/size_b;          
 
         //todo
         free(data_bits_a);
@@ -884,7 +892,8 @@ int main(int argc, char *argv[]) {
                 m_a[i] = decompressed_data_a[i];
             }
         }
-
+        gosa += gs/size_a; 
+        gs = 0;
         double* decompressed_data_b = myDecompress_double(msg_b.p_data, msg_b.c_data, msg_b.disp, size_b);
         for(int i=0; i<size_b; i++)
         {
@@ -897,8 +906,7 @@ int main(int argc, char *argv[]) {
                 m_b[i] = decompressed_data_b[i];
             }				
         }
-
-        gosa += gs/(size_a+size_b);  
+        gosa += gs/size_b; 
 
         //todo
         free(msg_a.p_data);
