@@ -78,7 +78,12 @@ int main(int argc, char *argv[])
 
          int size = mx_size - diag_ref;   
          int root = j % p;  
-         if(CT == 8)
+         
+         if(CT == 9)
+         {
+            MPI_Bcast_bitwise_mask_crc(save, size, root, id, p, &compress_ratio, &gosa, &resent);
+         }
+         else if(CT == 8)
          {
             MPI_Bcast_bitwise_crc(save, size, root, id, p, &compress_ratio, &gosa, &resent);
 
@@ -206,7 +211,7 @@ int main(int argc, char *argv[])
                char mask[1+11+8];
                strncpy(mask, double_arr, 1+11+8);			
 
-               myCompress_bitwise_double_mask(small, size, &data_bits, &data_bytes, &data_pos, type, mask);			
+               myCompress_bitwise_double_mask(small, size, &data_bits, &data_bytes, &data_pos, type, mask);		
             }
 
             MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
@@ -225,7 +230,7 @@ int main(int argc, char *argv[])
             char double_arr_recv[64+1];
             doubletostr(&medium, double_arr_recv);
             char mask_recv[1+11+8];
-            strncpy(mask_recv, double_arr_recv, 1+11+8);			
+            strncpy(mask_recv, double_arr_recv, 1+11+8);	    	
 
             double* decompressed_data = myDecompress_bitwise_double_mask(data_bits, data_bytes, size, type, mask_recv);
 
