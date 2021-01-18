@@ -192,8 +192,8 @@ int main(int argc, char *argv[]) {
     
     if(CT == 9)
     {
- 
-
+        MPI_Bcast_bitwise_mask_crc(m_a, size_a, 0, rank, num_worker, &compress_ratio, &gosa, &resent);
+        MPI_Bcast_bitwise_mask_crc(m_b, size_b, 0, rank, num_worker, &compress_ratio, &gosa, &resent);
     }
     else if(CT == 8)
     {
@@ -473,11 +473,12 @@ int main(int argc, char *argv[]) {
 
         double* decompressed_data_a = myDecompress_bitwise_double_mask(data_bits_a, data_bytes_a, size_a, type_a, mask_a_recv);
         double* decompressed_data_b = myDecompress_bitwise_double_mask(data_bits_b, data_bytes_b, size_b, type_b, mask_b_recv);
+        double gs = 0;
         for(int i=0; i<size_a; i++)
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_a[i] + a_min - m_a[i]);
+                gs += fabs(decompressed_data_a[i] + a_min - m_a[i]);
             }
             else
             {
@@ -488,13 +489,14 @@ int main(int argc, char *argv[]) {
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_b[i] + b_min - m_b[i]);
+                gs += fabs(decompressed_data_b[i] + b_min - m_b[i]);
             }
             else
             {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
-        }        
+        }
+        gosa += gs/(size_a+size_b);        
 
         //todo
         free(data_bits_a);
@@ -554,11 +556,12 @@ int main(int argc, char *argv[]) {
 
         double* decompressed_data_a = myDecompress_bitwise_double_np(data_bits_a, data_bytes_a, size_a);
         double* decompressed_data_b = myDecompress_bitwise_double_np(data_bits_b, data_bytes_b, size_b);
+        double gs = 0;
         for(int i=0; i<size_a; i++)
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_a[i] + a_min - m_a[i]);
+                gs += fabs(decompressed_data_a[i] + a_min - m_a[i]);
             }
             else
             {
@@ -569,13 +572,14 @@ int main(int argc, char *argv[]) {
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_b[i] + b_min - m_b[i]);
+                gs += fabs(decompressed_data_b[i] + b_min - m_b[i]);
             }
             else
             {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
-        }        
+        }
+        gosa += gs/(size_a+size_b);          
 
         //todo
         free(data_bits_a);
@@ -643,11 +647,12 @@ int main(int argc, char *argv[]) {
 
         double* decompressed_data_a = myDecompress_bitwise_double(data_bits_a, data_bytes_a, size_a);
         double* decompressed_data_b = myDecompress_bitwise_double(data_bits_b, data_bytes_b, size_b);
+        double gs = 0;
         for(int i=0; i<size_a; i++)
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_a[i] + a_min - m_a[i]);
+                gs += fabs(decompressed_data_a[i] + a_min - m_a[i]);
             }
             else
             {
@@ -658,13 +663,14 @@ int main(int argc, char *argv[]) {
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_b[i] + b_min - m_b[i]);
+                gs += fabs(decompressed_data_b[i] + b_min - m_b[i]);
             }
             else
             {
                 m_b[i] = decompressed_data_b[i] + b_min;
             }
         }
+        gosa += gs/(size_a+size_b);  
 
         //todo
         free(data_bits_a);
@@ -751,11 +757,12 @@ int main(int argc, char *argv[]) {
         sprintf(txtfile_b, "dataset/b.dat.zs.out.txt");  
         double* decompressed_data_b = readfrombinary_writetotxt_double(binfile_out_b, txtfile_b, size_b);	
 
+        double gs = 0;
         for(int i=0; i<size_a; i++)
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_a[i] - m_a[i]);
+                gs += fabs(decompressed_data_a[i] - m_a[i]);
             }
             else
             {
@@ -766,13 +773,14 @@ int main(int argc, char *argv[]) {
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_b[i] - m_b[i]);
+                gs += fabs(decompressed_data_b[i] - m_b[i]);
             }
             else
             {
                 m_b[i] = decompressed_data_b[i];
             }
-        }        
+        }
+        gosa += gs/(size_a+size_b);          
 
         //todo
         free(data_bits_a);
@@ -862,12 +870,14 @@ int main(int argc, char *argv[]) {
             MPI_Bcast(msg_b.disp, num_c_b, MPI_INT, 0, MPI_COMM_WORLD);
         }
 
+        double gs = 0; 
+
         double* decompressed_data_a = myDecompress_double(msg_a.p_data, msg_a.c_data, msg_a.disp, size_a);
         for(int i=0; i<size_a; i++)
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_a[i]-m_a[i]);
+                gs += fabs(decompressed_data_a[i]-m_a[i]);
             }
             else
             {
@@ -880,13 +890,15 @@ int main(int argc, char *argv[]) {
         {
             if(rank == 0)
             {
-                gosa += fabs(decompressed_data_b[i]-m_b[i]);
+                gs += fabs(decompressed_data_b[i]-m_b[i]);
             }
             else
             {
                 m_b[i] = decompressed_data_b[i];
             }				
         }
+
+        gosa += gs/(size_a+size_b);  
 
         //todo
         free(msg_a.p_data);

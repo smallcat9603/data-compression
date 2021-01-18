@@ -5,8 +5,20 @@
 #define absErrorBound	0.01 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 // #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 // #define relBoundRatio       0.01
-// #define pw_relBoundRatio    0.01    
-#define CT	8 //compress type for pingpong & himeno & k-means, 0 no compress, 1 mycompress, 2 no-lossy-performance, 3 no-lossy-area, 4 sz, 5 bitwise mycompress, 6 bitwise no prediction, 7 bitmask-based bitwise, 8 bitwise w/ crc
+// #define pw_relBoundRatio    0.01
+/*compress type 
+0 no compress, 
+1 mycompress, 
+2 no-lossy-performance, 
+3 no-lossy-area, 
+4 sz, 
+5 bitwise mycompress, 
+6 bitwise no prediction, 
+7 bitmask-based bitwise, 
+8 bitwise w/ crc,
+9 bitmask-based bitwise w/crc    
+*/
+#define CT	9 
 #define byte_or_bit         2 //1 byte, 2 bit
 //#define data_num            8192 //pingpong
 #define filename            "dataset/obs_info" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
@@ -26,6 +38,7 @@
 #define sz_decomp_cmd_prefix_double  "./sz -x -d -s "
 #define sz_decomp_cmd_suffix ".dat.zs -1 "
 
+void MPI_Bcast_bitwise_mask_crc(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);
 void MPI_Bcast_bitwise_crc(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);
 
 double* myDecompress_bitwise_double_mask(unsigned char*, int, int, int, char[1+11+8]);
