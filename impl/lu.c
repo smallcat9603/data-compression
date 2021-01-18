@@ -80,105 +80,107 @@ int main(int argc, char *argv[])
          int root = j % p;  
          if(CT == 8)
          {
-            int data_bytes = 0;
-            double min = 0;
+            MPI_Bcast_bitwise_crc(save, size, root, id, p, &compress_ratio, &gosa, &resent);
 
-            unsigned char* data_bits = NULL;
+            // int data_bytes = 0;
+            // double min = 0;
+
+            // unsigned char* data_bits = NULL;
             
-            if(id == root)
-            {
-               // sz_comp_ratio += calcCompressionRatio_sz_double(save, size);
-               // nolossy_performance += calcCompressionRatio_nolossy_performance_double(save, size);
-               // nolossy_area += calcCompressionRatio_nolossy_area_double(save, size);
+            // if(id == root)
+            // {
+            //    // sz_comp_ratio += calcCompressionRatio_sz_double(save, size);
+            //    // nolossy_performance += calcCompressionRatio_nolossy_performance_double(save, size);
+            //    // nolossy_area += calcCompressionRatio_nolossy_area_double(save, size);
 
-               //mycommpress
-               double* small = NULL;
-               min = toSmallDataset_double(save, &small, size);
+            //    //mycommpress
+            //    double* small = NULL;
+            //    min = toSmallDataset_double(save, &small, size);
 
-               int data_pos = 8; //position of filled bit in last byte --> 87654321
+            //    int data_pos = 8; //position of filled bit in last byte --> 87654321
 
-               myCompress_bitwise_double(small, size, &data_bits, &data_bytes, &data_pos);	
-               crc = do_crc32(data_bits, data_bytes);		
-            }
+            //    myCompress_bitwise_double(small, size, &data_bits, &data_bytes, &data_pos);	
+            //    crc = do_crc32(data_bits, data_bytes);		
+            // }
 
-            MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
-            MPI_Bcast(&min, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
-            compress_ratio += data_bytes*8.0/(size*sizeof(double)*8);
+            // MPI_Bcast(&data_bytes, 1, MPI_INT, root, MPI_COMM_WORLD);
+            // MPI_Bcast(&min, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            // compress_ratio += data_bytes*8.0/(size*sizeof(double)*8);
          
-            if(id != root)
-            {
-                  data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
-            }
-            MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
-            MPI_Bcast(&crc, 1, MPI_UNSIGNED, root, MPI_COMM_WORLD);
+            // if(id != root)
+            // {
+            //       data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
+            // }
+            // MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
+            // MPI_Bcast(&crc, 1, MPI_UNSIGNED, root, MPI_COMM_WORLD);
 
-            if(id != root)
-            {
-                  crc_check = do_crc32(data_bits, data_bytes);
+            // if(id != root)
+            // {
+            //       crc_check = do_crc32(data_bits, data_bytes);
 
-                  if(BER > 0)
-                  {
-                     double ber = BER;
-                     uint64_t to = 1/ber;
-                     uint64_t r = get_random_int(0, to);
-                     if(r < data_bytes * 8)
-                     {
-                        crc_check = 0;
-                     }
-                  }
+            //       if(BER > 0)
+            //       {
+            //          double ber = BER;
+            //          uint64_t to = 1/ber;
+            //          uint64_t r = get_random_int(0, to);
+            //          if(r < data_bytes * 8)
+            //          {
+            //             crc_check = 0;
+            //          }
+            //       }
                   
-                  if (crc == crc_check)
-                  {
-                     // printf("CRC passed\n");
-                     crc_ok = 'y';
-                  }  
-                  else
-                  {
-                     // printf("CRC NOT passed\n");
-                     crc_ok = 'n';
-                  }            
-            }
-            else
-            {
-                  crc_ok_recv = (unsigned char *)malloc(p*1*sizeof(unsigned char));
-            }
+            //       if (crc == crc_check)
+            //       {
+            //          // printf("CRC passed\n");
+            //          crc_ok = 'y';
+            //       }  
+            //       else
+            //       {
+            //          // printf("CRC NOT passed\n");
+            //          crc_ok = 'n';
+            //       }            
+            // }
+            // else
+            // {
+            //       crc_ok_recv = (unsigned char *)malloc(p*1*sizeof(unsigned char));
+            // }
 
-            MPI_Gather(&crc_ok, 1, MPI_UNSIGNED_CHAR, crc_ok_recv, 1, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
+            // MPI_Gather(&crc_ok, 1, MPI_UNSIGNED_CHAR, crc_ok_recv, 1, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
             
-            if(id == root)
-            {
-                  for(int i = 0; i < p; i++)
-                  {
-                     if(i != root && crc_ok_recv[i] == 'n')
-                     {
-                        MPI_Send(data_bits, data_bytes, MPI_UNSIGNED_CHAR, i, i, MPI_COMM_WORLD);
-                        resent++;
-                     }
-                  }
-            }
-            else if(crc_ok == 'n')
-            {
-                  MPI_Recv(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, id, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            }            
+            // if(id == root)
+            // {
+            //       for(int i = 0; i < p; i++)
+            //       {
+            //          if(i != root && crc_ok_recv[i] == 'n')
+            //          {
+            //             MPI_Send(data_bits, data_bytes, MPI_UNSIGNED_CHAR, i, i, MPI_COMM_WORLD);
+            //             resent++;
+            //          }
+            //       }
+            // }
+            // else if(crc_ok == 'n')
+            // {
+            //       MPI_Recv(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, id, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            // }            
 
-            double* decompressed_data = myDecompress_bitwise_double(data_bits, data_bytes, size);
+            // double* decompressed_data = myDecompress_bitwise_double(data_bits, data_bytes, size);
 
-            double gs = 0;
-            for(int i=0; i<size; i++)
-            {
-                  if(id == root)
-                  {
-                     gs += fabs(decompressed_data[i] + min - save[i]);
-                  }
-                  else
-                  {
-                     save[i] = decompressed_data[i] + min;
-                  }
-            }
-            gosa += gs/size;
+            // double gs = 0;
+            // for(int i=0; i<size; i++)
+            // {
+            //       if(id == root)
+            //       {
+            //          gs += fabs(decompressed_data[i] + min - save[i]);
+            //       }
+            //       else
+            //       {
+            //          save[i] = decompressed_data[i] + min;
+            //       }
+            // }
+            // gosa += gs/size;
 
-            //todo
-            free(data_bits);
+            // //todo
+            // free(data_bits);
          }
          else if(CT == 7)
          {
