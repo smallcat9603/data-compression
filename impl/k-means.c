@@ -471,12 +471,14 @@ int main(int argc, char *argv[])
 
 			double* decompressed_data_x = myDecompress_bitwise_double(data_bits_x, data_bytes_x, numOfClusters);
 			double* decompressed_data_y = myDecompress_bitwise_double(data_bits_y, data_bytes_y, numOfClusters);
+
+			double gs = 0; 
 			for(int i=0; i<numOfClusters; i++)
 			{
 				if(world_rank == 0)
 				{
-					gosa += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
-					gosa += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
+					gs += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
+					gs += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
 				}
 				else
 				{
@@ -484,11 +486,7 @@ int main(int argc, char *argv[])
 					k_means_y[i] = decompressed_data_y[i] + k_means_y_min;
 				}
 			}
-			
-			if(count == MAX_ITERATIONS - 1)
-			{
-				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
-			}
+			gosa += gs/numOfClusters;
 
 			//todo
 			free(data_bits_x);
@@ -579,12 +577,14 @@ int main(int argc, char *argv[])
 
 			double* decompressed_data_x = myDecompress_bitwise_double_mask(data_bits_x, data_bytes_x, numOfClusters, type_x, mask_x_recv);
 			double* decompressed_data_y = myDecompress_bitwise_double_mask(data_bits_y, data_bytes_y, numOfClusters, type_y, mask_y_recv);
+
+			double gs = 0; 
 			for(int i=0; i<numOfClusters; i++)
 			{
 				if(world_rank == 0)
 				{
-					gosa += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
-					gosa += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
+					gs += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
+					gs += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
 				}
 				else
 				{
@@ -592,11 +592,7 @@ int main(int argc, char *argv[])
 					k_means_y[i] = decompressed_data_y[i] + k_means_y_min;
 				}
 			}
-			
-			if(count == MAX_ITERATIONS - 1)
-			{
-				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
-			}
+			gosa += gs/numOfClusters;
 
 			//todo
 			free(data_bits_x);
@@ -665,12 +661,14 @@ int main(int argc, char *argv[])
 
 			double* decompressed_data_x = myDecompress_bitwise_double_np(data_bits_x, data_bytes_x, numOfClusters);
 			double* decompressed_data_y = myDecompress_bitwise_double_np(data_bits_y, data_bytes_y, numOfClusters);
+
+			double gs = 0;
 			for(int i=0; i<numOfClusters; i++)
 			{
 				if(world_rank == 0)
 				{
-					gosa += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
-					gosa += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
+					gs += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
+					gs += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
 				}
 				else
 				{
@@ -678,11 +676,7 @@ int main(int argc, char *argv[])
 					k_means_y[i] = decompressed_data_y[i] + k_means_y_min;
 				}
 			}
-			
-			if(count == MAX_ITERATIONS - 1)
-			{
-				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
-			}
+			gosa += gs/numOfClusters;
 
 			//todo
 			free(data_bits_x);
@@ -751,12 +745,14 @@ int main(int argc, char *argv[])
 
 			double* decompressed_data_x = myDecompress_bitwise_double(data_bits_x, data_bytes_x, numOfClusters);
 			double* decompressed_data_y = myDecompress_bitwise_double(data_bits_y, data_bytes_y, numOfClusters);
+
+			double gs = 0; 
 			for(int i=0; i<numOfClusters; i++)
 			{
 				if(world_rank == 0)
 				{
-					gosa += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
-					gosa += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
+					gs += fabs(decompressed_data_x[i] + k_means_x_min - k_means_x[i]);
+					gs += fabs(decompressed_data_y[i] + k_means_y_min - k_means_y[i]);
 				}
 				else
 				{
@@ -764,11 +760,7 @@ int main(int argc, char *argv[])
 					k_means_y[i] = decompressed_data_y[i] + k_means_y_min;
 				}
 			}
-			
-			if(count == MAX_ITERATIONS - 1)
-			{
-				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
-			}
+			gosa += gs/numOfClusters;
 
 			//todo
 			free(data_bits_x);
@@ -856,12 +848,13 @@ int main(int argc, char *argv[])
 			sprintf(txtfile_y, "dataset/y%d.dat.zs.out.txt", count);  
 			double* decompressed_data_y = readfrombinary_writetotxt_double(binfile_out_y, txtfile_y, numOfClusters);	
 
+			double gs = 0;
 			for(int i=0; i<numOfClusters; i++)
 			{
 				if(world_rank == 0)
 				{
-					gosa += fabs(decompressed_data_x[i] - k_means_x[i]);
-					gosa += fabs(decompressed_data_y[i] - k_means_y[i]);
+					gs += fabs(decompressed_data_x[i] - k_means_x[i]);
+					gs += fabs(decompressed_data_y[i] - k_means_y[i]);
 				}
 				else
 				{
@@ -869,11 +862,7 @@ int main(int argc, char *argv[])
 					k_means_y[i] = decompressed_data_y[i];
 				}
 			}
-			
-			if(count == MAX_ITERATIONS - 1)
-			{
-				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
-			}
+			gosa += gs/numOfClusters;
 
 			//todo
 			free(data_bits_x);
@@ -965,35 +954,22 @@ int main(int argc, char *argv[])
 			}
 
 			double* decompressed_data_x = myDecompress_double(msg_x.p_data, msg_x.c_data, msg_x.disp, numOfClusters);
+			double* decompressed_data_y = myDecompress_double(msg_y.p_data, msg_y.c_data, msg_y.disp, numOfClusters);
+			double gs = 0;
 			for(int i=0; i<numOfClusters; i++)
 			{
 				if(world_rank == 0)
 				{
-					gosa += fabs(decompressed_data_x[i]-k_means_x[i]);
+					gs += fabs(decompressed_data_x[i]-k_means_x[i]);
+					gs += fabs(decompressed_data_y[i]-k_means_y[i]);
 				}
 				else
 				{
 					k_means_x[i] = decompressed_data_x[i];
-				}
-			}
-
-			double* decompressed_data_y = myDecompress_double(msg_y.p_data, msg_y.c_data, msg_y.disp, numOfClusters);
-			for(int i=0; i<numOfClusters; i++)
-			{
-				if(world_rank == 0)
-				{
-					gosa += fabs(decompressed_data_y[i]-k_means_y[i]);
-				}
-				else
-				{
 					k_means_y[i] = decompressed_data_y[i];
-				}				
+				}
 			}
-			
-			if(count == MAX_ITERATIONS - 1)
-			{
-				gosa = gosa/(2*MAX_ITERATIONS*numOfClusters);
-			}
+			gosa += gs/numOfClusters;
 
 			//todo
 			free(msg_x.p_data);
@@ -1068,7 +1044,7 @@ int main(int argc, char *argv[])
 		fclose(fp);		
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
-		printf("gosa = %f \n", gosa);
+		printf("gosa = %f \n", gosa/(2*MAX_ITERATIONS));
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/(2*MAX_ITERATIONS)), 1/(nolossy_performance/(2*MAX_ITERATIONS)), 1/(nolossy_area/(2*MAX_ITERATIONS)));
 		printf("compress ratio = %f \n", 1/(compress_ratio/(2*MAX_ITERATIONS)));
 		printf("resent = %d (percentage = %f)\n", resent, resent/(2.0*(world_size-1)*MAX_ITERATIONS));  
