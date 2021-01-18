@@ -307,7 +307,12 @@ int main(int argc, char *argv[])
 	start_time = MPI_Wtime();
 	while(count < MAX_ITERATIONS)
 	{
-		if(CT == 8)
+		if(CT == 9)
+		{
+			MPI_Bcast_bitwise_mask_crc(k_means_x, numOfClusters, 0, world_rank, world_size, &compress_ratio, &gosa, &resent);
+			MPI_Bcast_bitwise_mask_crc(k_means_y, numOfClusters, 0, world_rank, world_size, &compress_ratio, &gosa, &resent);
+		}
+		else if(CT == 8)
 		{
 			MPI_Bcast_bitwise_crc(k_means_x, numOfClusters, 0, world_rank, world_size, &compress_ratio, &gosa, &resent);
 			MPI_Bcast_bitwise_crc(k_means_y, numOfClusters, 0, world_rank, world_size, &compress_ratio, &gosa, &resent);
