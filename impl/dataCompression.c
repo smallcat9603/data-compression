@@ -21,7 +21,7 @@ double absErrBound = absErrorBound;
 int absErrorBound_binary = -100;
 
 //double
-void MPI_Bcast_bitwise_mask_crc_hamming(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend)
+void MPI_Bcast_bitwise_crc(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend)
 {
   uint32_t crc = 0;
   uint32_t crc_check = 0;
