@@ -162,6 +162,7 @@ int main(int argc, char *argv[])
             }            
 
             double* decompressed_data = myDecompress_bitwise_double(data_bits, data_bytes, size);
+
             double gs = 0;
             for(int i=0; i<size; i++)
             {
@@ -174,8 +175,7 @@ int main(int argc, char *argv[])
                      save[i] = decompressed_data[i] + min;
                   }
             }
-            gs = gs/size;
-            gosa += gs;
+            gosa += gs/size;
 
             //todo
             free(data_bits);
@@ -226,6 +226,7 @@ int main(int argc, char *argv[])
             strncpy(mask_recv, double_arr_recv, 1+11+8);			
 
             double* decompressed_data = myDecompress_bitwise_double_mask(data_bits, data_bytes, size, type, mask_recv);
+
             double gs = 0;
             for(int i=0; i<size; i++)
             {
@@ -237,9 +238,8 @@ int main(int argc, char *argv[])
                   {
                      save[i] = decompressed_data[i] + min;
                   }
-            }      
-            gs = gs/size;
-            gosa += gs;
+            }  
+            gosa += gs/size;
 
             //todo
             free(data_bits);
@@ -273,6 +273,7 @@ int main(int argc, char *argv[])
             MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
 
             double* decompressed_data = myDecompress_bitwise_double_np(data_bits, data_bytes, size);
+
             double gs = 0;
             for(int i=0; i<size; i++)
             {
@@ -284,9 +285,8 @@ int main(int argc, char *argv[])
                   {
                      save[i] = decompressed_data[i] + min;
                   }
-            }        
-            gs = gs/size;
-            gosa += gs;
+            }
+            gosa += gs/size;        
 
             //todo
             free(data_bits);
@@ -324,6 +324,7 @@ int main(int argc, char *argv[])
             MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
 
             double* decompressed_data = myDecompress_bitwise_double(data_bits, data_bytes, size);
+
             double gs = 0;
             for(int i=0; i<size; i++)
             {
@@ -336,8 +337,7 @@ int main(int argc, char *argv[])
                      save[i] = decompressed_data[i] + min;
                   }
             }
-            gs = gs/size;
-            gosa += gs;
+            gosa += gs/size;
 
             //todo
             free(data_bits);
@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
             sprintf(binfile_out, "dataset/id%d.dat.zs.out", root);
             char txtfile[64];
             sprintf(txtfile, "dataset/id%d.dat.zs.out.txt", root); 
-            double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, size);			
+            double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, size);	
 
             double gs = 0;
             for(int i=0; i<size; i++)
@@ -395,9 +395,8 @@ int main(int argc, char *argv[])
                   {
                      save[i] = decompressed_data[i];
                   }
-            }     
-            gs = gs/size;
-            gosa += gs;
+            } 
+            gosa = gs/size;    
 
             //todo
             free(data_bits);
@@ -459,9 +458,7 @@ int main(int argc, char *argv[])
                      save[i] = decompressed_data[i];
                   }
             }
-            
-            gs = gs/size;
-            gosa += gs;
+            gosa += gs/size;
 
             //todo
             free(msg.p_data);

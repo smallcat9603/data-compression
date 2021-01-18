@@ -110,11 +110,12 @@ void MPI_Bcast_bitwise_crc(double *buffer, int count, int root, int rank, int pr
   }
 
   double* decompressed_data = myDecompress_bitwise_double(data_bits, data_bytes, count);
+  double gs = 0;
   for(int i=0; i<count; i++)
   {
       if(rank == root)
       {
-          *gosa += fabs(decompressed_data[i] + min - buffer[i]);
+          gs += fabs(decompressed_data[i] + min - buffer[i]);
       }
       else
       {
@@ -122,7 +123,7 @@ void MPI_Bcast_bitwise_crc(double *buffer, int count, int root, int rank, int pr
       }
   }
 
-  // *gosa = *gosa/count;
+  *gosa += gs/count;
 
   free(data_bits);
 }

@@ -948,7 +948,7 @@ int main(int argc, char *argv[]) {
 		printf("FINAL RESULTS:\n");	
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", rank, end_time-start_time, end_time, start_time);
-		printf("gosa = %f \n", gosa/(size_a+size_b));
+		printf("gosa = %f \n", gosa/2);
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/2), 1/(nolossy_performance/2), 1/(nolossy_area/2));
 		printf("compress ratio = %f \n", 1/(compress_ratio/2));    
         printf("resent = %d (percentage = %f)\n", resent, resent/(2.0*(num_worker-1)));    
