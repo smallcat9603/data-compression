@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 //N is the max number of data bits
 #define N 100
@@ -11,6 +12,7 @@ int error_info(char* v, int r, int* error_bit_pos); //calculate bit error positi
 void hamming_print(char* data, char* c, int k, int r); //print hamming secded
 void hamming_rectify(char* data, char* c, int k, int r, int error_bit_pos); //rectify error bit if one error (except parity bit)
 void cast_bits_to_char(unsigned char* bits, char* data, int bytes); //1 bit --> char '0' or '1' (8 bits)
+void hamming_encode(unsigned char* bits, char** c, int bytes, int* r); //data bits --> char[]
 
 void main()
 {
@@ -21,8 +23,13 @@ void main()
   //test
   // data[0] = 'z';
   // data[1] = '7';
-  // char b[16];
-  // cast_bits_to_char(data, b, 2);
+  // char* d = NULL;
+  // hamming_encode(data, &d, 2, &r);
+  // for(int i=0; i<(r+1); i++)
+  // {
+  //   printf("%c", d[i]);
+  // }
+  // printf("\n");
   // return;
 
   printf("Input data to encode: ");
@@ -275,18 +282,29 @@ void cast_bits_to_char(unsigned char* bits, char* data, int bytes)
     }
   }
 
-  //test
-  // for(int i = 0; i < bytes; i++)
-  // {
-  //   for(int j = 0; j < 8; j++)
-  //   {
-  //     printf("%c", ((bits[i] >> (7-j)) & 1) + '0');
-  //   }
-  // }
-  // printf("\n");
-  // for(int i = 0; i < bytes * 8; i++)
-  // {
-  //   printf("%c", data[i]);
-  // }
-  // printf("\n");
+  // test
+  for(int i = 0; i < bytes; i++)
+  {
+    for(int j = 0; j < 8; j++)
+    {
+      printf("%c", ((bits[i] >> (7-j)) & 1) + '0');
+    }
+  }
+  printf("\n");
+  for(int i = 0; i < bytes * 8; i++)
+  {
+    printf("%c", data[i]);
+  }
+  printf("\n");
+}
+
+//data bits --> char[]
+void hamming_encode(unsigned char* bits, char** c, int bytes, int* r)
+{
+  char data[bytes*8];
+  cast_bits_to_char(bits, data, bytes);
+
+  *r = hmLength(bytes*8);
+  *c = (char*) malloc(sizeof(char)*(*r+1));
+  hamming_code(data, *c, bytes*8, *r);
 }
