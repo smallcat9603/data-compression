@@ -10,12 +10,20 @@ void hamming_verify(char* data, char* c, int k, int r, char* v); //hamming verfi
 int error_info(char* v, int r, int* error_bit_pos); //calculate bit error position if possible one bit error
 void hamming_print(char* data, char* c, int k, int r); //print hamming secded
 void hamming_rectify(char* data, char* c, int k, int r, int error_bit_pos); //rectify error bit if one error (except parity bit)
+void cast_bits_to_char(unsigned char* bits, char* data, int bytes); //1 bit --> char '0' or '1' (8 bits)
 
 void main()
 {
   int k = 0, r = 0, dnum = 0, cnum = 0; //1100 -> 0111100, k = 4, r = 3
   char data[N];
   char c[N];
+
+  //test
+  // data[0] = 'z';
+  // data[1] = '7';
+  // char b[16];
+  // cast_bits_to_char(data, b, 2);
+  // return;
 
   printf("Input data to encode: ");
 
@@ -253,4 +261,32 @@ void hamming_rectify(char* data, char* c, int k, int r, int error_bit_pos)
       } 
     }
   }
+}
+
+//1 bit --> char '0' or '1' (8 bits)
+void cast_bits_to_char(unsigned char* bits, char* data, int bytes)
+{
+  for(int i = 0; i < bytes; i++)
+  {
+    for(int j = 0; j < 8; j++)
+    {
+      int pos = i * 8 + j;
+      data[pos] = ((bits[i] >> (7-j)) & 1) + '0';
+    }
+  }
+
+  //test
+  // for(int i = 0; i < bytes; i++)
+  // {
+  //   for(int j = 0; j < 8; j++)
+  //   {
+  //     printf("%c", ((bits[i] >> (7-j)) & 1) + '0');
+  //   }
+  // }
+  // printf("\n");
+  // for(int i = 0; i < bytes * 8; i++)
+  // {
+  //   printf("%c", data[i]);
+  // }
+  // printf("\n");
 }
