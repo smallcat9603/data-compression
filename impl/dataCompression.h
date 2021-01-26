@@ -16,9 +16,10 @@
 6 bitwise no prediction, 
 7 bitmask-based bitwise, 
 8 bitwise w/ crc,
-9 bitmask-based bitwise w/crc    
+9 bitmask-based bitwise w/crc  
+10 bitwise w/ crc hamming  
 */
-#define CT	9 
+#define CT	10 
 #define byte_or_bit         2 //1 byte, 2 bit
 //#define data_num            8192 //pingpong
 #define filename            "dataset/obs_info" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
@@ -38,6 +39,7 @@
 #define sz_decomp_cmd_prefix_double  "./sz -x -d -s "
 #define sz_decomp_cmd_suffix ".dat.zs -1 "
 
+void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);
 void MPI_Bcast_bitwise_mask_crc(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);
 void MPI_Bcast_bitwise_crc(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);
 
@@ -118,3 +120,17 @@ int to_absErrorBound_binary(double absErrBound);
 
 uint32_t do_crc32(unsigned char *data_bits, int bytes);
 uint64_t get_random_int(uint64_t from, uint64_t to);
+
+int hmLength(int k); //hamming check bits
+void hamming_code(char* data, char* c, int k, int r); //value of each hamming check bit
+void hamming_verify(char* data, char* c, int k, int r, char* v); //hamming verfify
+int error_info(char* v, int r, int* error_bit_pos); //calculate bit error position if possible one bit error
+void hamming_print(char* data, char* c, int k, int r); //print hamming secded
+void hamming_rectify(char* data, char* c, int k, int r, int error_bit_pos); //rectify error bit if one error (except parity bit)
+void cast_bits_to_char(unsigned char* bits, char* data, int bytes); //1 bit --> char '0' or '1' (8 bits)
+void hamming_encode(unsigned char* bits, char** c, int bytes, int* r); //data bits --> char[]
+int hamming_decode(unsigned char* bits, char* c, int bytes, int r);
+void hamming_verify_bit(unsigned char* bits, char* c, int bytes, int r, char* v);
+void hamming_rectify_bit(unsigned char* bits, char* c, int bytes, int r, int error_bit_pos); //rectify error bit if one error (except parity bit)
+void bit_flip(unsigned char* bits, int bytes); //bit flip
+int block_size(int data_bytes); //calculate block size (bytes)

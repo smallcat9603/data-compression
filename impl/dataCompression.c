@@ -54,6 +54,33 @@ void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank
   MPI_Bcast(&min, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
   *compress_ratio += data_bytes*8.0/(count*sizeof(double)*8);
 
+  //hamming for blocks
+  int bs = block_size(data_bytes);
+  int bs_num = data_bytes/bs;
+  int bs_last = data_bytes%bs;
+  if (bs_last > 0) bs_num++;
+  unsigned char* blocks[bs_num];
+  char* c[bs_num];
+  int r[bs_num];
+  if(rank == root)
+  { 
+    for(int i=0; i<bs_num; i++)
+    {
+      // c[i] = NULL;
+      // r[i] = 0;
+      int bytes = bs;
+      if(bs_last > 0 && i == bs_num-1)
+      {
+        bytes = bs_last;
+      } 
+
+      // blocks[i] = (unsigned char*)malloc(bytes*sizeof(unsigned char));
+      // memcpy(blocks[i], &data_bits[i*bs], bytes); 
+      hamming_encode(&data_bits[i*bs], &c[i], bytes, &r[i]);
+    }
+  }
+  // printf("bs = %d, bs_last = %d, bs_num = %d, r[0] = %d\n", bs, bs_last, bs_num, r[0]);
+
   if(rank != root)
   {
       data_bits = (unsigned char*) malloc(sizeof(unsigned char)*data_bytes);
@@ -61,20 +88,33 @@ void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank
   MPI_Bcast(data_bits, data_bytes, MPI_UNSIGNED_CHAR, root, MPI_COMM_WORLD);
   MPI_Bcast(&crc, 1, MPI_UNSIGNED, root, MPI_COMM_WORLD);
 
+  //hamming
+  MPI_Bcast(r, bs_num, MPI_INT, root, MPI_COMM_WORLD);
+  for(int i=0; i<bs_num; i++)
+  {
+    if(rank != root)
+    {
+      c[i] = (char*) malloc(sizeof(char)*(r[i]+1));
+    }
+    MPI_Bcast(c[i], r[i]+1, MPI_CHAR, root, MPI_COMM_WORLD);
+  }
+  // printf("r[0] = %d, c[0][1] = %c\n", r[0], c[0][1]);
+
+
   if(rank != root)
   {
-      crc_check = do_crc32(data_bits, data_bytes);
-
       if(BER > 0)
       {
           double ber = BER;
           uint64_t to = 1/ber;
-          uint64_t r = get_random_int(0, to);
-          if(r < data_bytes * 8)
+          int errors = data_bytes*8/to;
+          for (int n = 0; n < errors; n++)
           {
-              crc_check = 0;
+            bit_flip(data_bits, data_bytes);
           }
       }
+
+      crc_check = do_crc32(data_bits, data_bytes);
       
       if (crc == crc_check)
       {
@@ -84,7 +124,21 @@ void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank
       else
       {
           // printf("CRC NOT passed\n");
-          crc_ok = 'n';
+          crc_ok = 'y';
+          for(int i=0; i<bs_num; i++)
+          {
+            int bytes = bs;
+            if(bs_last > 0 && i == bs_num-1)
+            {
+              bytes = bs_last;
+            } 
+            int error_type = hamming_decode(&data_bits[i*bs], c[i], bytes, r[i]);
+            if(error_type == 1) //two-bit error
+            {
+              crc_ok = 'n';
+              break;
+            }
+          }
       }            
   }
   else
@@ -4703,4 +4757,342 @@ uint64_t get_random_int(uint64_t from, uint64_t to)
   uint64_t n;
   n = rand() % (to - from + 1) + from;
   return n;
+}
+
+//length(c) = r+1 (secded)
+void hamming_code(char* data, char* c, int k, int r)
+{
+  for(int i=0; i<r; i++)
+  {
+    int sum = 0, dnum = 0, cnum = 0;
+    for(int j=1; j<r+k+1; j++)
+    {
+      if(j == (int)pow(2, cnum))
+      {
+        cnum++;
+      }
+      else
+      {
+        int x = pow(2, i);
+        int y = j%(x*2);
+        x = y/x;
+        sum += (data[dnum]-'0')*x;
+        dnum++;
+      }
+    }
+    c[i] = sum%2 == 0?'0':'1';
+  }
+
+  //one additional parity bit for two bit error detection (secded)
+  int sum = 0;
+  for(int i=0; i<k; i++)
+  {
+    sum += data[i] - '0';
+  }
+  for(int i=0; i<r; i++)
+  {
+    sum += c[i] - '0';
+  }
+  c[r] = sum%2 + '0';
+}
+
+//calculate r
+int hmLength(int k)
+{
+  int r = 0, flag = 1;
+  while(flag)
+  {
+    int temp = pow(2, r);
+    temp = temp - 1;
+    flag = (temp-r-k<0);
+    r++;
+  }
+  return r-1;
+}
+
+//hamming verify --> v
+void hamming_verify(char* data, char* c, int k, int r, char* v)
+{
+  for(int i=0; i<r; i++)
+  {
+    int sum = 0, dnum = 0, cnum = 0;
+    for(int j=1; j<r+k+1; j++)
+    {
+      if(j == (int)pow(2, cnum))
+      {
+        cnum++;
+      }
+      else
+      {
+        int x = pow(2, i);
+        int y = j%(x*2);
+        x = y/x;
+        sum += (data[dnum]-'0')*x;
+        dnum++;
+      }
+    }
+    v[i] = sum%2 == (c[i]-'0')?'0':'1';
+  }
+
+  int sum = 0;
+  for(int i=0; i<k; i++)
+  {
+    sum += data[i] - '0';
+  }
+  for(int i=0; i<r; i++)
+  {
+    sum += c[i] - '0';
+  }
+  v[r] = sum%2 == (c[r]-'0')?'0':'1';
+}
+
+//calculate bit error position if possible one bit error
+int error_info(char* v, int r, int* error_bit_pos)
+{
+  int error_type = 0;
+
+  for(int i=0; i<r; i++)
+  {
+    *error_bit_pos += (v[i]-'0')*pow(2, i);
+  }
+
+  if(*error_bit_pos > 0 && v[r] == '0') //two bit error
+  {
+    error_type = 1;
+  }
+  else if(*error_bit_pos == 0 && v[r] == '1') //parity bit error
+  {
+    error_type = 2;
+  }
+  else if(*error_bit_pos > 0 && v[r] == '1') //one bit error
+  {
+    error_type = 3;
+  }
+
+  return error_type;
+}
+
+//print hamming secded
+void hamming_print(char* data, char* c, int k, int r)
+{
+  int dnum = 0, cnum = 0; 
+
+  for(int j = 1; j < r+k+1; j++)
+  {
+    if(j == (int)pow(2, cnum))
+    {
+      printf("%c", c[cnum]);
+      cnum++;
+    }
+    else
+    {
+      printf("%c", data[dnum]);
+      dnum++;
+    }
+  }
+  printf(" %c\n", c[r]);  
+}
+
+//rectify error bit if one error (except parity bit)
+void hamming_rectify(char* data, char* c, int k, int r, int error_bit_pos)
+{
+  int dnum = 0, cnum = 0;
+
+  for(int j=1; j<r+k+1; j++)
+  {
+    if(j == (int)pow(2, cnum))
+    {   
+      if(j == error_bit_pos)
+      {
+        c[cnum] = c[cnum] == '0'?'1':'0';
+        break;
+      }
+      else
+      {
+        cnum++;
+      }  
+    }
+    else
+    {  
+      if(j == error_bit_pos)
+      {
+        data[dnum] = data[dnum] == '0'?'1':'0';
+        break;
+      }
+      else
+      {
+        dnum++;
+      } 
+    }
+  }
+}
+
+//1 bit --> char '0' or '1' (8 bits)
+void cast_bits_to_char(unsigned char* bits, char* data, int bytes)
+{
+  for(int i = 0; i < bytes; i++)
+  {
+    for(int j = 0; j < 8; j++)
+    {
+      int pos = i * 8 + j;
+      data[pos] = ((bits[i] >> (7-j)) & 1) + '0';
+    }
+  }
+
+  // test
+  // for(int i = 0; i < bytes; i++)
+  // {
+  //   for(int j = 0; j < 8; j++)
+  //   {
+  //     printf("%c", ((bits[i] >> (7-j)) & 1) + '0');
+  //   }
+  // }
+  // printf("\n");
+  // for(int i = 0; i < bytes * 8; i++)
+  // {
+  //   printf("%c", data[i]);
+  // }
+  // printf("\n");
+}
+
+//data bits --> char[]
+void hamming_encode(unsigned char* bits, char** c, int bytes, int* r)
+{
+  char data[bytes*8];
+  cast_bits_to_char(bits, data, bytes);
+
+  *r = hmLength(bytes*8);
+  *c = (char*) malloc(sizeof(char)*(*r+1));
+  hamming_code(data, *c, bytes*8, *r);
+}
+
+int hamming_decode(unsigned char* bits, char* c, int bytes, int r)
+{
+  char v[r+1];
+  hamming_verify_bit(bits, c, bytes, r, v);
+
+  int error_bit_pos = 0; // 1 for most left bit
+  int error_type = error_info(v, r, &error_bit_pos);  
+  switch(error_type)
+  {
+    case 0:
+      // printf("no error\n");
+      break;
+    case 1:
+      printf("two-bit error\n");
+      break;
+    case 2:
+      printf("parity error\n");
+      c[r] = c[r] == '0'?'1':'0';
+      break;
+    case 3:
+      printf("one bit error: pos = %d\n", error_bit_pos);
+      hamming_rectify_bit(bits, c, bytes, r, error_bit_pos);
+      break;
+    default:
+      printf("ERROR");
+  }
+
+  return error_type;
+}
+
+//hamming verify --> v
+void hamming_verify_bit(unsigned char* bits, char* c, int bytes, int r, char* v)
+{
+  for(int i=0; i<r; i++)
+  {
+    int sum = 0, bnum = 0, cnum = 0;
+    for(int j=1; j<r+bytes*8+1; j++)
+    {
+      if(j == (int)pow(2, cnum))
+      {
+        cnum++;
+      }
+      else
+      {
+        int x = pow(2, i);
+        int y = j%(x*2);
+        x = y/x;
+        int bits_num = bnum/8;
+        int bit_num = bnum%8;       
+        sum += ((bits[bits_num] >> (7 - bit_num)) & 1) * x;
+        bnum++;
+      }
+    }
+    v[i] = sum%2 == (c[i]-'0')?'0':'1';
+  }
+
+  int sum = 0;
+  for(int i=0; i<bytes; i++)
+  {
+    for(int j=0; j<8; j++)
+    {
+      sum += (bits[i] >> j) & 1;
+    }
+  }
+  for(int i=0; i<r; i++)
+  {
+    sum += c[i] - '0';
+  }
+  v[r] = sum%2 == (c[r]-'0')?'0':'1';
+}
+
+//rectify error bit if one error (except parity bit)
+void hamming_rectify_bit(unsigned char* bits, char* c, int bytes, int r, int error_bit_pos)
+{
+  int bnum = 0, cnum = 0;
+
+  for(int j=1; j<r+bytes*8+1; j++)
+  {
+    if(j == (int)pow(2, cnum))
+    {   
+      if(j == error_bit_pos)
+      {
+        c[cnum] = c[cnum] == '0'?'1':'0';
+        break;
+      }
+      else
+      {
+        cnum++;
+      }  
+    }
+    else
+    {  
+      if(j == error_bit_pos)
+      {
+        int bits_num = bnum/8;
+        int bit_num = bnum%8;
+        bits[bits_num] ^= 1 << (7 - bit_num);
+        break;
+      }
+      else
+      {
+        bnum++;
+      } 
+    }
+  }
+}
+
+//bit flip
+void bit_flip(unsigned char* bits, int bytes)
+{
+  int num = rand() % (bytes*8);
+  int byte = num/8;
+  int bit = num%8;
+
+  bits[byte] ^= 1 << (7 - bit);
+}
+
+//calculate block size (bytes)
+int block_size(int data_bytes)
+{
+  double ber = BER;
+  uint64_t bits = 1/ber;
+  uint64_t bytes = bits/8;
+  int bs = data_bytes;
+  if(bs > bytes)
+  {
+    bs = bytes;
+  }
+  return bs;
 }
