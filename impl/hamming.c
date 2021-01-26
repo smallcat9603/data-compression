@@ -16,6 +16,7 @@ void hamming_encode(unsigned char* bits, char** c, int bytes, int* r); //data bi
 int hamming_decode(unsigned char* bits, char* c, int bytes, int r);
 void hamming_verify_bit(unsigned char* bits, char* c, int bytes, int r, char* v);
 void hamming_rectify_bit(unsigned char* bits, char* c, int bytes, int r, int error_bit_pos); //rectify error bit if one error (except parity bit)
+void bit_flip(unsigned char* bits, int bytes); //bit flip
 
 void main()
 {
@@ -33,7 +34,9 @@ void main()
   //   printf("%c", d[i]);
   // }
   // printf("\n");
-  // data[0] ^= 1 << 7;
+  // bit_flip(data, 2);
+  // printf("recv %c\n", data[0]);
+  // printf("recv %c\n", data[1]);
   // c[0] = '0';
   // c[1] = '1';
   // c[2] = '0';
@@ -41,6 +44,8 @@ void main()
   // c[4] = '0';
   // c[5] = '0';
   // hamming_decode(data, c, 2, 5);
+  // printf("rect %c\n", data[0]);
+  // printf("rect %c\n", data[1]);
   // return;
 
   printf("Input data to encode: ");
@@ -425,4 +430,14 @@ void hamming_rectify_bit(unsigned char* bits, char* c, int bytes, int r, int err
       } 
     }
   }
+}
+
+//bit flip
+void bit_flip(unsigned char* bits, int bytes)
+{
+  int num = rand() % (bytes*8);
+  int byte = num/8;
+  int bit = num%8;
+
+  bits[byte] ^= 1 << (7 - bit);
 }
