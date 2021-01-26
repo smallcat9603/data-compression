@@ -190,7 +190,13 @@ int main(int argc, char *argv[]) {
     srand((unsigned)time(NULL));      
 	start_time = MPI_Wtime();
     
-    if(CT == 9)
+
+    if(CT == 10)
+    {
+        MPI_Bcast_bitwise_crc_hamming(m_a, size_a, 0, rank, num_worker, &compress_ratio, &gosa, &resent);
+        MPI_Bcast_bitwise_crc_hamming(m_b, size_b, 0, rank, num_worker, &compress_ratio, &gosa, &resent);  
+    }
+    else if(CT == 9)
     {
         MPI_Bcast_bitwise_mask_crc(m_a, size_a, 0, rank, num_worker, &compress_ratio, &gosa, &resent);
         MPI_Bcast_bitwise_mask_crc(m_b, size_b, 0, rank, num_worker, &compress_ratio, &gosa, &resent);
@@ -972,6 +978,7 @@ int main(int argc, char *argv[]) {
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/2), 1/(nolossy_performance/2), 1/(nolossy_area/2));
 		printf("compress ratio = %f \n", 1/(compress_ratio/2));    
         printf("resent = %d (percentage = %f)\n", resent, resent/(2.0*(num_worker-1)));    
+        // printf("hamming_correct = %d (percentage = %f)\n", hamming_correct, 1.0*hamming_correct/(resent+hamming_correct));
     }
     
     free(result_matrix);
