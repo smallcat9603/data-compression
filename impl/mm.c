@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 #include "param.h"
 #include "dataCompression.h"
 
@@ -979,6 +980,16 @@ int main(int argc, char *argv[]) {
 		printf("compress ratio = %f \n", 1/(compress_ratio/2));    
         printf("resent = %d (percentage = %f)\n", resent, resent/(2.0*(num_worker-1)));    
         // printf("hamming_correct = %d (percentage = %f)\n", hamming_correct, 1.0*hamming_correct/(resent+hamming_correct));
+
+        char fn[] = "mm.csv";
+        int fexist = access(fn, 0);
+        FILE* fp = fopen(fn, "a"); 
+        if(fexist == -1)
+        {
+            fprintf(fp, "num_worker, size_res, CT, absErrorBound, BER, compression ratio, time, gosa, resent, resent ratio\n"); 
+        }    
+        fprintf(fp, "%d, %d, %d, %e, %e, %f, %f, %f, %d, %f\n", num_worker, size_res, CT, absErrorBound, BER, 1/(compress_ratio/2), end_time - start_time, gosa/2, resent, resent/(2.0*(num_worker-1)));    
+        fclose(fp);          
     }
     
     free(result_matrix);

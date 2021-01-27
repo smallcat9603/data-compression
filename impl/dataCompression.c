@@ -138,6 +138,10 @@ void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank
               crc_ok = 'n';
               break;
             }
+            // else if(error_type == 2 || error_type == 3)
+            // {
+            //   (*hamming_correct)++;
+            // }
           }
       }            
   }
