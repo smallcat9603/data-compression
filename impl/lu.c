@@ -79,7 +79,11 @@ int main(int argc, char *argv[])
          int size = mx_size - diag_ref;   
          int root = j % p;  
          
-         if(CT == 9)
+         if(CT == 10)
+         {
+            MPI_Bcast_bitwise_crc_hamming(save, size, root, id, p, &compress_ratio, &gosa, &resent);
+         }
+         else if(CT == 9)
          {
             MPI_Bcast_bitwise_mask_crc(save, size, root, id, p, &compress_ratio, &gosa, &resent);
          }

@@ -1,9 +1,12 @@
 #!/bin/sh
 
-prog=k-means
+prog=lu #mm lu k-means
 procs=4
+mmpara="testdata/mat_512_512_a.txt testdata/mat_512_512_b.txt"
+lupara=256
 
-for CT in 8
+
+for CT in 10
 do
     for AEB in 0.000001 0.00001 0.0001 0.001 0.01
     do
@@ -11,7 +14,7 @@ do
         do
             sh ./set-parameter.sh dataCompression.h ${CT} ${AEB} ${BER}
             mpicc ${prog}.c dataCompression.c -o ${prog} -lm -lz
-            mpirun -np ${procs} ./${prog} ${procs}
+            mpirun -np ${procs} ./${prog} ${lupara}
         done
     done 
 done
