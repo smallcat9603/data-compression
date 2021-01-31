@@ -1,8 +1,8 @@
 /*
  *
  */
-#define BER	1e-5   //1e-16 (0), 1e-6
-#define absErrorBound	0.01 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
+#define BER	1e-7   //1e-16 (0), 1e-6
+#define absErrorBound	0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 // #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 // #define relBoundRatio       0.01
 // #define pw_relBoundRatio    0.01

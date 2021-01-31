@@ -56,9 +56,11 @@ void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank
 
   //hamming for blocks
   int bs = block_size(data_bytes);
+  // printf("bytes = %d, bs = %d \n", data_bytes, bs);
   int bs_num = data_bytes/bs;
   int bs_last = data_bytes%bs;
   if (bs_last > 0) bs_num++;
+  // printf("bs_num = %d, bs_last = %d \n", bs_num, bs_last);
   unsigned char* blocks[bs_num];
   char* c[bs_num];
   int r[bs_num];
@@ -79,7 +81,7 @@ void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank
       hamming_encode(&data_bits[i*bs], &c[i], bytes, &r[i]);
     }
   }
-  // printf("bs = %d, bs_last = %d, bs_num = %d, r[0] = %d\n", bs, bs_last, bs_num, r[0]);
+  // printf("rank = %d, bs = %d, bs_last = %d, bs_num = %d, r[0] = %d\n", rank, bs, bs_last, bs_num, r[0]);
 
   if(rank != root)
   {
