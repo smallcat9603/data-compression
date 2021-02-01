@@ -276,6 +276,21 @@ int main(int argc, char** argv) {
         {
           ping_pong_count--;
         }       
+      }
+      else if(CT == 9)
+      {
+        // start_time_comp_bit_crc = MPI_Wtime();
+        crc = do_crc32(data_bits_mask, bytes_mask);
+        // end_time_comp_bit_crc = MPI_Wtime();
+        // printf("CRC32 value is: %u, time is %f\n", crc, end_time_comp_bit_crc-start_time_comp_bit_crc);  
+
+        MPI_Send(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 9, MPI_COMM_WORLD);
+        MPI_Send(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD);
+        MPI_Recv(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if(crc_ok == 'n')
+        {
+          ping_pong_count--;
+        }        
       }        
     }
     else {
@@ -347,6 +362,43 @@ int main(int argc, char** argv) {
           resent++;
         }
         MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);
+      }
+      else if(CT == 9)
+      {
+        MPI_Recv(data_bits_mask, bytes_mask, MPI_CHAR, partner_rank, 9, MPI_COMM_WORLD, MPI_STATUS_IGNORE);    
+        MPI_Recv(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        // start_time_decomp_bit_crc = MPI_Wtime();
+        crc_check = do_crc32(data_bits_mask, bytes_mask);
+        // end_time_decomp_bit_crc = MPI_Wtime();
+
+        if(BER > 0)
+        {
+          double ber = BER;
+          uint64_t to = 1/ber;
+          uint64_t r = get_random_int(0, to);
+          // printf("to = %lu, r = %lu, b = %d\n", to, r, bytes);
+          if(r < bytes_mask * 8)
+          {
+            crc_check = 0;
+          }
+        }
+        
+        // printf("check CRC32 value is: %u, time is %f\n", crc_check, end_time_decomp_bit_crc - start_time_decomp_bit_crc);   
+        // printf("recv CRC32 value is: %u\n", crc);  
+        if (crc == crc_check)
+        {
+          // printf("CRC passed\n");
+          crc_ok = 'y';
+        }  
+        else
+        {
+          // printf("CRC NOT passed\n");
+          crc_ok = 'n';
+          ping_pong_count--;
+          resent++;
+        }
+        MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);        
       }                
       if(ping_pong_count == PING_PONG_LIMIT)
       {
@@ -419,7 +471,7 @@ int main(int argc, char** argv) {
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
         } 
-        else if(CT == 7)
+        else if(CT == 7 || CT == 9)
         {
           start_time_decomp_bit_mask = MPI_Wtime();
           float* decompressed_data = myDecompress_bitwise_mask(data_bits_mask, bytes_mask, data_num, type, mask);
@@ -487,12 +539,20 @@ int main(int argc, char** argv) {
     } 
     else if(CT == 8)
     {
-      printf("Decompression time (bitwise): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
+      printf("Decompression time (bitwise_crc): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
       compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
       //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
-      printf("Compression rate (bitwise): %f \n", 1/compress_ratio); 
+      printf("Compression rate (bitwise_crc): %f \n", 1/compress_ratio); 
       printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
-    }        
+    } 
+    else if(CT == 9)
+    {
+      printf("Decompression time (bitwise_mask_crc): %f \n", end_time_decomp_bit_mask-start_time_decomp_bit_mask); 
+      compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(float)*8);
+      //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
+      printf("Compression rate (bitwise_mask_crc): %f \n", 1/compress_ratio); 
+      printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
+    }           
   }
 
   MPI_Finalize();
