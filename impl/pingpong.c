@@ -52,7 +52,8 @@ int main(int argc, char** argv) {
   double start_time_comp_bit_mask, end_time_comp_bit_mask, start_time_decomp_bit_mask, end_time_decomp_bit_mask;
   double start_time_comp_bit_crc, end_time_comp_bit_crc, start_time_decomp_bit_crc, end_time_decomp_bit_crc;
   
-  const int PING_PONG_LIMIT = 10000;
+  const int PING_PONG_LIMIT = 10000; // 10000
+  const int DUP = 1;
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -71,20 +72,26 @@ int main(int argc, char** argv) {
   // read data file
   char output_filename[32];
   sprintf(output_filename, "%s%s", filename, suffix);
-  FILE *fp = fopen(output_filename, "r");
   float *data = NULL; //data array
   //double *data = NULL; //switch to double
-  int n; //data number = n-1
-  for (n=0; !feof(fp); n++) 
+  int n = 0; //data number = n-1
+
+  for(int d = 0; d < DUP; d++)
   {
-    data = (float *)(data?realloc(data,sizeof(float)*(n+1)):malloc(sizeof(float)));
-    //data = (double *)(data?realloc(data,sizeof(double)*(n+1)):malloc(sizeof(double))); //switch to double
-    fscanf(fp, "%f", data+n);
-    // printf("%f\t", data[n]);
+    FILE *fp = fopen(output_filename, "r");
+    for (; !feof(fp); n++) 
+    {
+      data = (float *)(data?realloc(data,sizeof(float)*(n+1)):malloc(sizeof(float)));
+      //data = (double *)(data?realloc(data,sizeof(double)*(n+1)):malloc(sizeof(double))); //switch to double
+      fscanf(fp, "%f", data+n);
+      // printf("%f\t", data[n]);
+    }
+    fclose(fp);
+    // free(data);    
   }
-  fclose(fp);
-  // free(data);
+
   int data_num = n - 1;
+  printf("data_num = %d\n", data_num);  
 
   float compress_ratio;
 
@@ -221,7 +228,18 @@ int main(int argc, char** argv) {
   myCompress_bitwise_mask(data_small, data_num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask);
   //myCompress_bitwise_double_mask(data_small, data_num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask); //switch to double
   // printf("bytes_mask = %d, improvement = %f\n", bytes_mask, (float)bytes_mask/bytes);
-  end_time_comp_bit_mask = MPI_Wtime();     
+  end_time_comp_bit_mask = MPI_Wtime();    
+
+  //hamming for blocks
+  int bs = block_size(bytes);
+  // printf("bytes = %d, bs = %d \n", bytes, bs);
+  int bs_num = bytes/bs;
+  int bs_last = bytes%bs;
+  if (bs_last > 0) bs_num++;
+  // printf("bs_num = %d, bs_last = %d \n", bs_num, bs_last);
+  unsigned char* blocks[bs_num];
+  char* c[bs_num];
+  int r[bs_num];   
 
   int ping_pong_count = 0;
   int partner_rank = (world_rank + 1) % 2;
@@ -291,6 +309,47 @@ int main(int argc, char** argv) {
         {
           ping_pong_count--;
         }        
+      }
+      else if(CT == 10)
+      {
+        printf("==== loop = %d\n", ping_pong_count);
+
+        // start_time_comp_bit_crc = MPI_Wtime();
+        crc = do_crc32(data_bits, bytes);
+        // end_time_comp_bit_crc = MPI_Wtime();
+        // printf("CRC32 value is: %u, time is %f\n", crc, end_time_comp_bit_crc-start_time_comp_bit_crc);  
+
+        MPI_Send(data_bits, bytes, MPI_CHAR, partner_rank, 10, MPI_COMM_WORLD);
+        MPI_Send(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD);
+
+        for(int i=0; i<bs_num; i++)
+        {
+          // c[i] = NULL;
+          // r[i] = 0;
+          int bytes_num = bs;
+          if(bs_last > 0 && i == bs_num-1)
+          {
+            bytes_num = bs_last;
+          } 
+
+          // blocks[i] = (unsigned char*)malloc(bytes*sizeof(unsigned char));
+          // memcpy(blocks[i], &data_bits[i*bs], bytes); 
+          hamming_encode(&data_bits[i*bs], &c[i], bytes_num, &r[i]);
+        }
+        // printf("rank = %d, bs = %d, bs_last = %d, bs_num = %d, r[0] = %d\n", world_rank, bs, bs_last, bs_num, r[0]);  
+
+        //hamming
+        MPI_Send(r, bs_num, MPI_INT, partner_rank, 1000, MPI_COMM_WORLD);    
+        for(int i=0; i<bs_num; i++)
+        {
+          MPI_Send(c[i], r[i]+1, MPI_CHAR, partner_rank, 1001+i, MPI_COMM_WORLD); 
+        }
+
+        MPI_Recv(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if(crc_ok == 'n')
+        {
+          ping_pong_count--;
+        }                  
       }        
     }
     else {
@@ -399,6 +458,65 @@ int main(int argc, char** argv) {
           resent++;
         }
         MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);        
+      }
+      else if(CT == 10)
+      {
+        MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 10, MPI_COMM_WORLD, MPI_STATUS_IGNORE);    
+        MPI_Recv(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        //hamming
+        MPI_Recv(r, bs_num, MPI_INT, partner_rank, 1000, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for(int i=0; i<bs_num; i++)
+        {
+          c[i] = (char*) malloc(sizeof(char)*(r[i]+1));
+          MPI_Recv(c[i], r[i]+1, MPI_CHAR, partner_rank, 1001+i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }     
+
+        if(BER > 0)
+        {
+          double ber = BER;
+          uint64_t to = 1/ber;
+          int errors = bytes*8/to;
+          for (int n = 0; n < errors; n++)
+          {
+            bit_flip(data_bits, bytes);
+          }
+        }
+
+        // start_time_decomp_bit_crc = MPI_Wtime();
+        crc_check = do_crc32(data_bits, bytes);
+        // end_time_decomp_bit_crc = MPI_Wtime();        
+        
+        // printf("check CRC32 value is: %u, time is %f\n", crc_check, end_time_decomp_bit_crc - start_time_decomp_bit_crc);   
+        // printf("recv CRC32 value is: %u\n", crc);  
+        if (crc == crc_check)
+        {
+          // printf("CRC passed\n");
+          crc_ok = 'y';
+        }  
+        else
+        {
+          // printf("CRC NOT passed\n");
+          crc_ok = 'y';
+          for(int i=0; i<bs_num; i++)
+          {
+            int bytes_num = bs;
+            if(bs_last > 0 && i == bs_num-1)
+            {
+              bytes_num = bs_last;
+            } 
+            int error_type = hamming_decode(&data_bits[i*bs], c[i], bytes_num, r[i]);
+            if(error_type == 1) //two-bit error
+            {
+              ping_pong_count--;
+              resent++;
+
+              crc_ok = 'n';
+              break;
+            }
+          }
+        }
+        MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);        
       }                
       if(ping_pong_count == PING_PONG_LIMIT)
       {
@@ -441,7 +559,7 @@ int main(int argc, char** argv) {
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);        
         }         
-        else if(CT == 5 || CT == 8)
+        else if(CT == 5 || CT == 8 || CT == 10)
         {         
           start_time_decomp_bit = MPI_Wtime();
           float* decompressed_data = myDecompress_bitwise(data_bits, bytes, data_num);
@@ -552,7 +670,15 @@ int main(int argc, char** argv) {
       //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (bitwise_mask_crc): %f \n", 1/compress_ratio); 
       printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
-    }           
+    } 
+    else if(CT == 10)
+    {
+      printf("Decompression time (bitwise_crc_hamming): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
+      compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
+      //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
+      printf("Compression rate (bitwise_crc_hamming): %f \n", 1/compress_ratio); 
+      printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
+    }               
   }
 
   MPI_Finalize();

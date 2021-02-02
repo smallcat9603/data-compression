@@ -1,7 +1,7 @@
 /*
  *
  */
-#define BER	1e-7   //1e-16 (0), 1e-6
+#define BER	1e-6   //1e-16 (0), 1e-6
 #define absErrorBound	0.000001 //default 0.0001=2^{-12} (-13?), 0.000001=2^{-20}, 0.00001=2^{-16}, 0.001=2^{-10}, 0.01=2^{-7}
 // #define absErrorBound_binary  20 //bitwise, SZ, equal to above
 // #define relBoundRatio       0.01
@@ -19,7 +19,7 @@
 9 bitmask-based bitwise w/crc  
 10 bitwise w/ crc hamming  
 */
-#define CT	9 
+#define CT	8 
 #define byte_or_bit         2 //1 byte, 2 bit
 //#define data_num            8192 //pingpong
 #define filename            "dataset/testfloat_8_8_128" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma
