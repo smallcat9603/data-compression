@@ -19,7 +19,7 @@
 9 bitmask-based bitwise w/crc  
 10 bitwise w/ crc hamming  
 */
-#define CT	8 
+#define CT	10 
 #define byte_or_bit         2 //1 byte, 2 bit
 //#define data_num            8192 //pingpong
 #define filename            "dataset/testfloat_8_8_128" //pingpong, k-means, "input", "testfloat_8_8_128", "testdouble_8_8_128", "testdouble_8_8_8_128", test, obs_info, num_plasma

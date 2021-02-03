@@ -6,7 +6,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-// #include <unistd.h> 
+#include <unistd.h> 
 #include <time.h>
 #include <math.h>
 #include <string.h>
@@ -52,8 +52,8 @@ int main(int argc, char** argv) {
   double start_time_comp_bit_mask, end_time_comp_bit_mask, start_time_decomp_bit_mask, end_time_decomp_bit_mask;
   double start_time_comp_bit_crc, end_time_comp_bit_crc, start_time_decomp_bit_crc, end_time_decomp_bit_crc;
   
-  const int PING_PONG_LIMIT = 10000; // 10000
-  const int DUP = 1;
+  const int PING_PONG_LIMIT = 3; // 10000
+  const int DUP = 1; //data size
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -94,6 +94,7 @@ int main(int argc, char** argv) {
   printf("data_num = %d\n", data_num);  
 
   float compress_ratio;
+  float gosa = 0;
 
   // float sz_comp_ratio = calcCompressionRatio_sz_float(data, data_num);
   // float nolossy_performance = calcCompressionRatio_nolossy_performance_float(data, data_num);
@@ -312,7 +313,7 @@ int main(int argc, char** argv) {
       }
       else if(CT == 10)
       {
-        printf("==== loop = %d\n", ping_pong_count);
+        // printf("==== loop = %d\n", ping_pong_count);
 
         // start_time_comp_bit_crc = MPI_Wtime();
         crc = do_crc32(data_bits, bytes);
@@ -390,21 +391,32 @@ int main(int argc, char** argv) {
         MPI_Recv(data_bits, bytes, MPI_CHAR, partner_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);    
         MPI_Recv(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
+        if(BER > 0)
+        {
+            double ber = BER;
+            uint64_t to = 1/ber;
+            int errors = bytes*8/to;
+            for (int n = 0; n < errors; n++)
+            {
+              bit_flip(data_bits, bytes);
+            }
+        }
+
         // start_time_decomp_bit_crc = MPI_Wtime();
         crc_check = do_crc32(data_bits, bytes);
         // end_time_decomp_bit_crc = MPI_Wtime();
 
-        if(BER > 0)
-        {
-          double ber = BER;
-          uint64_t to = 1/ber;
-          uint64_t r = get_random_int(0, to);
-          // printf("to = %lu, r = %lu, b = %d\n", to, r, bytes);
-          if(r < bytes * 8)
-          {
-            crc_check = 0;
-          }
-        }
+        // if(BER > 0)
+        // {
+        //   double ber = BER;
+        //   uint64_t to = 1/ber;
+        //   uint64_t r = get_random_int(0, to);
+        //   // printf("to = %lu, r = %lu, b = %d\n", to, r, bytes);
+        //   if(r < bytes * 8)
+        //   {
+        //     crc_check = 0;
+        //   }
+        // }
         
         // printf("check CRC32 value is: %u, time is %f\n", crc_check, end_time_decomp_bit_crc - start_time_decomp_bit_crc);   
         // printf("recv CRC32 value is: %u\n", crc);  
@@ -419,6 +431,7 @@ int main(int argc, char** argv) {
           crc_ok = 'n';
           ping_pong_count--;
           resent++;
+          // printf("resent = %d\n", resent);
         }
         MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);
       }
@@ -527,7 +540,7 @@ int main(int argc, char** argv) {
           //double* decompressed_data = myDecompress_double(array_double, array_char, array_char_displacement, data_num); //switch to double
           end_time_decomp_byte = MPI_Wtime();
 
-          float gosa = 0;
+          //float gosa = 0;
           for(int i=0; i<data_num; i++)
           {
             gosa += fabs(decompressed_data[i]-data[i]);
@@ -678,7 +691,17 @@ int main(int argc, char** argv) {
       //compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); //switch to double
       printf("Compression rate (bitwise_crc_hamming): %f \n", 1/compress_ratio); 
       printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
-    }               
+    }
+
+    char fn[] = "pingpong.csv";
+    int fexist = access(fn, 0);
+    FILE* fp = fopen(fn, "a"); 
+    if(fexist == -1)
+    {
+        fprintf(fp, "world_size, PING_PONG_LIMIT, DUP, CT, absErrorBound, BER, compression ratio, time, gosa, resent, resent ratio\n"); 
+    }    
+    fprintf(fp, "%d, %d, %d, %d, %e, %e, %f, %f, %f, %d, %f\n", world_size, PING_PONG_LIMIT, DUP, CT, absErrorBound, BER, 1/compress_ratio, end_time - start_time, gosa, resent, 1.0*resent/PING_PONG_LIMIT);    
+    fclose(fp);                    
   }
 
   MPI_Finalize();
