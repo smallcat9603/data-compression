@@ -2802,7 +2802,7 @@ double med_dataset_double(double* data, int num, int* type)
   for(int i=10; i>0; i--)
   {
     add += pow(2, i);
-    if(max < add - 1023)
+    if(max < pow(2, (add-1023)))
     {
       *type = 11 - i;
       break;
@@ -2831,7 +2831,7 @@ float med_dataset_float(float* data, int num, int* type)
   for(int i=7; i>0; i--)
   {
     add += pow(2, i);
-    if(max < add - 127)
+    if(max < pow(2, (add-127)))
     {
       *type = 8 - i;
       break;
