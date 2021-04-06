@@ -51,8 +51,9 @@ int main(int argc, char** argv) {
   double start_time_comp_sz, end_time_comp_sz, start_time_decomp_sz, end_time_decomp_sz;
   double start_time_comp_bit_mask, end_time_comp_bit_mask, start_time_decomp_bit_mask, end_time_decomp_bit_mask;
   double start_time_comp_bit_crc, end_time_comp_bit_crc, start_time_decomp_bit_crc, end_time_decomp_bit_crc;
+  double start_time_comp_bit_hamming, end_time_comp_bit_hamming, start_time_decomp_bit_hamming, end_time_decomp_bit_hamming;
   
-  const int PING_PONG_LIMIT = 3; // 10000
+  const int PING_PONG_LIMIT = 10000; // 10000
   const int DUP = 1; //data size
 
   // Initialize the MPI environment
@@ -315,14 +316,15 @@ int main(int argc, char** argv) {
       {
         // printf("==== loop = %d\n", ping_pong_count);
 
-        // start_time_comp_bit_crc = MPI_Wtime();
+        start_time_comp_bit_crc = MPI_Wtime();
         crc = do_crc32(data_bits, bytes);
-        // end_time_comp_bit_crc = MPI_Wtime();
-        // printf("CRC32 value is: %u, time is %f\n", crc, end_time_comp_bit_crc-start_time_comp_bit_crc);  
+        end_time_comp_bit_crc = MPI_Wtime();
+        printf("CRC32 value is: %u, time is %f\n", crc, end_time_comp_bit_crc-start_time_comp_bit_crc);  
 
         MPI_Send(data_bits, bytes, MPI_CHAR, partner_rank, 10, MPI_COMM_WORLD);
         MPI_Send(&crc, 1, MPI_UNSIGNED, partner_rank, 32, MPI_COMM_WORLD);
 
+        start_time_comp_bit_hamming = MPI_Wtime();
         for(int i=0; i<bs_num; i++)
         {
           // c[i] = NULL;
@@ -338,6 +340,8 @@ int main(int argc, char** argv) {
           hamming_encode(&data_bits[i*bs], &c[i], bytes_num, &r[i]);
         }
         // printf("rank = %d, bs = %d, bs_last = %d, bs_num = %d, r[0] = %d\n", world_rank, bs, bs_last, bs_num, r[0]);  
+        end_time_comp_bit_hamming = MPI_Wtime();
+        printf("hamming encoding time is: %f\n", end_time_comp_bit_hamming-start_time_comp_bit_hamming);  
 
         //hamming
         MPI_Send(r, bs_num, MPI_INT, partner_rank, 1000, MPI_COMM_WORLD);    
@@ -511,6 +515,7 @@ int main(int argc, char** argv) {
         {
           // printf("CRC NOT passed\n");
           crc_ok = 'y';
+          start_time_decomp_bit_hamming = MPI_Wtime();
           for(int i=0; i<bs_num; i++)
           {
             int bytes_num = bs;
@@ -528,7 +533,10 @@ int main(int argc, char** argv) {
               break;
             }
           }
+          end_time_decomp_bit_hamming = MPI_Wtime();
+          printf("hamming decoding time is: %f\n", end_time_decomp_bit_hamming-start_time_decomp_bit_hamming);  
         }
+
         MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);        
       }                
       if(ping_pong_count == PING_PONG_LIMIT)
