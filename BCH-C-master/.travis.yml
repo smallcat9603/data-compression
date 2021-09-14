@@ -1,0 +1,22 @@
+language: c
+compiler:
+- clang
+- gcc
+
+sudo: required
+dist: trusty
+
+branches:
+  only:
+    - master
+
+addons:
+  apt:
+    packages: 
+    - build-essential
+    - gcc
+
+script:
+  - cd BCH_codes
+  - make
+  - make test
