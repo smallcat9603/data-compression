@@ -5,11 +5,12 @@
 #include "Headers/encode.h"
 #include "Headers/decode.h"
 
-#define BUFFER_SIZE 100
-
-
 int main()
 {
+	int BUFFER_SIZE = 100; //max number of bytes to encode, in ASCII, deleted if over BUFFER_SIZE
+	int ENCODE_SYMBOLS = 6; //encode bytes
+	int ERRORS = 3; //bytes, <= ENCODE_SYMBOLS/2
+
 	struct gf_tables *gf_table = malloc(sizeof(struct gf_tables));
 	gf_table->gf_exp = malloc(sizeof(struct Array));
 	gf_table->gf_log = malloc(sizeof(struct Array));
@@ -21,16 +22,16 @@ int main()
 	printf("Enter the string you want to test and press enter when you're done:\n");
 	
 	struct Array *msg_in = malloc(sizeof(struct Array));
-	initArray(msg_in, 50);
+	initArray(msg_in, 50); //BUFFER_SIZE/2
 	char my_msg[BUFFER_SIZE];
 	
 	fgets( my_msg, sizeof(my_msg), stdin );
 
 	for (size_t i = 0; i < strlen(my_msg); i++) {
 		msg_in->array[i] = (int)my_msg[i];
-		insertArray(msg_in);
+		insertArray(msg_in); //msg_in->used++, and msg_in->size *= 2 if size not enough
 	}
-
+	printf("]\n");
 
 	printf("Msg in: [");
 	for (size_t i = 0; i < msg_in->used; i++) {
@@ -38,7 +39,7 @@ int main()
 	}
 	printf("]\n");
 
-	struct Array *msg = malloc(sizeof(struct Array));
+	struct Array *msg = malloc(sizeof(struct Array)); //msg_in + encode
 	initArray(msg, 170);
 
 	struct Array *err_loc = malloc(sizeof(struct Array));
@@ -49,7 +50,7 @@ int main()
 
 	struct Array *rev_pos = malloc(sizeof(struct Array));
 
-	msg = rs_encode_msg(msg_in, 14, gf_table);
+	msg = rs_encode_msg(msg_in, ENCODE_SYMBOLS, gf_table); 
 	
 	printf("Msg Encoded: [");
 	for (size_t i = 0; i < msg->used; i++) {
@@ -59,9 +60,12 @@ int main()
 	
 	
 	//Tempering msg
-	msg->array[0] = 0;
-	msg->array[3] = 0;
-	msg->array[10] = 0;
+	// msg->array[0] = '0';
+	// msg->array[3] = '0';
+	// msg->array[10] = '0';
+	for (int i = 0; i < ERRORS*3; i=i+3){ //random
+		msg->array[i] = '0';
+	}
 	
 	printf("Msg Tempered: [");
 	for (size_t i = 0; i < strlen(my_msg); i++) {
@@ -74,19 +78,20 @@ int main()
 		printf("%c",msg->array[i]);
 	}
 	printf("\n");
-	printf("Msg Encoded: [");
+
+	printf("Msg Encoded after Tempered: [");
 	for (size_t i = 0; i < msg->used; i++) {
 		printf("%u,",msg->array[i]);
 	}
 	printf("]\n");
 	
-	synd = rs_calc_syndromes(msg, 14, gf_table);
+	synd = rs_calc_syndromes(msg, ENCODE_SYMBOLS, gf_table);
 	printf("synd : ");
 	for (size_t i = 0; i < synd->used; i++) {
 		printf("%u, ",synd->array[i]);
 	}
 	printf("\n");
-	err_loc = rs_find_error_locator(synd, 14, 0, gf_table);
+	err_loc = rs_find_error_locator(synd, ENCODE_SYMBOLS, 0, gf_table);
 	printf("err_loc : ");
 	for (size_t i = 0; i < err_loc->used; i++) {
 		printf("%u, ",err_loc->array[i]);
@@ -99,7 +104,6 @@ int main()
 	}
 	printf("\n");
 	rev_pos = reverse_arr(pos);
-	
 	printf("Error positions: [");
 	for (size_t i = 0; i < rev_pos->used; i++) {
 		printf("%u,", rev_pos->array[i]);
@@ -107,10 +111,10 @@ int main()
 	printf("]\n");
 	
 	struct Array *err_pos = malloc(sizeof(struct Array));
-	initArray(err_pos, 3);
+	initArray(err_pos, ERRORS);
 	err_pos->array[0] = 0;
 	
-	msg = rs_correct_msg(msg, 14, err_pos, gf_table);
+	msg = rs_correct_msg(msg, ENCODE_SYMBOLS, err_pos, gf_table);
 	
 	printf("Msg Corrected: [");
 	for (size_t i = 0; i < msg->used; i++) {
@@ -123,6 +127,22 @@ int main()
 		printf("%c",msg->array[i]);
 	}
 	printf("\n");
+
+	bool success = true;
+	for (size_t i = 0; i < msg_in->used; i++){
+		if (msg->array[i] != msg_in->array[i]){
+			success = false;
+			break;
+		}
+	}
+	if (success){
+		printf("Correction success!");
+	}
+	else{
+		printf("Correction failed!");
+	}
+	printf("\n");
+
 	freeArray(gf_table->gf_exp);
 	freeArray(gf_table->gf_log);
 	freeArray(msg_in);
