@@ -29,9 +29,9 @@
 
 #include "bch_functions.h"
 
-#define len_msg 16
-
 int main(){
+
+    int len_msg = 16; //bytes
     
     time_t t;
     int i,j, count = 1000, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg+4;
