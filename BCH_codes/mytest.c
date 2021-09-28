@@ -33,6 +33,7 @@ int main(){
 
     int len_msg = 16; //bytes
     int correctable_errors = 4; //bytes
+    int LOOP = 1000;
     
     time_t t;
     int i,j, count = 1000, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg + correctable_errors;
@@ -44,7 +45,7 @@ int main(){
     printf("Start testing.\n\n");
     
     printf("Test correcting 0-%d errors:...           ",maxEncodedLen-len_msg);
-    for (j = 1; j<=1000; j++) {
+    for (j = 1; j<=LOOP; j++) {
     
         // Generate message
     
@@ -81,7 +82,7 @@ int main(){
     
     count = 1000;
     printf("Test detecting more than %d errors:...    \n", maxEncodedLen-len_msg);
-    for (j = 1; j<=1000; j++) {
+    for (j = 1; j<=LOOP; j++) {
         
         // Generate message
         
