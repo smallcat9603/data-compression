@@ -1377,10 +1377,10 @@ void correct_bch(struct bch_control *bch, uint8_t *data, unsigned int len,unsign
  * @maxResultLen : max length of the encoded message
  * @pResultLen : length of the encoded message
  */
-void GenerateBCH128( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen )
+void GenerateBCH128( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t )
 {
     const int m = 8, prim_poly = 285; // parameters set for 128-bit message
-    int t = 4;
+    // int t = 4;
     
     struct bch_control * bch = init_bch(m,t,prim_poly);
     
@@ -1405,17 +1405,17 @@ void GenerateBCH128( const unsigned char* pPayload, int payloadLen, unsigned cha
  * @pPayloadLen : length of pPayload
  * @return: 0 in case of succesfull decoding, -EBADMSG if decoding failed
  */
-int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen )
+int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen, int t )
 {
     const int m = 8, prim_poly = 285; // parameters set for 128-bit message
-#define ECC_BYTES 4
-    int t = ECC_BYTES;
+// #define ECC_BYTES 4
+    // int t = ECC_BYTES;
     int numOfError = 0;
     
     *pPayloadLen = inputLen-t;
     
     uint8_t * ecc = calloc(t, sizeof(char));
-    unsigned int err_location[ECC_BYTES];
+    unsigned int err_location[t];
     
     struct bch_control * bch = init_bch(m,t,prim_poly);
     

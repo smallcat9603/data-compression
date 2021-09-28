@@ -32,9 +32,10 @@
 int main(){
 
     int len_msg = 16; //bytes
+    int correctable_errors = 4; //bytes
     
     time_t t;
-    int i,j, count = 1000, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg+4;
+    int i,j, count = 1000, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg + correctable_errors;
     unsigned char msg[len_msg], original_msg[len_msg];
     unsigned char pEncoded[maxEncodedLen], pDecoded[len_msg];
     
@@ -55,7 +56,9 @@ int main(){
     
         // Generate the code
         
-        GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
+        GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+
+        // printf("pEncoded: %d \n", pEncodedLen);
         
         // Generate errors
     
@@ -67,7 +70,7 @@ int main(){
     
         // Decode and correct
     
-        ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
+        ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
     
         if(strncmp((char*)original_msg, (char*)pDecoded, len_msg)){
             count--;
@@ -90,7 +93,7 @@ int main(){
         
         // Generate the code
         
-        GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
+        GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
         
         // Generate errors
         
@@ -102,7 +105,7 @@ int main(){
         
         // Decode and correct
         
-        ret = ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
+        ret = ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
         
         if(ret == 0 && strncmp((char*)original_msg, (char*)pDecoded, len_msg))
         {

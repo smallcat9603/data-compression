@@ -9,7 +9,7 @@ int main()
 {
 	int BUFFER_SIZE = 100; //max number of bytes to encode, in ASCII, deleted if over BUFFER_SIZE
 	int ENCODE_SYMBOLS = 6; //encode bytes
-	int ERRORS = 3; //bytes, <= ENCODE_SYMBOLS/2
+	int ERRORS = 3; //correctable errors, in bytes, <= ENCODE_SYMBOLS/2
 
 	struct gf_tables *gf_table = malloc(sizeof(struct gf_tables));
 	gf_table->gf_exp = malloc(sizeof(struct Array));
