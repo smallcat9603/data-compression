@@ -86,6 +86,10 @@ void correct_bch(struct bch_control *bch, uint8_t *data,unsigned int len, unsign
 void GenerateBCH128( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t );
     
 int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen, int t );
+
+void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t );
+    
+int ValidateBCH( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen, int t );
     
 #ifdef __cplusplus
 }

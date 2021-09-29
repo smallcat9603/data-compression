@@ -31,12 +31,12 @@
 
 int main(){
 
-    int len_msg = 16; //bytes
+    int len_msg = 256; //16; //bytes
     int correctable_errors = 4; //bytes
-    int LOOP = 1000;
+    int LOOP = 10;
     
     time_t t;
-    int i,j, count = 1000, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg + correctable_errors;
+    int i,j, count = LOOP, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg + correctable_errors;
     unsigned char msg[len_msg], original_msg[len_msg];
     unsigned char pEncoded[maxEncodedLen], pDecoded[len_msg];
     
@@ -57,7 +57,12 @@ int main(){
     
         // Generate the code
         
-        GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+        if(len_msg == 16){
+            GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+        }
+        else{
+            GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+        }     
 
         // printf("pEncoded: %d \n", pEncodedLen);
         
@@ -71,16 +76,21 @@ int main(){
     
         // Decode and correct
     
-        ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+        if(len_msg == 16){
+            ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+        }
+        else{
+            ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+        }
     
-        if(strncmp((char*)original_msg, (char*)pDecoded, len_msg)){
+        if(strncmp((char*)original_msg, (char*)pDecoded, len_msg) != 0){
             count--;
             printf("     - failed with %d errors test n. %d\n",errors,j-1);
         }
     }
-    printf("\nfinished %d tests, %d%% passed!\n\n",j-1, (count)/10);
+    printf("\nfinished %d tests, %.1f%% passed!\n\n",j-1, 100.0*count/LOOP);
     
-    count = 1000;
+    count = LOOP;
     printf("Test detecting more than %d errors:...    \n", maxEncodedLen-len_msg);
     for (j = 1; j<=LOOP; j++) {
         
@@ -94,11 +104,16 @@ int main(){
         
         // Generate the code
         
-        GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+        if(len_msg == 16){
+            GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+        }
+        else{
+            GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+        }
         
         // Generate errors
         
-        errors = (rand() % 50);
+        errors = rand() % 50;
         
         for (i= 0; i<errors; i++){
             pEncoded[rand() % (pEncodedLen+1)] ^= ((unsigned char) 1 << ((rand() % 8)) & 0xFF);
@@ -106,15 +121,20 @@ int main(){
         
         // Decode and correct
         
-        ret = ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+        if(len_msg == 16){
+            ret = ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+        }
+        else{
+            ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+        } 
         
-        if(ret == 0 && strncmp((char*)original_msg, (char*)pDecoded, len_msg))
+        if(strncmp((char*)original_msg, (char*)pDecoded, len_msg) != 0)
         {
             count--;
             printf("     - failed with %d errors, test n. %d\n",errors,j-1);
         }
     }
-    printf("finished %d tests, %d%% passed!\n\n",j-1,(count)/10);
+    printf("finished %d tests, %.1f%% passed!\n\n", j-1, 100.0*count/LOOP);
     printf("End testing.\n");
     
     return 0;

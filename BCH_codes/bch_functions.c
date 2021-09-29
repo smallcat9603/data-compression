@@ -1435,3 +1435,70 @@ int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pP
     return 0;
     
 }
+
+/**
+ * custom.
+ * @pPayload : message to be encoded
+ * @payloadLen : length of pPayload
+ * @pResult : encoded message, memory has to be allocated before
+ * @maxResultLen : max length of the encoded message
+ * @pResultLen : length of the encoded message
+ */
+void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t )
+{
+    const int m = 12, prim_poly = 4179; // parameters set for 256-byte message
+    // int t = 4;
+    
+    struct bch_control * bch = init_bch(m,t,prim_poly);
+    
+    uint8_t *ecc = (uint8_t*) calloc(bch->ecc_bytes, sizeof(uint8_t));
+    
+    encode_bch(bch, (uint8_t*) pPayload, payloadLen, ecc);
+    
+    memcpy(pResult, pPayload, payloadLen);
+    memcpy(&pResult[payloadLen], ecc, t);
+    
+    *pResultLen = payloadLen+t;
+    
+    free_bch(bch); free(ecc);
+}
+
+/**
+ * custom.
+ * @pInput : received message (encoded)
+ * @inputLen : length of pInput
+ * @pPayload : message decoded, memory has to be allocated before
+ * @maxPayloadLen : mex length of pPayload
+ * @pPayloadLen : length of pPayload
+ * @return: 0 in case of succesfull decoding, -EBADMSG if decoding failed
+ */
+int ValidateBCH( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen, int t )
+{
+    const int m = 12, prim_poly = 4179; // parameters set for 256-byte message
+// #define ECC_BYTES 4
+    // int t = ECC_BYTES;
+    int numOfError = 0;
+    
+    *pPayloadLen = inputLen-t;
+    
+    uint8_t * ecc = calloc(t, sizeof(char));
+    unsigned int err_location[t];
+    
+    struct bch_control * bch = init_bch(m,t,prim_poly);
+    
+    memcpy(pPayload, pInput, *pPayloadLen);
+    memcpy(ecc, &pInput[inputLen-t], t);
+    
+    numOfError = decode_bch(bch, pPayload, *pPayloadLen, ecc, NULL, NULL, err_location);
+    
+    if (numOfError > 0)
+        correct_bch(bch, pPayload, *pPayloadLen, err_location, numOfError);
+    
+    free_bch(bch); free(ecc);
+    
+    if (numOfError < 0 )
+        return numOfError;
+    
+    return 0;
+    
+}

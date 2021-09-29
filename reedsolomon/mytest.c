@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 
 #include "Headers/op.h"
 #include "Headers/array.h"
@@ -7,9 +8,13 @@
 
 int main()
 {
-	int BUFFER_SIZE = 100; //max number of bytes to encode, in ASCII, deleted if over BUFFER_SIZE
-	int ENCODE_SYMBOLS = 6; //encode bytes
-	int ERRORS = 3; //correctable errors, in bytes, <= ENCODE_SYMBOLS/2
+	int BUFFER_SIZE = 255-8; //100; //max number of bytes to encode, in ASCII, deleted if over BUFFER_SIZE
+	int ENCODE_SYMBOLS = 8; //encode bytes, BUFFER_SIZE + ENCODE_SYMBOLS <= 255
+	int ERRORS = 4; //correctable errors, in bytes, <= ENCODE_SYMBOLS/2
+	double start_time_encode, end_time_encode, start_time_decode, end_time_decode;
+	
+	time_t t;
+	srand((unsigned) time(&t));
 
 	struct gf_tables *gf_table = malloc(sizeof(struct gf_tables));
 	gf_table->gf_exp = malloc(sizeof(struct Array));
@@ -19,13 +24,16 @@ int main()
 	gf_table = init_tables();
 	
 	printf("##### Reed-Solomon Error Correction #####\n");
-	printf("Enter the string you want to test and press enter when you're done:\n");
+	// printf("Enter the string you want to test and press enter when you're done:\n");
 	
 	struct Array *msg_in = malloc(sizeof(struct Array));
 	initArray(msg_in, 50); //BUFFER_SIZE/2
 	char my_msg[BUFFER_SIZE];
 	
-	fgets( my_msg, sizeof(my_msg), stdin );
+	//fgets( my_msg, sizeof(my_msg), stdin );
+	for(int i = 0; i < BUFFER_SIZE; i++){
+		my_msg[i] = 48 + rand() % 10;
+	}
 
 	for (size_t i = 0; i < strlen(my_msg); i++) {
 		msg_in->array[i] = (int)my_msg[i];
@@ -50,7 +58,10 @@ int main()
 
 	struct Array *rev_pos = malloc(sizeof(struct Array));
 
+	start_time_encode = clock();
 	msg = rs_encode_msg(msg_in, ENCODE_SYMBOLS, gf_table); 
+	end_time_encode = clock();
+	printf("encode time=%f\n", (double)(end_time_encode-start_time_encode)/CLOCKS_PER_SEC);  
 	
 	printf("Msg Encoded: [");
 	for (size_t i = 0; i < msg->used; i++) {
