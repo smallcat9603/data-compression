@@ -31,7 +31,7 @@
 
 int main(){
 
-    int len_msg = 16; //16; //bytes
+    int len_msg = 256; //16; //bytes
     int LOOP = 10;
     
     time_t t;

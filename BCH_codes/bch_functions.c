@@ -1446,19 +1446,36 @@ int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pP
  */
 void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen)
 {
-    const int m = 12, prim_poly = 4179; // parameters set for 256-byte message
-    int t = 4;
+    // m   2^m-1   Polynomial
+    // 2	3	    7
+    // 3	7	    11
+    // 4	15	    19
+    // 5	31	    37
+    // 6	63	    67
+    // 7	127	    137
+    // 8	255	    285
+    // 9	511	    529
+    // 10	1023	1033
+    // 11	2047	2053
+    // 12	4095	4179
+    // 13	8191	8219
+    // 14	16383	17475
+    // 15	32767	32771
+    // 16	65535	69643
+
+    const int m = 12, prim_poly = 4179; // parameters set for 256-byte (2048 bits) message
+    int t = 4; //maximum error correction capability, in bits
     
     struct bch_control * bch = init_bch(m,t,prim_poly);
     
-    uint8_t *ecc = (uint8_t*) calloc(bch->ecc_bytes, sizeof(uint8_t));
+    uint8_t *ecc = (uint8_t*) calloc(bch->ecc_bytes, sizeof(uint8_t)); //bch->ecc_bytes = ecc max size (m*t bits) in bytes = m*t/8 = 6
     
     encode_bch(bch, (uint8_t*) pPayload, payloadLen, ecc);
     
     memcpy(pResult, pPayload, payloadLen);
-    memcpy(&pResult[payloadLen], ecc, t);
+    memcpy(&pResult[payloadLen], ecc, bch->ecc_bytes);
     
-    *pResultLen = payloadLen+t;
+    *pResultLen = payloadLen+bch->ecc_bytes;
     
     free_bch(bch); free(ecc);
 }
@@ -1475,19 +1492,19 @@ void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* 
 int ValidateBCH( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen)
 {
     const int m = 12, prim_poly = 4179; // parameters set for 256-byte message
-#define ECC_BYTES 4
-    int t = ECC_BYTES;
+    int t = 4;
+    int eccbytes = 6; // m*t/8 = 6
     int numOfError = 0;
     
-    *pPayloadLen = inputLen-t;
+    *pPayloadLen = inputLen-eccbytes;
     
-    uint8_t * ecc = calloc(t, sizeof(char));
+    uint8_t * ecc = calloc(eccbytes, sizeof(char));
     unsigned int err_location[t];
     
     struct bch_control * bch = init_bch(m,t,prim_poly);
     
     memcpy(pPayload, pInput, *pPayloadLen);
-    memcpy(ecc, &pInput[inputLen-t], t);
+    memcpy(ecc, &pInput[inputLen-eccbytes], eccbytes);
     
     numOfError = decode_bch(bch, pPayload, *pPayloadLen, ecc, NULL, NULL, err_location);
     
