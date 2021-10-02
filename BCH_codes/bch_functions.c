@@ -1444,10 +1444,10 @@ int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pP
  * @maxResultLen : max length of the encoded message
  * @pResultLen : length of the encoded message
  */
-void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t )
+void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen)
 {
     const int m = 12, prim_poly = 4179; // parameters set for 256-byte message
-    // int t = 4;
+    int t = 4;
     
     struct bch_control * bch = init_bch(m,t,prim_poly);
     
@@ -1472,11 +1472,11 @@ void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* 
  * @pPayloadLen : length of pPayload
  * @return: 0 in case of succesfull decoding, -EBADMSG if decoding failed
  */
-int ValidateBCH( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen, int t )
+int ValidateBCH( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen)
 {
     const int m = 12, prim_poly = 4179; // parameters set for 256-byte message
-// #define ECC_BYTES 4
-    // int t = ECC_BYTES;
+#define ECC_BYTES 4
+    int t = ECC_BYTES;
     int numOfError = 0;
     
     *pPayloadLen = inputLen-t;

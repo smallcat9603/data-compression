@@ -32,11 +32,10 @@
 int main(){
 
     int len_msg = 16; //16; //bytes
-    int correctable_errors = 4; //bytes
-    int LOOP = 1000;
+    int LOOP = 10;
     
     time_t t;
-    int i,j, count = LOOP, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg + correctable_errors;
+    int i,j, count = LOOP, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg + 4;
     unsigned char msg[len_msg], original_msg[len_msg];
     unsigned char pEncoded[maxEncodedLen], pDecoded[len_msg];
     
@@ -61,7 +60,7 @@ int main(){
             GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
         }
         else{
-            GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+            GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
         }     
 
         // printf("pEncoded: %d \n", pEncodedLen);
@@ -80,7 +79,7 @@ int main(){
             ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
         }
         else{
-            ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+            ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
         }
     
         if(strncmp((char*)original_msg, (char*)pDecoded, len_msg) != 0){
@@ -108,7 +107,7 @@ int main(){
             GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
         }
         else{
-            GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+            GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
         }
         
         // Generate errors
@@ -125,7 +124,7 @@ int main(){
             ret = ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
         }
         else{
-            ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+            ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
         } 
         
         if(strncmp((char*)original_msg, (char*)pDecoded, len_msg) != 0)

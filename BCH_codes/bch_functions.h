@@ -87,9 +87,9 @@ void GenerateBCH128( const unsigned char* pPayload, int payloadLen, unsigned cha
     
 int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen);
 
-void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t );
+void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen);
     
-int ValidateBCH( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen, int t );
+int ValidateBCH( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen);
     
 #ifdef __cplusplus
 }
