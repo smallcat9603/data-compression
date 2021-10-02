@@ -83,9 +83,9 @@ int decode_bch(struct bch_control *bch, const uint8_t *data, unsigned int len,
 
 void correct_bch(struct bch_control *bch, uint8_t *data,unsigned int len, unsigned int *errloc, int nerr);
     
-void GenerateBCH128( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t );
+void GenerateBCH128( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen);
     
-int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen, int t );
+int ValidateBCH128( const unsigned char* pInput, int inputLen, unsigned char* pPayload, int maxPayloadLen, int* pPayloadLen);
 
 void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* pResult, int maxResultLen, int* pResultLen, int t );
     

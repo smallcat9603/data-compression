@@ -31,9 +31,9 @@
 
 int main(){
 
-    int len_msg = 256; //16; //bytes
+    int len_msg = 16; //16; //bytes
     int correctable_errors = 4; //bytes
-    int LOOP = 10;
+    int LOOP = 1000;
     
     time_t t;
     int i,j, count = LOOP, pEncodedLen, pDecodedLen, errors, ret, maxEncodedLen = len_msg + correctable_errors;
@@ -58,7 +58,7 @@ int main(){
         // Generate the code
         
         if(len_msg == 16){
-            GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+            GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
         }
         else{
             GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
@@ -77,7 +77,7 @@ int main(){
         // Decode and correct
     
         if(len_msg == 16){
-            ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+            ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
         }
         else{
             ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
@@ -105,7 +105,7 @@ int main(){
         // Generate the code
         
         if(len_msg == 16){
-            GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
+            GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
         }
         else{
             GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen, correctable_errors);
@@ -122,7 +122,7 @@ int main(){
         // Decode and correct
         
         if(len_msg == 16){
-            ret = ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
+            ret = ValidateBCH128(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen);
         }
         else{
             ValidateBCH(pEncoded, pEncodedLen, pDecoded, maxEncodedLen, &pDecodedLen, correctable_errors);
