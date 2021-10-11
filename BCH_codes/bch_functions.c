@@ -29,6 +29,10 @@
 #include "bch_functions.h"
 #include <errno.h>
 
+//added by smallcat
+#include <time.h>
+double start_time_encode, end_time_encode, start_time_decode, end_time_decode;
+
 static
 inline
 uint32_t CPU_TO_BE32(uint32_t p)
@@ -1469,8 +1473,11 @@ void GenerateBCH( const unsigned char* pPayload, int payloadLen, unsigned char* 
     struct bch_control * bch = init_bch(m,t,prim_poly);
     
     uint8_t *ecc = (uint8_t*) calloc(bch->ecc_bytes, sizeof(uint8_t)); //bch->ecc_bytes = ecc max size (m*t bits) in bytes = m*t/8 = 6
-    
+
+    start_time_encode = clock();    
     encode_bch(bch, (uint8_t*) pPayload, payloadLen, ecc);
+    end_time_encode = clock();
+	printf("encode time=%f\n", (double)(end_time_encode-start_time_encode)/CLOCKS_PER_SEC);   
     
     memcpy(pResult, pPayload, payloadLen);
     memcpy(&pResult[payloadLen], ecc, bch->ecc_bytes);

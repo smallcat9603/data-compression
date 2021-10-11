@@ -55,13 +55,13 @@ int main(){
         memcpy(original_msg, msg, len_msg);
     
         // Generate the code
-        
+
         if(len_msg == 16){
             GenerateBCH128( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
         }
         else{
             GenerateBCH( msg, len_msg, pEncoded, maxEncodedLen, &pEncodedLen);
-        }     
+        }   
 
         // printf("pEncoded: %d \n", pEncodedLen);
         
