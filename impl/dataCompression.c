@@ -4765,7 +4765,7 @@ uint64_t get_random_int(uint64_t from, uint64_t to)
   return n;
 }
 
-//length(c) = r+1 (secded)
+//c: hamming code, length(data) = k, length(c) = r+1 (secded)
 void hamming_code(char* data, char* c, int k, int r)
 {
   for(int i=0; i<r; i++)
