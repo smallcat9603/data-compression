@@ -98,6 +98,10 @@ void calcKmeans(double k_means_x[], double k_means_y[], double data_x_points[], 
 
 int main(int argc, char *argv[])
 {
+	//modify CT
+	int CT = 0;
+	if(argc > 1) CT = atoi(argv[1]);
+
 	// initialize the MPI environment
 	MPI_Init(NULL, NULL);
 
@@ -124,14 +128,15 @@ int main(int argc, char *argv[])
 
 	if(world_rank == 0)
 	{
-		if(argc != 2)
-		{
-			printf("Please include an argument after the program name to list how many processes.\n");
-			printf("e.g. To indicate 4 processes, run: mpirun -n 4 ./kmeans 4\n");
-			exit(-1);
-		}
+		// if(argc != 2)
+		// {
+		// 	printf("Please include an argument after the program name to list how many processes.\n");
+		// 	printf("e.g. To indicate 4 processes, run: mpirun -n 4 ./kmeans 4\n");
+		// 	exit(-1);
+		// }
 
-		num_of_processes = atoi(argv[1]);
+		// num_of_processes = atoi(argv[1]);
+		num_of_processes = world_size;
 
 		// char buffer[2];
 		// printf("How many clusters would you like to analyze for? ");
@@ -249,7 +254,8 @@ int main(int argc, char *argv[])
 	else
 	{	// I am a worker node
 
-		num_of_processes = atoi(argv[1]);
+		// num_of_processes = atoi(argv[1]);
+		num_of_processes = world_size;
 
 		// receive broadcast of number of clusters
 		MPI_Bcast(&numOfClusters, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -1053,6 +1059,7 @@ int main(int argc, char *argv[])
 
 		printf("rank = %d, elapsed = %f = %f - %f\n", world_rank, end_time-start_time, end_time, start_time);
 		printf("gosa = %f \n", gosa/(2*MAX_ITERATIONS));
+		printf("CT = %d \n", CT);
 		printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/(sz_comp_ratio/(2*MAX_ITERATIONS)), 1/(nolossy_performance/(2*MAX_ITERATIONS)), 1/(nolossy_area/(2*MAX_ITERATIONS)));
 		printf("compress ratio = %f \n", 1/(compress_ratio/(2*MAX_ITERATIONS)));
 		printf("resent = %d (percentage = %f)\n", resent, resent/(2.0*(world_size-1)*MAX_ITERATIONS));  
