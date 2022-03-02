@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "mpi.h"
 #include "param.h"
 #include "dataCompression.h"
@@ -77,11 +78,15 @@ MPI_Datatype ijvec,ikvec,jkvec;
 //todo
 static float cr = 0; //compression rate
 static int cr_num = 0;
-static double time = 0;
+static double duration = 0;
+//modify CT
+int CT = 0;
 
 int
 main(int argc,char *argv[])
 {
+	if(argc > 1) CT = atoi(argv[1]);
+
   int    i,j,k,nn;
   int    mx,my,mz,it;
   float  gosa;
@@ -141,7 +146,7 @@ main(int argc,char *argv[])
            mflops(nn,cpu,flop),cpu,gosa);
   }
   nn= (int)(target/(cpu/3.0));
-  //nn= 12; // for simgrid
+  nn= 12; // for simgrid
 
   if(id == 0){
     printf(" Now, start the actual measurement process.\n");
@@ -174,7 +179,7 @@ main(int argc,char *argv[])
            mflops(nn,cpu,flop)/82.84);
     //todo
     printf("Compression rate: %f \n", 1/(cr/cr_num));
-    printf("Execution time: %f \n", time/nn);
+    printf("Execution time: %f \n", duration/nn);
   }
 
   MPI_Finalize();
@@ -280,7 +285,7 @@ jacobi(int nn)
     sendp(ndx,ndy,ndz);
     double end_time = MPI_Wtime();
     //printf("execution time: %f\n", end_time-start_time);
-    time += end_time-start_time;
+    duration += end_time-start_time;
 
     MPI_Allreduce(&wgosa,
                   &gosa,
