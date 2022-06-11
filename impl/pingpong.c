@@ -42,6 +42,10 @@ int main(int argc, char** argv) {
 
   //   }  
   // }
+  
+  //modify CT
+	int CT = 0;
+	if(argc > 1) CT = atoi(argv[1]);
   printf("CT = %d, absErrorBound = %.2e, BER = %.2e\n", CT, absErrorBound, BER);  
 
   double start_time, end_time;
