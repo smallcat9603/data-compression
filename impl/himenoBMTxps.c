@@ -179,7 +179,7 @@ main(int argc,char *argv[])
            mflops(nn,cpu,flop)/82.84);
     //todo
     printf("Compression rate: %f \n", 1/(cr/cr_num));
-    printf("Execution time: %f \n", duration/nn);
+    // printf("Execution time: %f \n", duration/nn);
   }
 
   MPI_Finalize();
