@@ -1,14 +1,14 @@
 /*  This is an implementation of the k-means clustering algorithm (aka Lloyd's algorithm) using MPI (message passing interface). */
 //Original version: https://github.com/dzdao/k-means-clustering-mpi
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<time.h>
-#include<unistd.h>
-#include<math.h>
-#include<errno.h>
-#include<mpi.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include <math.h>
+#include <errno.h>
+#include <mpi.h>
+#include <string.h>
 #include <stdint.h>
 #include "param.h"
 #include "dataCompression.h"
