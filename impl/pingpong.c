@@ -10,6 +10,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <stdint.h>
 #include "param.h"
 #include "dataCompression.h"
 // #include "/opt/sz191211/include/sz.h"
