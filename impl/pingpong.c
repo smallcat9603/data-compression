@@ -108,19 +108,19 @@ int main(int argc, char** argv) {
   // printf("compression ratio: sz %f, nolossy_performance %f, nolossy_area %f \n", 1/sz_comp_ratio, 1/nolossy_performance, 1/nolossy_area);  
 
   //sz compression
-  start_time_comp_sz = MPI_Wtime();
-  char* binfile = filename bin_suffix; 
-  writetobinary_float(binfile, data, data_num); //.txt --> .dat
-  //writetobinary_double(binfile, data, data_num); //switch to double
-  char sz_comp_cmd[128];
-  sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num);
-  //sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix_double, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num); //switch to double
-  //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
-  int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
-  char* binfile_sz = filename bin_suffix sz_suffix;
-  int bytes_sz = 0;
-  unsigned char* data_bits_sz = readfrombinary_char(binfile_sz, &bytes_sz);
-  end_time_comp_sz = MPI_Wtime();
+  // start_time_comp_sz = MPI_Wtime();
+  // char* binfile = filename bin_suffix; 
+  // writetobinary_float(binfile, data, data_num); //.txt --> .dat
+  // //writetobinary_double(binfile, data, data_num); //switch to double
+  // char sz_comp_cmd[128];
+  // sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num);
+  // //sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix_double, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num); //switch to double
+  // //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+  // int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
+  // char* binfile_sz = filename bin_suffix sz_suffix;
+  // int bytes_sz = 0;
+  // unsigned char* data_bits_sz = readfrombinary_char(binfile_sz, &bytes_sz);
+  // end_time_comp_sz = MPI_Wtime();
 
   // my compress bytewise
   float* array_float = NULL;
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
       }
       else if(CT == 4)
       {
-        MPI_Send(data_bits_sz, bytes_sz, MPI_UNSIGNED_CHAR, partner_rank, 6, MPI_COMM_WORLD);
+        // MPI_Send(data_bits_sz, bytes_sz, MPI_UNSIGNED_CHAR, partner_rank, 6, MPI_COMM_WORLD);
       }       
       else if(CT == 5)
       { 
@@ -381,7 +381,7 @@ int main(int argc, char** argv) {
       }
       else if(CT == 4)
       {
-        MPI_Recv(data_bits_sz, bytes_sz, MPI_UNSIGNED_CHAR, partner_rank, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        // MPI_Recv(data_bits_sz, bytes_sz, MPI_UNSIGNED_CHAR, partner_rank, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }        
       else if(CT == 5)
       {
@@ -563,27 +563,27 @@ int main(int argc, char** argv) {
         }
         else if(CT == 4)
         {
-          start_time_decomp_sz = MPI_Wtime();
-          char* binfile_zs = filename bin_suffix zs_suffix;
-          writetobinary_char(binfile_zs, data_bits_sz, bytes_sz); //.dat.zs
-          char sz_decomp_cmd[64];
-          sprintf(sz_decomp_cmd, "%s%s%s%d", sz_decomp_cmd_prefix, filename, sz_decomp_cmd_suffix, data_num);
-          //sprintf(sz_decomp_cmd, "%s%s%s%d", sz_decomp_cmd_prefix_double, filename, sz_decomp_cmd_suffix, data_num); //switch to double
-          //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
-          int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
-          char* binfile_out = filename bin_suffix zs_suffix out_suffix;
-          char* txtfile = filename bin_suffix zs_suffix out_suffix suffix;  
-          float* decompressed_data = readfrombinary_writetotxt_float(binfile_out, txtfile, data_num);
-          //double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, data_num); //switch to double
-          end_time_decomp_sz = MPI_Wtime();
+          // start_time_decomp_sz = MPI_Wtime();
+          // char* binfile_zs = filename bin_suffix zs_suffix;
+          // writetobinary_char(binfile_zs, data_bits_sz, bytes_sz); //.dat.zs
+          // char sz_decomp_cmd[64];
+          // sprintf(sz_decomp_cmd, "%s%s%s%d", sz_decomp_cmd_prefix, filename, sz_decomp_cmd_suffix, data_num);
+          // //sprintf(sz_decomp_cmd, "%s%s%s%d", sz_decomp_cmd_prefix_double, filename, sz_decomp_cmd_suffix, data_num); //switch to double
+          // //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
+          // int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
+          // char* binfile_out = filename bin_suffix zs_suffix out_suffix;
+          // char* txtfile = filename bin_suffix zs_suffix out_suffix suffix;  
+          // float* decompressed_data = readfrombinary_writetotxt_float(binfile_out, txtfile, data_num);
+          // //double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, data_num); //switch to double
+          // end_time_decomp_sz = MPI_Wtime();
 
-          float gosa = 0;
-          for(int i=0; i<data_num; i++)
-          {
-            gosa += fabs(decompressed_data[i]-data[i]);
-          }
-          gosa = gosa/data_num;
-          printf("gosa = %f \n", gosa);        
+          // float gosa = 0;
+          // for(int i=0; i<data_num; i++)
+          // {
+          //   gosa += fabs(decompressed_data[i]-data[i]);
+          // }
+          // gosa = gosa/data_num;
+          // printf("gosa = %f \n", gosa);        
         }         
         else if(CT == 5 || CT == 8 || CT == 10)
         {         
@@ -655,10 +655,10 @@ int main(int argc, char** argv) {
     } 
     else if(CT == 4)
     {
-      printf("Decompression time (sz): %f \n", end_time_decomp_sz-start_time_decomp_sz); 
-      compress_ratio = (float)(bytes_sz*8)/(data_num*sizeof(float)*8);
-      //compress_ratio = (float)(bytes_sz*8)/(data_num*sizeof(double)*8); //switch to double
-      printf("Compression rate (sz): %f \n", 1/compress_ratio); 
+      // printf("Decompression time (sz): %f \n", end_time_decomp_sz-start_time_decomp_sz); 
+      // compress_ratio = (float)(bytes_sz*8)/(data_num*sizeof(float)*8);
+      // //compress_ratio = (float)(bytes_sz*8)/(data_num*sizeof(double)*8); //switch to double
+      // printf("Compression rate (sz): %f \n", 1/compress_ratio); 
     }
     else if(CT == 5)
     {
