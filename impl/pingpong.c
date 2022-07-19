@@ -76,8 +76,10 @@ int main(int argc, char** argv) {
   }
 
   // read data file
-  char output_filename[32];
+  char output_filename[64];
   sprintf(output_filename, "%s%s", filename, suffix);
+  if(argc > 2) strncpy(output_filename, argv[2], strlen(argv[2])+1);
+
   float *data = NULL; //data array
   //double *data = NULL; //switch to double
   int n = 0; //data number = n-1
@@ -97,7 +99,7 @@ int main(int argc, char** argv) {
   }
 
   int data_num = n - 1;
-  printf("data_num = %d\n", data_num);  
+  printf("data_file = %s, data_num = %d\n", output_filename, data_num);  
 
   float compress_ratio;
   float gosa = 0;
