@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <math.h>
 #include "../impl/param.h"
 #include "../impl/dataCompression.h"
