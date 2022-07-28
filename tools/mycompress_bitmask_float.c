@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "../impl/param.h"
 #include "../impl/dataCompression.h"
 
@@ -12,8 +13,8 @@ int main(int argc, char** argv) {
 
   if(argc < 2)
   {
-    printf("Test case: ./mycompress_bitwise_float [input_txt]\n");
-    printf("Example: ./mycompress_bitwise_float input.txt\n");
+    printf("Test case: ./mycompress_bitmask_float [input_txt]\n");
+    printf("Example: ./mycompress_bitmask_float input.txt\n");
     exit(0);
   }
   
@@ -21,7 +22,7 @@ int main(int argc, char** argv) {
   printf("input_txt = %s\n", input_txt); 
   sprintf(input_bi, "%s.bi", input_txt);
   sprintf(output_bc, "%s.bc", input_txt);
-  sprintf(output_txt, "%s.bit.txt", input_txt);
+  sprintf(output_txt, "%s.bm.txt", input_txt);
 
   FILE *fp = fopen(input_txt, "r");
   float *data = NULL; //data array
@@ -39,21 +40,28 @@ int main(int argc, char** argv) {
   float* data_small = NULL;
   float min = toSmallDataset_float(data, &data_small, num);
 
-  unsigned char* data_bits_comp = NULL;
-  int bytes_comp = 0; //total bytes of compressed data
-  int pos = 8; //position of filled bit in last byte --> 87654321
+  unsigned char* data_bits_mask = NULL;
+  int bytes_mask = 0; //total bytes of compressed data
+  int pos_mask = 8; //position of filled bit in last byte --> 87654321
+  int type = 0;
+
+  float medium = med_dataset_float(data_small, num, &type);
+  char float_arr[32+1];
+  floattostr(&medium, float_arr);
+  char mask[1+8+8];
+  strncpy(mask, float_arr, 1+8+8); 
 
   double start_time_comp = clock();
-  myCompress_bitwise(data_small, num, &data_bits_comp, &bytes_comp, &pos);
+  myCompress_bitwise_mask(data_small, num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask);
   double end_time_comp = clock();
 
-  writetobinary_char(output_bc, data_bits_comp, bytes_comp); //.bc
+  writetobinary_char(output_bc, data_bits_mask, bytes_mask); //.bc
 
-  int bytes_decomp = 0;
-  unsigned char* data_bits_decomp = readfrombinary_char(output_bc, &bytes_decomp);
+  int bytes_mask_decomp = 0;
+  unsigned char* data_bits_mask_decomp = readfrombinary_char(output_bc, &bytes_mask_decomp);
 
   double start_time_decomp = clock();
-  float* decompressed_data = myDecompress_bitwise(data_bits_decomp, bytes_decomp, num);
+  float* decompressed_data = myDecompress_bitwise_mask(data_bits_mask_decomp, bytes_mask_decomp, num, type, mask);
   double end_time_decomp = clock();
 
   fp = fopen(output_txt, "w");
@@ -66,7 +74,7 @@ int main(int argc, char** argv) {
 
   printf("absErrorBound: %f \n", absErrorBound); 
 
-  float compress_ratio = (float)(bytes_comp*8)/(num*sizeof(float)*8);
+  float compress_ratio = (float)(bytes_mask*8)/(num*sizeof(float)*8);
   printf("Compression rate: %f \n", 1/compress_ratio); 
   printf("Compression time: %f sec \n", (end_time_comp-start_time_comp)/CLOCKS_PER_SEC); 
   printf("Decompression time: %f sec \n", (end_time_decomp-start_time_decomp)/CLOCKS_PER_SEC); 

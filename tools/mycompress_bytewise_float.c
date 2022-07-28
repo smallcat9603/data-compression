@@ -73,7 +73,6 @@ int main(int argc, char** argv) {
   printf("done\n");
 
   free(data);
-  free(decompressed_data);
   
   return 0;
 
