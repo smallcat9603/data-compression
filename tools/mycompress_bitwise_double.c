@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv) {
 
-  char input_txt[64], input_bi[64], output_bc[64], output_txt[64]; 
+  char input_txt[64], input_bi[128], output_bc[128], output_txt[128]; 
 
   if(argc < 2)
   {
