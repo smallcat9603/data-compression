@@ -6,22 +6,26 @@
 #include "../impl/param.h"
 #include "../impl/dataCompression.h"
 
+struct vector
+{
+  double* p_data; //precise data
+  char* c_data; //compressed data
+};
+
 int main(int argc, char** argv) {
 
-  char input_txt[64], input_bi[128], output_bc[128], output_txt[128]; 
+  char input_txt[64], output_txt[128]; 
 
   if(argc < 2)
   {
-    printf("Test case: ./mycompress_bitwise_double [input_txt]\n");
-    printf("Example: ./mycompress_bitwise_double input.txt\n");
+    printf("Test case: ./mycompress_bytewise_double [input_txt]\n");
+    printf("Example: ./mycompress_bytewise_double input.txt\n");
     exit(0);
   }
   
   sprintf(input_txt, "%s", argv[1]);
   printf("input_txt = %s\n", input_txt); 
-  sprintf(input_bi, "%s.bi", input_txt);
-  sprintf(output_bc, "%s.bc", input_txt);
-  sprintf(output_txt, "%s.bit.txt", input_txt);
+  sprintf(output_txt, "%s.byte.txt", input_txt);
 
   FILE *fp = fopen(input_txt, "r");
   double *data = NULL; //data array
@@ -34,39 +38,34 @@ int main(int argc, char** argv) {
   fclose(fp);
   int num = n-1;
 
-  writetobinary_double(input_bi, data, num); //.txt --> .bi
-
-  double* data_small = NULL;
-  double min = toSmallDataset_double(data, &data_small, num);
-
-  unsigned char* data_bits_comp = NULL;
-  int bytes_comp = 0; //total bytes of compressed data
-  int pos = 8; //position of filled bit in last byte --> 87654321
+  double* array_double = NULL;
+  char* array_char = NULL;
+  int* array_char_displacement = NULL;
 
   double start_time_comp = clock();
-  myCompress_bitwise_double(data_small, num, &data_bits_comp, &bytes_comp, &pos);
+  int array_double_len = myCompress_double(data, &array_double, &array_char, &array_char_displacement, num);
   double end_time_comp = clock();
 
-  writetobinary_char(output_bc, data_bits_comp, bytes_comp); //.bc
-
-  int bytes_decomp = 0;
-  unsigned char* data_bits_decomp = readfrombinary_char(output_bc, &bytes_decomp);
+  struct vector msg; 
+  int num_p = array_double_len, num_c = num-array_double_len;
+  msg.p_data = array_double;
+  msg.c_data = array_char;
 
   double start_time_decomp = clock();
-  double* decompressed_data = myDecompress_bitwise_double(data_bits_decomp, bytes_decomp, num);
+  double* decompressed_data = myDecompress_double(array_double, array_char, array_char_displacement, num);
   double end_time_decomp = clock();
 
   fp = fopen(output_txt, "w");
   for(int i=0; i<num; i++)
   {
-    fprintf(fp, "%f\n", decompressed_data[i]+min);
+    fprintf(fp, "%f\n", decompressed_data[i]);
   }  
   fclose(fp);
   printf("%sに保存しました。\n", output_txt);
 
   printf("absErrorBound: %f \n", absErrorBound); 
 
-  float compress_ratio = (float)(bytes_comp*8)/(num*sizeof(double)*8);
+  float compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(double))/((num_c+num_p)*sizeof(double));
   printf("Compression rate: %f \n", 1/compress_ratio); 
   printf("Compression time: %f sec \n", (end_time_comp-start_time_comp)/CLOCKS_PER_SEC); 
   printf("Decompression time: %f sec \n", (end_time_decomp-start_time_decomp)/CLOCKS_PER_SEC); 
@@ -74,9 +73,6 @@ int main(int argc, char** argv) {
   printf("done\n");
 
   free(data);
-  free(data_small);
-  free(data_bits_comp);
-  free(data_bits_decomp);
   free(decompressed_data);
   
   return 0;

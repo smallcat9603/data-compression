@@ -3006,7 +3006,7 @@ double* myDecompress_double(double array_double[], char array_char[], int array_
   int array_double_p = 0, array_char_p = 0, array_char_displacement_p = 0;
   for(int i=0; i<num; i++)
   {
-    if(array_char_displacement[array_char_displacement_p] - 1 == i)
+    if(array_char_displacement != NULL && array_char_displacement[array_char_displacement_p] - 1 == i)
     {
       if(array_char[array_char_p] == 'a')
       {
@@ -3171,7 +3171,7 @@ float* myDecompress(float array_float[], char array_char[], int array_char_displ
   int array_float_p = 0, array_char_p = 0, array_char_displacement_p = 0;
   for(int i=0; i<num; i++)
   {
-    if(array_char_displacement[array_char_displacement_p] - 1 == i)
+    if(array_char_displacement != NULL && array_char_displacement[array_char_displacement_p] - 1 == i)
     {
       if(array_char[array_char_p] == 'a')
       {
