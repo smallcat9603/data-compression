@@ -11,8 +11,8 @@ int main(int argc, char** argv) {
 
   if(argc < 2)
   {
-    printf("Test case: mycompress_float [input_txt]\n");
-    printf("Example: mycompress_float input.txt\n");
+    printf("Test case: ./mycompress_bitwise_float [input_txt]\n");
+    printf("Example: ./mycompress_bitwise_float input.txt\n");
     exit(0);
   }
   
