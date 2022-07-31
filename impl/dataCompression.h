@@ -17,7 +17,8 @@
 7 bitmask-based bitwise, 
 8 bitwise w/ crc,
 9 bitmask-based bitwise w/crc  
-10 bitwise w/ crc hamming  
+10 bitwise w/ crc hamming 
+11 bitwise only prediction 
 */
 // #define CT	5  --> set CT in main program (e.x. if(argc > 1) CT = atoi(argv[1]);)
 #define byte_or_bit         2 //1 byte, 2 bit
@@ -58,6 +59,11 @@ float* myDecompress_bitwise_np(unsigned char*, int, int);
 float decompress_bitwise_float_np(char*, int);
 void myCompress_bitwise_double_np(double[], int, unsigned char**, int*, int*);
 void myCompress_bitwise_np(float[], int, unsigned char**, int*, int*);
+
+void myCompress_bitwise_double_op(double[], int, unsigned char**, int*, int*);
+double* myDecompress_bitwise_double_op(unsigned char*, int, int);
+void myCompress_bitwise_op(float[], int, unsigned char**, int*, int*);
+float* myDecompress_bitwise_op(unsigned char*, int, int);
 
 double* myDecompress_bitwise_double(unsigned char*, int, int);
 double decompress_bitwise_double(char*, int, double, double, double);

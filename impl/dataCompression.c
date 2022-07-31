@@ -21,6 +21,450 @@
 double absErrBound = absErrorBound;
 int absErrorBound_binary = -100;
 
+void myCompress_bitwise_double_op(double data[], int num, unsigned char** data_bits, int* bytes, int* pos)
+{
+  double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  double diff1, diff2, diff3, diff_min, selected_predict_value;
+  char compress_type;
+  int a=0, b=0, c=0, d=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+    double double10 = real_value;
+    char double_arr[64+1];
+    doubletostr(&double10, double_arr);
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      if(fabs(real_value) < absErrorBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else
+      {
+        for(int i=0; i<64; i++)
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, double_arr[i]-'0');
+        }
+      }       
+      
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a'; //101
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b'; //110
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c'; //111
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+      
+      if(fabs(real_value) < absErrorBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else if(diff_min<=absErrorBound) 
+      {
+        if(compress_type == 'a')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);   
+          a++;     
+        }
+        else if(compress_type == 'b')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);  
+          b++;
+        }
+        else if(compress_type == 'c')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);  
+          c++;
+        }
+        else
+        {
+          printf("Error compress_type\n");
+          exit(1);
+        }
+      }
+      else 
+      {
+        for(int i=0; i<64; i++)
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, double_arr[i]-'0');
+        }          
+      }
+    }
+  }
+}
+
+double* myDecompress_bitwise_double_op(unsigned char* data_bits, int bytes, int num)
+{
+  int offset_bits = 0;
+  char* bits = NULL;
+  char* bits_more = NULL;
+  int bits_num = 0;
+  int min_shift = 0;
+
+  double before_value1=-1, before_value2=-1, before_value3=-1;
+  double* decompressed = (double*) malloc(sizeof(double)*num);
+  int decompressed_num = 0;
+
+  for(int i=0; i<bytes; i++)
+  {
+    for (int j=7; j>=min_shift; j--) //each bit of byte
+    {
+      int bit = (data_bits[i] >> j) & 1;
+
+      if(offset_bits == 0) //start bit
+      {
+        if(bit == 0)
+        {
+          offset_bits = 64;
+          bits_num++;
+          bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+          if (bits_more != NULL) 
+          {
+            bits = bits_more;
+            bits[bits_num-1] = bit + '0';
+          }
+          else 
+          {
+            printf("Error (re)allocating memory\n");
+            exit(1);
+          }             
+        }
+        else if(bit == 1)
+        {
+          offset_bits = 3; //100, 101, 110, 111
+          bits_num++;
+          bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+          if (bits_more != NULL) 
+          {
+            bits = bits_more;
+            bits[bits_num-1] = bit + '0';
+          }
+          else 
+          {
+            printf("Error (re)allocating memory\n");
+            exit(1);
+          }             
+        }
+      }
+      else
+      {
+        bits_num++;
+        bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+        if (bits_more != NULL) 
+        {
+          bits = bits_more;
+          bits[bits_num-1] = bit + '0';
+        }
+        else 
+        {
+          printf("Error (re)allocating memory\n");
+          exit(1);
+        }        
+      }
+      offset_bits--;
+      if(offset_bits == 0)
+      {
+        decompressed_num++;
+        decompressed[decompressed_num-1] = decompress_bitwise_double(bits, bits_num, before_value1, before_value2, before_value3);
+        
+        if(before_value3 == -1) 
+        {
+          before_value3 = decompressed[decompressed_num-1]; 
+        }
+        else if(before_value2 == -1) 
+        {
+          before_value2 = decompressed[decompressed_num-1];
+        }
+        else if(before_value1 == -1) 
+        {
+          before_value1 = decompressed[decompressed_num-1];
+        }
+        else
+        {
+          before_value3 = before_value2;
+          before_value2 = before_value1;
+          before_value1 = decompressed[decompressed_num-1];
+        }
+
+        bits = NULL;
+        bits_num = 0;
+      }
+    }       
+  }
+  return decompressed;
+}
+
+void myCompress_bitwise_op(float data[], int num, unsigned char** data_bits, int* bytes, int* pos)
+{
+  float real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
+  float diff1, diff2, diff3, diff_min, selected_predict_value;
+  char compress_type;
+  int a=0, b=0, c=0, d=0;
+
+  for(int n=0; n<num; n++)
+  {
+    real_value = data[n];
+    float float10 = real_value;
+    char float_arr[32+1];
+    floattostr(&float10, float_arr);
+
+    if(before_value3 == -1 || before_value2 == -1 || before_value1 == -1)
+    {
+      if(fabs(real_value) < absErrorBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else
+      {
+        for(int i=0; i<32; i++)
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+        }
+      }       
+      
+      if(before_value3 == -1) 
+      {
+        before_value3 = real_value; 
+      }
+      else if(before_value2 == -1) 
+      {
+        before_value2 = real_value;
+      }
+      else if(before_value1 == -1) 
+      {
+        before_value1 = real_value;
+      }        
+    }
+    else
+    {
+      predict_value1 = before_value1;
+      predict_value2 = 2*before_value1 - before_value2;
+      predict_value3 = 3*before_value1 - 3*before_value2 + before_value3;
+
+      diff1 = fabs(predict_value1-real_value);
+      diff2 = fabs(predict_value2-real_value);
+      diff3 = fabs(predict_value3-real_value);
+
+      diff_min = diff1;
+      compress_type = 'a'; //101
+      selected_predict_value = predict_value1;
+      if(diff2<diff_min)
+      {
+        diff_min = diff2;
+        compress_type = 'b'; //110
+        selected_predict_value = predict_value2;
+      }
+      if(diff3<diff_min)
+      {
+        diff_min = diff3;
+        compress_type = 'c'; //111
+        selected_predict_value = predict_value3;
+      }        
+
+      before_value3 = before_value2;
+      before_value2 = before_value1;
+      before_value1 = real_value;
+      
+      if(fabs(real_value) < absErrorBound)
+      {
+        add_bit_to_bytes(data_bits, bytes, pos, 1);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        add_bit_to_bytes(data_bits, bytes, pos, 0);
+        d++;
+      }
+      else if(diff_min<=absErrorBound) 
+      {
+        if(compress_type == 'a')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);   
+          a++;     
+        }
+        else if(compress_type == 'b')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 0);  
+          b++;
+        }
+        else if(compress_type == 'c')
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);
+          add_bit_to_bytes(data_bits, bytes, pos, 1);  
+          c++;
+        }
+        else
+        {
+          printf("Error compress_type\n");
+          exit(1);
+        }
+      }
+      else 
+      {
+        for(int i=0; i<32; i++)
+        {
+          add_bit_to_bytes(data_bits, bytes, pos, float_arr[i]-'0');
+        }          
+      }
+    }
+  }
+}
+
+float* myDecompress_bitwise_op(unsigned char* data_bits, int bytes, int num)
+{
+  int offset_bits = 0;
+  char* bits = NULL;
+  char* bits_more = NULL;
+  int bits_num = 0;
+  int min_shift = 0;
+
+  float before_value1=-1, before_value2=-1, before_value3=-1;
+  float* decompressed = (float*) malloc(sizeof(float)*num);
+  int decompressed_num = 0;
+
+  for(int i=0; i<bytes; i++)
+  {
+    for (int j=7; j>=min_shift; j--) //each bit of byte
+    {
+      int bit = (data_bits[i] >> j) & 1;
+
+      if(offset_bits == 0) //start bit
+      {
+        if(bit == 0)
+        {
+          offset_bits = 32;
+          bits_num++;
+          bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+          if (bits_more != NULL) 
+          {
+            bits = bits_more;
+            bits[bits_num-1] = bit + '0';
+          }
+          else 
+          {
+            printf("Error (re)allocating memory\n");
+            exit(1);
+          }             
+        }
+        else if(bit == 1)
+        {
+          offset_bits = 3; //100, 101, 110, 111
+          bits_num++;
+          bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+          if (bits_more != NULL) 
+          {
+            bits = bits_more;
+            bits[bits_num-1] = bit + '0';
+          }
+          else 
+          {
+            printf("Error (re)allocating memory\n");
+            exit(1);
+          }             
+        }
+      }
+      else
+      {
+        bits_num++;
+        bits_more = (char*)realloc(bits, sizeof(char)*bits_num);
+        if (bits_more != NULL) 
+        {
+          bits = bits_more;
+          bits[bits_num-1] = bit + '0';
+        }
+        else 
+        {
+          printf("Error (re)allocating memory\n");
+          exit(1);
+        }        
+      }
+      offset_bits--;
+      if(offset_bits == 0)
+      {
+        decompressed_num++;
+        decompressed[decompressed_num-1] = decompress_bitwise_float(bits, bits_num, before_value1, before_value2, before_value3);
+        
+        if(before_value3 == -1) 
+        {
+          before_value3 = decompressed[decompressed_num-1]; 
+        }
+        else if(before_value2 == -1) 
+        {
+          before_value2 = decompressed[decompressed_num-1];
+        }
+        else if(before_value1 == -1) 
+        {
+          before_value1 = decompressed[decompressed_num-1];
+        }
+        else
+        {
+          before_value3 = before_value2;
+          before_value2 = before_value1;
+          before_value1 = decompressed[decompressed_num-1];
+        }
+
+        bits = NULL;
+        bits_num = 0;
+      }
+    }       
+  }
+  return decompressed;
+}
+
 //double
 void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend)
 {
