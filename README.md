@@ -71,7 +71,7 @@ $ sh ./set-parameter.sh dataCompression.h 8 0.01 1e-6 // CT = 8, absErrorBound =
 
 | Parameter | Note | Value |
 | --- | --- | --- |
-| **CT** | Compression type |  0: no compress, <br> 1: byte-wise compression, <br> 2: no-lossy-performance compression, <br> 3: no-lossy-area compression, <br> 4: sz, <br> 5: bit-wise compression, <br> 6: bit-wise compression with no prediction, <br> 7 bitmask-based bit-wise compression, <br> 8 bit-wise compression with CRC |
+| **CT** | Compression type |  0: no compress, <br> 1: byte-wise compression, <br> 2: no-lossy-performance compression, <br> 3: no-lossy-area compression, <br> 4: sz, <br> 5: bit-wise compression, <br> 6: bit-wise compression with no prediction, <br> 7 bitmask-based bit-wise compression, <br> 8 bit-wise compression with CRC, <br> 9 bitmask-based bitwise w/crc, <br> 10 bitwise w/ crc hamming, <br> 11 bitwise only prediction |
 | **absErrorBound** | Absolute error bound | Any |
 | **clusters** | Number of clusters in K-means clustering | Integer (defaultly 100) |
 | **filename** | file of raw data | dataset/ |
