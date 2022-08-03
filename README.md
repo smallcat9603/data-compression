@@ -34,15 +34,15 @@ $ mpicc lu.c dataCompression.c -o lu -lm -lz
 ## Execution 
 ### Pingpong
 ```shell
-$ mpirun -np 2 ./pingpong
+$ mpirun -np 2 ./pingpong [CT]
 ```
 ### Himeno
 ```shell
-$ mpirun -np 2 ./bmt
+$ mpirun -np 2 ./bmt [CT]
 ```
 ### K-means
 ```shell
-$ mpirun -np 2 ./k-means 2
+$ mpirun -np 2 ./k-means [CT]
 ```
 
 ### MM
