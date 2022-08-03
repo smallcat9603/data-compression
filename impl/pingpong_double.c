@@ -18,7 +18,7 @@
 
 struct vector
 {
-  float* p_data; //precise data
+  double* p_data;  //precise data
   char* c_data; //compressed data
 };
 
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
   sprintf(output_filename, "%s%s", filename, suffix);
   if(argc > 2) strncpy(output_filename, argv[2], strlen(argv[2])+1);
 
-  float *data = NULL; //data array
+  double *data = NULL; //data array
   int n = 0; //data number = n-1
 
   for(int d = 0; d < DUP; d++)
@@ -88,8 +88,8 @@ int main(int argc, char** argv) {
     FILE *fp = fopen(output_filename, "r");
     for (; !feof(fp); n++) 
     {
-      data = (float *)(data?realloc(data,sizeof(float)*(n+1)):malloc(sizeof(float)));
-      fscanf(fp, "%f", data+n);
+      data = (double *)(data?realloc(data,sizeof(double)*(n+1)):malloc(sizeof(double))); 
+      fscanf(fp, "%lf", data+n);
       // printf("%f\t", data[n]);
     }
     fclose(fp);  
@@ -109,9 +109,9 @@ int main(int argc, char** argv) {
   //sz compression
   // start_time_comp_sz = MPI_Wtime();
   // char* binfile = filename bin_suffix; 
-  // writetobinary_float(binfile, data, data_num); //.txt --> .dat
+  //writetobinary_double(binfile, data, data_num); //.txt --> .dat
   // char sz_comp_cmd[128];
-  // sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num);
+  //sprintf(sz_comp_cmd, "%s%g%s%s%s%d", sz_comp_cmd_prefix_double, absErrorBound, sz_comp_cmd_suffix1, filename, sz_comp_cmd_suffix2, data_num); 
   // //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
   // int iret_comp = system(sz_comp_cmd); //.dat --> .dat.sz
   // char* binfile_sz = filename bin_suffix sz_suffix;
@@ -120,18 +120,18 @@ int main(int argc, char** argv) {
   // end_time_comp_sz = MPI_Wtime();
 
   // my compress bytewise
-  float* array_float = NULL;
+  double* array_double = NULL; 
   char* array_char = NULL;
   int* array_char_displacement = NULL;
 
   start_time_comp_byte = MPI_Wtime();
-  int array_float_len = myCompress(data, &array_float, &array_char, &array_char_displacement, data_num);
+  int array_double_len = myCompress_double(data, &array_double, &array_char, &array_char_displacement, data_num);
   end_time_comp_byte = MPI_Wtime();
 
   struct vector msg; 
-  int num_p = array_float_len, num_c = data_num-array_float_len;
+  int num_p = array_double_len, num_c = data_num-array_double_len;
 
-  msg.p_data = array_float;
+  msg.p_data = array_double; 
   msg.c_data = array_char;
 
   // compress_ratio = (float)(num_c*sizeof(char)+num_p*sizeof(float))/((num_c+num_p)*sizeof(float));
@@ -144,8 +144,8 @@ int main(int argc, char** argv) {
   // printf("Compression rate (double, bit): %f \n", 1/compress_ratio);    
 
   // my compress bitwise
-  float* data_small = NULL;
-  float min = toSmallDataset_float(data, &data_small, data_num);
+  double* data_small = NULL;
+  double min = toSmallDataset_double(data, &data_small, data_num); 
 
   // fp = fopen("bit.txt", "w");
   // for(int i=0; i<data_num; i++)
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
   int pos = 8; //position of filled bit in last byte --> 87654321
 
   start_time_comp_bit = MPI_Wtime();
-  myCompress_bitwise(data_small, data_num, &data_bits, &bytes, &pos);
+  myCompress_bitwise_double(data_small, data_num, &data_bits, &bytes, &pos);
   end_time_comp_bit = MPI_Wtime();
 
   uint32_t crc = 0;
@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
   int pos_np = 8; //position of filled bit in last byte --> 87654321
 
   start_time_comp_bit_np = MPI_Wtime();
-  myCompress_bitwise_np(data_small, data_num, &data_bits_np, &bytes_np, &pos_np);
+  myCompress_bitwise_double_np(data_small, data_num, &data_bits_np, &bytes_np, &pos_np); 
   end_time_comp_bit_np = MPI_Wtime();    
 
   // my compress bitwise with only prediction
@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
   int pos_op = 8; //position of filled bit in last byte --> 87654321
 
   start_time_comp_bit_op = MPI_Wtime();
-  myCompress_bitwise_op(data_small, data_num, &data_bits_op, &bytes_op, &pos_op);
+  myCompress_bitwise_double_op(data_small, data_num, &data_bits_op, &bytes_op, &pos_op); 
   end_time_comp_bit_op = MPI_Wtime();   
 
   // my compress bitmask-based bitwise
@@ -199,14 +199,14 @@ int main(int argc, char** argv) {
   int pos_mask = 8; //position of filled bit in last byte --> 87654321
   int type = 0;
 
-  float medium = med_dataset_float(data_small, data_num, &type);
-  char float_arr[32+1];
-  floattostr(&medium, float_arr);
-  char mask[1+8+8];
-  strncpy(mask, float_arr, 1+8+8);
+  double medium = med_dataset_double(data_small, data_num, &type); 
+  char double_arr[64+1]; 
+  doubletostr(&medium, double_arr);
+  char mask[1+11+8]; 
+  strncpy(mask, double_arr, 1+11+8); 
 
   start_time_comp_bit_mask = MPI_Wtime();
-  myCompress_bitwise_mask(data_small, data_num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask);
+  myCompress_bitwise_double_mask(data_small, data_num, &data_bits_mask, &bytes_mask, &pos_mask, type, mask); 
   end_time_comp_bit_mask = MPI_Wtime();    
 
   //hamming for blocks
@@ -231,12 +231,12 @@ int main(int argc, char** argv) {
       //printf("%d sent and incremented ping_pong_count %d to %d\n", world_rank, ping_pong_count, partner_rank);
       if(CT == 0)
       {
-        MPI_Send(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD);
+        MPI_Send(data, data_num, MPI_DOUBLE, partner_rank, 3, MPI_COMM_WORLD);
         //printf("%d sent data to %d\n", world_rank, partner_rank);
       }      
       else if(CT == 1)
       {
-        MPI_Send(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD);
+        MPI_Send(msg.p_data, num_p, MPI_DOUBLE, partner_rank, 1, MPI_COMM_WORLD); 
         //printf("%d sent msg.p_data to %d\n", world_rank, partner_rank);
         MPI_Send(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD);
         //printf("%d sent msg.c_data to %d\n", world_rank, partner_rank);
@@ -307,7 +307,7 @@ int main(int argc, char** argv) {
           } 
           hamming_encode(&data_bits[i*bs], &c[i], bytes_num, &r[i]);
         }
- 
+
         end_time_comp_bit_hamming = MPI_Wtime();
         printf("hamming encoding time is: %f\n", end_time_comp_bit_hamming-start_time_comp_bit_hamming);  
 
@@ -334,12 +334,12 @@ int main(int argc, char** argv) {
       //printf("%d received ping_pong_count %d from %d\n", world_rank, ping_pong_count, partner_rank);
       if(CT == 0)
       {
-        MPI_Recv(data, data_num, MPI_FLOAT, partner_rank, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(data, data_num, MPI_DOUBLE, partner_rank, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE); 
         //printf("%d received data from %d\n", world_rank, partner_rank);
       }      
       else if(CT == 1)
       {
-        MPI_Recv(msg.p_data, num_p, MPI_FLOAT, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(msg.p_data, num_p, MPI_DOUBLE, partner_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         //printf("%d received msg.p_data from %d\n", world_rank, partner_rank);
         MPI_Recv(msg.c_data, num_c, MPI_CHAR, partner_rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         //printf("%d received msg.c_data from %d\n", world_rank, partner_rank);
@@ -507,7 +507,7 @@ int main(int argc, char** argv) {
         }
 
         MPI_Send(&crc_ok, 1, MPI_CHAR, partner_rank, 100, MPI_COMM_WORLD);        
-      } 
+      }  
       else if(CT == 11)
       {
         MPI_Recv(data_bits_op, bytes_op, MPI_CHAR, partner_rank, 11, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -518,7 +518,7 @@ int main(int argc, char** argv) {
         if(CT == 1)
         {
           start_time_decomp_byte = MPI_Wtime();
-          float* decompressed_data = myDecompress(array_float, array_char, array_char_displacement, data_num);
+          double* decompressed_data = myDecompress_double(array_double, array_char, array_char_displacement, data_num); 
           end_time_decomp_byte = MPI_Wtime();
 
           for(int i=0; i<data_num; i++)
@@ -534,12 +534,12 @@ int main(int argc, char** argv) {
           // char* binfile_zs = filename bin_suffix zs_suffix;
           // writetobinary_char(binfile_zs, data_bits_sz, bytes_sz); //.dat.zs
           // char sz_decomp_cmd[64];
-          // sprintf(sz_decomp_cmd, "%s%s%s%d", sz_decomp_cmd_prefix, filename, sz_decomp_cmd_suffix, data_num);
+          // sprintf(sz_decomp_cmd, "%s%s%s%d", sz_decomp_cmd_prefix_double, filename, sz_decomp_cmd_suffix, data_num);
           // //int iret = system("./sz -z -f -c sz.config -M ABS -A 0.001 -i ./testdata/x86/testfloat_8_8_128.dat -1 8192");
           // int iret_decomp = system(sz_decomp_cmd); //.dat.zs --> .dat.zs.out
           // char* binfile_out = filename bin_suffix zs_suffix out_suffix;
           // char* txtfile = filename bin_suffix zs_suffix out_suffix suffix;  
-          // float* decompressed_data = readfrombinary_writetotxt_float(binfile_out, txtfile, data_num);
+          //double* decompressed_data = readfrombinary_writetotxt_double(binfile_out, txtfile, data_num); 
           // end_time_decomp_sz = MPI_Wtime();
 
           // float gosa = 0;
@@ -553,9 +553,9 @@ int main(int argc, char** argv) {
         else if(CT == 5 || CT == 8 || CT == 10)
         {         
           start_time_decomp_bit = MPI_Wtime();
-          float* decompressed_data = myDecompress_bitwise(data_bits, bytes, data_num);
+          double* decompressed_data = myDecompress_bitwise_double(data_bits, bytes, data_num); 
           end_time_decomp_bit = MPI_Wtime();
-
+ 
           float gosa = 0;
           for(int i=0; i<data_num; i++)
           {
@@ -567,7 +567,7 @@ int main(int argc, char** argv) {
         else if(CT == 6)
         {
           start_time_decomp_bit_np = MPI_Wtime();
-          float* decompressed_data = myDecompress_bitwise_np(data_bits_np, bytes_np, data_num);
+          double* decompressed_data = myDecompress_bitwise_double_np(data_bits_np, bytes_np, data_num); 
           end_time_decomp_bit_np = MPI_Wtime();
 
           float gosa = 0;
@@ -577,11 +577,11 @@ int main(int argc, char** argv) {
           }
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
-        }
+        } 
         else if(CT == 11)
         {
           start_time_decomp_bit_op = MPI_Wtime();
-          float* decompressed_data = myDecompress_bitwise_op(data_bits_op, bytes_op, data_num);
+          double* decompressed_data = myDecompress_bitwise_double_op(data_bits_op, bytes_op, data_num); 
           end_time_decomp_bit_op = MPI_Wtime();
 
           float gosa = 0;
@@ -591,11 +591,11 @@ int main(int argc, char** argv) {
           }
           gosa = gosa/data_num;
           printf("gosa = %f \n", gosa);          
-        }         
+        } 
         else if(CT == 7 || CT == 9)
         {
           start_time_decomp_bit_mask = MPI_Wtime();
-          float* decompressed_data = myDecompress_bitwise_mask(data_bits_mask, bytes_mask, data_num, type, mask);
+          double* decompressed_data = myDecompress_bitwise_double_mask(data_bits_mask, bytes_mask, data_num, type, mask); 
           end_time_decomp_bit_mask = MPI_Wtime();
 
           float gosa = 0;
@@ -640,48 +640,48 @@ int main(int argc, char** argv) {
     else if(CT == 5)
     {
       printf("Decompression time (bitwise): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
-      compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
+      compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); 
       printf("Compression rate (bitwise): %f \n", 1/compress_ratio); 
     }
     else if(CT == 6)
     {
       printf("Decompression time (bitwise_np): %f \n", end_time_decomp_bit_np-start_time_decomp_bit_np); 
-      compress_ratio = (float)(bytes_np*8)/(data_num*sizeof(float)*8);
+      compress_ratio = (float)(bytes_np*8)/(data_num*sizeof(double)*8); 
       printf("Compression rate (bitwise_np): %f \n", 1/compress_ratio); 
     }    
     else if(CT == 7)
     {
       printf("Decompression time (bitwise_mask): %f \n", end_time_decomp_bit_mask-start_time_decomp_bit_mask); 
-      compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(float)*8);
+      compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(double)*8); 
       printf("Compression rate (bitwise_mask): %f (improvement = %f) \n", 1/compress_ratio, (float)bytes/bytes_mask); 
     } 
     else if(CT == 8)
     {
       printf("Decompression time (bitwise_crc): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
-      compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
+      compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); 
       printf("Compression rate (bitwise_crc): %f \n", 1/compress_ratio); 
       printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
     } 
     else if(CT == 9)
     {
       printf("Decompression time (bitwise_mask_crc): %f \n", end_time_decomp_bit_mask-start_time_decomp_bit_mask); 
-      compress_ratio = (float)(bytes_mask*8)/(data_num*sizeof(float)*8);
+      compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8);
       printf("Compression rate (bitwise_mask_crc): %f \n", 1/compress_ratio); 
       printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
     } 
     else if(CT == 10)
     {
       printf("Decompression time (bitwise_crc_hamming): %f \n", end_time_decomp_bit-start_time_decomp_bit); 
-      compress_ratio = (float)(bytes*8)/(data_num*sizeof(float)*8);
+      compress_ratio = (float)(bytes*8)/(data_num*sizeof(double)*8); 
       printf("Compression rate (bitwise_crc_hamming): %f \n", 1/compress_ratio); 
       printf("resent = %d (percentage = %f)\n", resent, 1.0*resent/PING_PONG_LIMIT);
     }
     else if(CT == 11)
     {
       printf("Decompression time (bitwise_op): %f \n", end_time_decomp_bit_op-start_time_decomp_bit_op); 
-      compress_ratio = (float)(bytes_op*8)/(data_num*sizeof(float)*8);
+      compress_ratio = (float)(bytes_op*8)/(data_num*sizeof(double)*8); 
       printf("Compression rate (bitwise_op): %f \n", 1/compress_ratio); 
-    }
+    }  
 
     char fn[] = "pingpong.csv";
     int fexist = access(fn, 0);
