@@ -1,0 +1,288 @@
+./mycompress_bytewise_double float_eq_8192.txt
+input_txt = float_eq_8192.txt
+float_eq_8192.txt.byte.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 7.972749 
+Compression time: 0.001024 sec 
+Decompression time: 0.000146 sec 
+done
+./mycompress_bitwise_double float_eq_8192.txt
+input_txt = float_eq_8192.txt
+float_eq_8192.txt.biに保存しました。
+float_eq_8192.txt.bcに保存しました。
+float_eq_8192.txt.bit.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.000273 sec 
+Decompression time: 0.000492 sec 
+done
+./mycompress_bitmask_double float_eq_8192.txt
+input_txt = float_eq_8192.txt
+float_eq_8192.txt.biに保存しました。
+float_eq_8192.txt.bcに保存しました。
+float_eq_8192.txt.bm.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.000203 sec 
+Decompression time: 0.001250 sec 
+done
+./mycompress_bitnp_double float_eq_8192.txt
+input_txt = float_eq_8192.txt
+float_eq_8192.txt.biに保存しました。
+float_eq_8192.txt.bcに保存しました。
+float_eq_8192.txt.bnp.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 5.333333 
+Compression time: 0.002077 sec 
+Decompression time: 0.003812 sec 
+done
+./mycompress_bitop_double float_eq_8192.txt
+input_txt = float_eq_8192.txt
+float_eq_8192.txt.biに保存しました。
+float_eq_8192.txt.bcに保存しました。
+float_eq_8192.txt.bop.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.000758 sec 
+Decompression time: 0.000394 sec 
+done
+./mycompress_bytewise_double float_eq_16384.txt
+input_txt = float_eq_16384.txt
+float_eq_16384.txt.byte.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 7.986351 
+Compression time: 0.000833 sec 
+Decompression time: 0.000083 sec 
+done
+./mycompress_bitwise_double float_eq_16384.txt
+input_txt = float_eq_16384.txt
+float_eq_16384.txt.biに保存しました。
+float_eq_16384.txt.bcに保存しました。
+float_eq_16384.txt.bit.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.000392 sec 
+Decompression time: 0.000756 sec 
+done
+./mycompress_bitmask_double float_eq_16384.txt
+input_txt = float_eq_16384.txt
+float_eq_16384.txt.biに保存しました。
+float_eq_16384.txt.bcに保存しました。
+float_eq_16384.txt.bm.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.000538 sec 
+Decompression time: 0.003143 sec 
+done
+./mycompress_bitnp_double float_eq_16384.txt
+input_txt = float_eq_16384.txt
+float_eq_16384.txt.biに保存しました。
+float_eq_16384.txt.bcに保存しました。
+float_eq_16384.txt.bnp.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 5.333333 
+Compression time: 0.004086 sec 
+Decompression time: 0.008071 sec 
+done
+./mycompress_bitop_double float_eq_16384.txt
+input_txt = float_eq_16384.txt
+float_eq_16384.txt.biに保存しました。
+float_eq_16384.txt.bcに保存しました。
+float_eq_16384.txt.bop.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.001792 sec 
+Decompression time: 0.000757 sec 
+done
+./mycompress_bytewise_double float_eq_32768.txt
+input_txt = float_eq_32768.txt
+float_eq_32768.txt.byte.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 7.993170 
+Compression time: 0.001234 sec 
+Decompression time: 0.000141 sec 
+done
+./mycompress_bitwise_double float_eq_32768.txt
+input_txt = float_eq_32768.txt
+float_eq_32768.txt.biに保存しました。
+float_eq_32768.txt.bcに保存しました。
+float_eq_32768.txt.bit.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.000776 sec 
+Decompression time: 0.002252 sec 
+done
+./mycompress_bitmask_double float_eq_32768.txt
+input_txt = float_eq_32768.txt
+float_eq_32768.txt.biに保存しました。
+float_eq_32768.txt.bcに保存しました。
+float_eq_32768.txt.bm.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.000757 sec 
+Decompression time: 0.004761 sec 
+done
+./mycompress_bitnp_double float_eq_32768.txt
+input_txt = float_eq_32768.txt
+float_eq_32768.txt.biに保存しました。
+float_eq_32768.txt.bcに保存しました。
+float_eq_32768.txt.bnp.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 5.333333 
+Compression time: 0.008190 sec 
+Decompression time: 0.014492 sec 
+done
+./mycompress_bitop_double float_eq_32768.txt
+input_txt = float_eq_32768.txt
+float_eq_32768.txt.biに保存しました。
+float_eq_32768.txt.bcに保存しました。
+float_eq_32768.txt.bop.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.003152 sec 
+Decompression time: 0.001506 sec 
+done
+./mycompress_bytewise_double float_eq_65536.txt
+input_txt = float_eq_65536.txt
+float_eq_65536.txt.byte.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 7.996583 
+Compression time: 0.001842 sec 
+Decompression time: 0.000306 sec 
+done
+./mycompress_bitwise_double float_eq_65536.txt
+input_txt = float_eq_65536.txt
+float_eq_65536.txt.biに保存しました。
+float_eq_65536.txt.bcに保存しました。
+float_eq_65536.txt.bit.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.001564 sec 
+Decompression time: 0.003040 sec 
+done
+./mycompress_bitmask_double float_eq_65536.txt
+input_txt = float_eq_65536.txt
+float_eq_65536.txt.biに保存しました。
+float_eq_65536.txt.bcに保存しました。
+float_eq_65536.txt.bm.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.001545 sec 
+Decompression time: 0.009325 sec 
+done
+./mycompress_bitnp_double float_eq_65536.txt
+input_txt = float_eq_65536.txt
+float_eq_65536.txt.biに保存しました。
+float_eq_65536.txt.bcに保存しました。
+float_eq_65536.txt.bnp.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 5.333333 
+Compression time: 0.016093 sec 
+Decompression time: 0.029071 sec 
+done
+./mycompress_bitop_double float_eq_65536.txt
+input_txt = float_eq_65536.txt
+float_eq_65536.txt.biに保存しました。
+float_eq_65536.txt.bcに保存しました。
+float_eq_65536.txt.bop.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.005645 sec 
+Decompression time: 0.002831 sec 
+done
+./mycompress_bytewise_double float_eq_131072.txt
+input_txt = float_eq_131072.txt
+float_eq_131072.txt.byte.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 7.998291 
+Compression time: 0.002645 sec 
+Decompression time: 0.000542 sec 
+done
+./mycompress_bitwise_double float_eq_131072.txt
+input_txt = float_eq_131072.txt
+float_eq_131072.txt.biに保存しました。
+float_eq_131072.txt.bcに保存しました。
+float_eq_131072.txt.bit.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.002870 sec 
+Decompression time: 0.006002 sec 
+done
+./mycompress_bitmask_double float_eq_131072.txt
+input_txt = float_eq_131072.txt
+float_eq_131072.txt.biに保存しました。
+float_eq_131072.txt.bcに保存しました。
+float_eq_131072.txt.bm.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.003021 sec 
+Decompression time: 0.017460 sec 
+done
+./mycompress_bitnp_double float_eq_131072.txt
+input_txt = float_eq_131072.txt
+float_eq_131072.txt.biに保存しました。
+float_eq_131072.txt.bcに保存しました。
+float_eq_131072.txt.bnp.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 5.333333 
+Compression time: 0.029683 sec 
+Decompression time: 0.052696 sec 
+done
+./mycompress_bitop_double float_eq_131072.txt
+input_txt = float_eq_131072.txt
+float_eq_131072.txt.biに保存しました。
+float_eq_131072.txt.bcに保存しました。
+float_eq_131072.txt.bop.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.011813 sec 
+Decompression time: 0.005839 sec 
+done
+./mycompress_bytewise_double float_eq_262144.txt
+input_txt = float_eq_262144.txt
+float_eq_262144.txt.byte.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 7.999146 
+Compression time: 0.005646 sec 
+Decompression time: 0.001143 sec 
+done
+./mycompress_bitwise_double float_eq_262144.txt
+input_txt = float_eq_262144.txt
+float_eq_262144.txt.biに保存しました。
+float_eq_262144.txt.bcに保存しました。
+float_eq_262144.txt.bit.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.005816 sec 
+Decompression time: 0.017644 sec 
+done
+./mycompress_bitmask_double float_eq_262144.txt
+input_txt = float_eq_262144.txt
+float_eq_262144.txt.biに保存しました。
+float_eq_262144.txt.bcに保存しました。
+float_eq_262144.txt.bm.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.005569 sec 
+Decompression time: 0.035044 sec 
+done
+./mycompress_bitnp_double float_eq_262144.txt
+input_txt = float_eq_262144.txt
+float_eq_262144.txt.biに保存しました。
+float_eq_262144.txt.bcに保存しました。
+float_eq_262144.txt.bnp.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 5.333333 
+Compression time: 0.059924 sec 
+Decompression time: 0.105887 sec 
+done
+./mycompress_bitop_double float_eq_262144.txt
+input_txt = float_eq_262144.txt
+float_eq_262144.txt.biに保存しました。
+float_eq_262144.txt.bcに保存しました。
+float_eq_262144.txt.bop.txtに保存しました。
+absErrorBound: 0.000001 
+Compression rate: 21.333334 
+Compression time: 0.023451 sec 
+Decompression time: 0.011242 sec 
+done
