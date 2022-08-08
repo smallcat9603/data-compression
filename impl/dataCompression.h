@@ -40,6 +40,9 @@
 #define sz_decomp_cmd_prefix_double  "./sz -x -d -s "
 #define sz_decomp_cmd_suffix ".dat.zs -1 "
 
+int MPI_Send_bitwise_double_op(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
+int MPI_Recv_bitwise_double_op(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status);
+
 void MPI_Bcast_bitwise_crc_hamming(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);
 void MPI_Bcast_bitwise_mask_crc(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);
 void MPI_Bcast_bitwise_crc(double *buffer, int count, int root, int rank, int procs, float* compress_ratio, double* gosa, int* resend);

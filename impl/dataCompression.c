@@ -21,6 +21,16 @@
 double absErrBound = absErrorBound;
 int absErrorBound_binary = -100;
 
+int MPI_Send_bitwise_double_op(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+{
+
+}
+
+int MPI_Recv_bitwise_double_op(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
+{
+  
+}
+
 void myCompress_bitwise_double_op(double data[], int num, unsigned char** data_bits, int* bytes, int* pos)
 {
   double real_value, before_value1=-1, before_value2=-1, before_value3=-1, predict_value1, predict_value2, predict_value3;
