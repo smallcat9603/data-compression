@@ -40,12 +40,14 @@ int main(int argc, char** argv) {
       data[i] = d;
       d += 1.0;
     }
-    MPI_Send(data, num_data, MPI_DOUBLE, 1, tag, MPI_COMM_WORLD);
+    // MPI_Send(data, num_data, MPI_DOUBLE, 1, tag, MPI_COMM_WORLD);
+    MPI_Send_bitwise_double_op(data, num_data, MPI_DOUBLE, 1, tag, MPI_COMM_WORLD);
   }
   else if(myrank == 1)
   {
     // MPI_Recv((void *)&b, 1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
-    MPI_Recv(data, num_data, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
+    // MPI_Recv(data, num_data, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv_bitwise_double_op(data, num_data, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
   }
   
   // printf("Process %d: a = %e, b = %e\n", myrank, a, b);

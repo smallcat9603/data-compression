@@ -23,12 +23,41 @@ int absErrorBound_binary = -100;
 
 int MPI_Send_bitwise_double_op(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
+  double* data_small = NULL;
+  double min = toSmallDataset_double((double*)buf, &data_small, count); 
 
+  unsigned char* data_bits_op = NULL;
+  int bytes_op = 0; //total bytes of compressed data
+  int pos_op = 8; //position of filled bit in last byte --> 87654321
+
+  myCompress_bitwise_double_op(data_small, count, &data_bits_op, &bytes_op, &pos_op); 
+
+  unsigned char* data_bits_op_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes_op);;
+ 
+  memmove(data_bits_op_aux, &bytes_op, sizeof(int));
+  memmove(data_bits_op_aux+sizeof(int), &min, sizeof(double));
+  memmove(data_bits_op_aux+sizeof(int)+sizeof(double), data_bits_op, bytes_op);
+
+  MPI_Send(data_bits_op_aux, sizeof(int)+sizeof(double)+bytes_op, MPI_CHAR, dest, tag, comm); 
+
+  free(data_bits_op_aux);
 }
 
 int MPI_Recv_bitwise_double_op(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
-  
+  MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+
+  int* recv_int = buf;
+  int bytes_op = recv_int[0];
+  double* recv_double = buf + sizeof(int);
+  double min = recv_double[0];
+  unsigned char* data_bits_op = buf + sizeof(int) + sizeof(double);
+  double* decompressed_data = myDecompress_bitwise_double_op(data_bits_op, bytes_op, count); 
+
+  for(int i = 0; i < count; i++)
+  {
+    ((double*)buf)[i] = decompressed_data[i] + min;
+  }
 }
 
 void myCompress_bitwise_double_op(double data[], int num, unsigned char** data_bits, int* bytes, int* pos)
