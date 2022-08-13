@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 
   int num_procs, myrank;
   // double a, b;
-  int num_data = 3;
+  int num_data = 9;
   double* data = (double *)malloc(sizeof(double)*num_data);
   int tag = 0;
   MPI_Status status;
@@ -40,7 +40,8 @@ int main(int argc, char** argv) {
     }
   }
   // MPI_Bcast((void *)&a, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(data, num_data, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  // MPI_Bcast(data, num_data, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast_bitwise_double(data, num_data, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   
   // printf("Process %d: a = %e, b = %e\n", myrank, a, b);
   for(int i = 0; i < num_data; i++)

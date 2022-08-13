@@ -21,6 +21,55 @@
 double absErrBound = absErrorBound;
 int absErrorBound_binary = -100;
 
+int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
+{
+  int myrank;
+  MPI_Comm_rank(comm, &myrank);
+
+  unsigned char* data_bits_aux = NULL;
+  
+  if(myrank == root)
+  {
+    double* data_small = NULL;
+    double min = toSmallDataset_double((double*)buf, &data_small, count); 
+
+    unsigned char* data_bits = NULL;
+    int bytes = 0; //total bytes of compressed data
+    int pos = 8; //position of filled bit in last byte --> 87654321
+
+    myCompress_bitwise_double(data_small, count, &data_bits, &bytes, &pos); 
+
+    data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes);
+
+    memmove(data_bits_aux, &bytes, sizeof(int));
+    memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
+    memmove(data_bits_aux+sizeof(int)+sizeof(double), data_bits, bytes);
+  }
+  else
+  {
+    data_bits_aux = (unsigned char*) malloc(count*sizeof(double)+sizeof(int)+sizeof(double)); 
+  }
+
+  MPI_Bcast(data_bits_aux, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_UNSIGNED_CHAR, root, comm);
+
+  if(myrank != root)
+  {
+    int* recv_int = data_bits_aux;
+    int bytes = recv_int[0];
+    double* recv_double = data_bits_aux + sizeof(int);
+    double min = recv_double[0];
+    unsigned char* data_bits = data_bits_aux + sizeof(int) + sizeof(double);
+    double* decompressed_data = myDecompress_bitwise_double(data_bits, bytes, count); 
+
+    for(int i = 0; i < count; i++)
+    {
+      ((double*)buf)[i] = decompressed_data[i] + min;
+    }   
+  }
+
+  free(data_bits_aux);  
+}
+
 int MPI_Send_bitwise_double(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
   double* data_small = NULL;
@@ -32,7 +81,7 @@ int MPI_Send_bitwise_double(const void *buf, int count, MPI_Datatype datatype, i
 
   myCompress_bitwise_double(data_small, count, &data_bits, &bytes, &pos); 
 
-  unsigned char* data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes);;
+  unsigned char* data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes);
  
   memmove(data_bits_aux, &bytes, sizeof(int));
   memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
@@ -71,7 +120,7 @@ int MPI_Send_bitwise_double_np(const void *buf, int count, MPI_Datatype datatype
 
   myCompress_bitwise_double_np(data_small, count, &data_bits_np, &bytes_np, &pos_np); 
 
-  unsigned char* data_bits_np_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes_np);;
+  unsigned char* data_bits_np_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes_np);
  
   memmove(data_bits_np_aux, &bytes_np, sizeof(int));
   memmove(data_bits_np_aux+sizeof(int), &min, sizeof(double));
@@ -110,7 +159,7 @@ int MPI_Send_bitwise_double_op(const void *buf, int count, MPI_Datatype datatype
 
   myCompress_bitwise_double_op(data_small, count, &data_bits_op, &bytes_op, &pos_op); 
 
-  unsigned char* data_bits_op_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes_op);;
+  unsigned char* data_bits_op_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes_op);
  
   memmove(data_bits_op_aux, &bytes_op, sizeof(int));
   memmove(data_bits_op_aux+sizeof(int), &min, sizeof(double));
