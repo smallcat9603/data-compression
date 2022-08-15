@@ -54,9 +54,9 @@ int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int ro
 
   if(myrank != root)
   {
-    int* recv_int = data_bits_aux;
+    int* recv_int = (int*)data_bits_aux;
     int bytes = recv_int[0];
-    double* recv_double = data_bits_aux + sizeof(int);
+    double* recv_double = (double*)(data_bits_aux + sizeof(int));
     double min = recv_double[0];
     unsigned char* data_bits = data_bits_aux + sizeof(int) + sizeof(double);
     double* decompressed_data = myDecompress_bitwise_double(data_bits, bytes, count); 
@@ -96,9 +96,9 @@ int MPI_Recv_bitwise_double(void *buf, int count, MPI_Datatype datatype, int sou
 {
   MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
-  int* recv_int = buf;
+  int* recv_int = (int*)buf;
   int bytes = recv_int[0];
-  double* recv_double = buf + sizeof(int);
+  double* recv_double = (double*)(buf + sizeof(int));
   double min = recv_double[0];
   unsigned char* data_bits = buf + sizeof(int) + sizeof(double);
   double* decompressed_data = myDecompress_bitwise_double(data_bits, bytes, count); 
@@ -135,9 +135,9 @@ int MPI_Recv_bitwise_double_np(void *buf, int count, MPI_Datatype datatype, int 
 {
   MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
-  int* recv_int = buf;
+  int* recv_int = (int*)buf;
   int bytes_np = recv_int[0];
-  double* recv_double = buf + sizeof(int);
+  double* recv_double = (double*)(buf + sizeof(int));
   double min = recv_double[0];
   unsigned char* data_bits_np = buf + sizeof(int) + sizeof(double);
   double* decompressed_data = myDecompress_bitwise_double_np(data_bits_np, bytes_np, count); 
@@ -174,9 +174,9 @@ int MPI_Recv_bitwise_double_op(void *buf, int count, MPI_Datatype datatype, int 
 {
   MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
-  int* recv_int = buf;
+  int* recv_int = (int*)buf;
   int bytes_op = recv_int[0];
-  double* recv_double = buf + sizeof(int);
+  double* recv_double = (double*)(buf + sizeof(int));
   double min = recv_double[0];
   unsigned char* data_bits_op = buf + sizeof(int) + sizeof(double);
   double* decompressed_data = myDecompress_bitwise_double_op(data_bits_op, bytes_op, count); 
