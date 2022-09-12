@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
   int num_procs, myrank;
   // double a, b;
   int num_data = 10;
+  int len_data = 8;
   double* data = (double *)malloc(sizeof(double)*num_data);
   int tag = 0;
   MPI_Status status;
@@ -41,13 +42,13 @@ int main(int argc, char** argv) {
       d += 1.0;
     }
     // MPI_Send(data, num_data, MPI_DOUBLE, 1, tag, MPI_COMM_WORLD);
-    MPI_Send_bitwise_double_cn(data, num_data, MPI_DOUBLE, 1, tag, MPI_COMM_WORLD, 5);
+    MPI_Send_bitwise_double_cn(data, num_data, MPI_DOUBLE, 1, tag, MPI_COMM_WORLD, len_data);
   }
   else if(myrank == 1)
   {
     // MPI_Recv((void *)&b, 1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
     // MPI_Recv(data, num_data, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
-    MPI_Recv_bitwise_double_cn(data, num_data, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status, 5);
+    MPI_Recv_bitwise_double_cn(data, num_data, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status, len_data);
   }
   
   // printf("Process %d: a = %e, b = %e\n", myrank, a, b);

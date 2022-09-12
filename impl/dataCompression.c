@@ -64,6 +64,92 @@ int MPI_Recv_bitwise_double_cn(void *buf, int count, MPI_Datatype datatype, int 
   MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
 }
 
+int MPI_Send_bitwise_double_np_cn(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, int len)
+{
+  double* data_small = NULL;
+  double min = toSmallDataset_double((double*)buf, &data_small, len); 
+
+  unsigned char* data_bits = NULL;
+  int bytes = 0; //total bytes of compressed data
+  int pos = 8; //position of filled bit in last byte --> 87654321
+
+  myCompress_bitwise_double_np(data_small, len, &data_bits, &bytes, &pos); 
+
+  unsigned char* data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes);
+ 
+  memmove(data_bits_aux, &bytes, sizeof(int));
+  memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
+  memmove(data_bits_aux+sizeof(int)+sizeof(double), data_bits, bytes);
+
+  MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
+
+  free(data_bits_aux);
+
+  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+}
+
+int MPI_Recv_bitwise_double_np_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len)
+{
+  MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+
+  int* recv_int = (int*)buf;
+  int bytes = recv_int[0];
+  double* recv_double = (double*)(buf + sizeof(int));
+  double min = recv_double[0];
+  unsigned char* data_bits = buf + sizeof(int) + sizeof(double);
+  double* decompressed_data = myDecompress_bitwise_double_np(data_bits, bytes, len); 
+
+  for(int i = 0; i < len; i++)
+  {
+    ((double*)buf)[i] = decompressed_data[i] + min;
+  }
+
+  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+}
+
+int MPI_Send_bitwise_double_op_cn(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, int len)
+{
+  double* data_small = NULL;
+  double min = toSmallDataset_double((double*)buf, &data_small, len); 
+
+  unsigned char* data_bits = NULL;
+  int bytes = 0; //total bytes of compressed data
+  int pos = 8; //position of filled bit in last byte --> 87654321
+
+  myCompress_bitwise_double_op(data_small, len, &data_bits, &bytes, &pos); 
+
+  unsigned char* data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes);
+ 
+  memmove(data_bits_aux, &bytes, sizeof(int));
+  memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
+  memmove(data_bits_aux+sizeof(int)+sizeof(double), data_bits, bytes);
+
+  MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
+
+  free(data_bits_aux);
+
+  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+}
+
+int MPI_Recv_bitwise_double_op_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len)
+{
+  MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+
+  int* recv_int = (int*)buf;
+  int bytes = recv_int[0];
+  double* recv_double = (double*)(buf + sizeof(int));
+  double min = recv_double[0];
+  unsigned char* data_bits = buf + sizeof(int) + sizeof(double);
+  double* decompressed_data = myDecompress_bitwise_double_op(data_bits, bytes, len); 
+
+  for(int i = 0; i < len; i++)
+  {
+    ((double*)buf)[i] = decompressed_data[i] + min;
+  }
+
+  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+}
+
 int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
 {
   int myrank;

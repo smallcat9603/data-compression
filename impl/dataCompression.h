@@ -42,6 +42,10 @@
 
 int MPI_Send_bitwise_double_cn(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, int len);
 int MPI_Recv_bitwise_double_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len);
+int MPI_Send_bitwise_double_np_cn(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, int len);
+int MPI_Recv_bitwise_double_np_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len);
+int MPI_Send_bitwise_double_op_cn(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, int len);
+int MPI_Recv_bitwise_double_op_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len);
 
 int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
 
