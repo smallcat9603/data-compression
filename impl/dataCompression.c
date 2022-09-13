@@ -42,7 +42,7 @@ int MPI_Send_bitwise_double_cn(const void *buf, int count, MPI_Datatype datatype
 
   free(data_bits_aux);
 
-  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag, comm); 
 
   return ret;
 }
@@ -63,7 +63,7 @@ int MPI_Recv_bitwise_double_cn(void *buf, int count, MPI_Datatype datatype, int 
     ((double*)buf)[i] = decompressed_data[i] + min;
   }
 
-  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag, comm, status);
 
   return ret;
 }
@@ -89,7 +89,7 @@ int MPI_Send_bitwise_double_np_cn(const void *buf, int count, MPI_Datatype datat
 
   free(data_bits_aux);
 
-  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag, comm); 
 
   return ret;
 }
@@ -110,7 +110,7 @@ int MPI_Recv_bitwise_double_np_cn(void *buf, int count, MPI_Datatype datatype, i
     ((double*)buf)[i] = decompressed_data[i] + min;
   }
 
-  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag, comm, status);
 
   return ret;
 }
@@ -136,7 +136,7 @@ int MPI_Send_bitwise_double_op_cn(const void *buf, int count, MPI_Datatype datat
 
   free(data_bits_aux);
 
-  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+  MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag, comm); 
 
   return ret;
 }
@@ -157,7 +157,7 @@ int MPI_Recv_bitwise_double_op_cn(void *buf, int count, MPI_Datatype datatype, i
     ((double*)buf)[i] = decompressed_data[i] + min;
   }
 
-  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+  MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag, comm, status);
 
   return ret;
 }
