@@ -38,16 +38,18 @@ int MPI_Send_bitwise_double_cn(const void *buf, int count, MPI_Datatype datatype
   memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
   memmove(data_bits_aux+sizeof(int)+sizeof(double), data_bits, bytes);
 
-  MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
+  int ret = MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
 
   free(data_bits_aux);
 
   MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+
+  return ret;
 }
 
 int MPI_Recv_bitwise_double_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len)
 {
-  MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+  int ret = MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
   int* recv_int = (int*)buf;
   int bytes = recv_int[0];
@@ -62,6 +64,8 @@ int MPI_Recv_bitwise_double_cn(void *buf, int count, MPI_Datatype datatype, int 
   }
 
   MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+
+  return ret;
 }
 
 int MPI_Send_bitwise_double_np_cn(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, int len)
@@ -81,16 +85,18 @@ int MPI_Send_bitwise_double_np_cn(const void *buf, int count, MPI_Datatype datat
   memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
   memmove(data_bits_aux+sizeof(int)+sizeof(double), data_bits, bytes);
 
-  MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
+  int ret = MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
 
   free(data_bits_aux);
 
   MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+
+  return ret;
 }
 
 int MPI_Recv_bitwise_double_np_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len)
 {
-  MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+  int ret = MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
   int* recv_int = (int*)buf;
   int bytes = recv_int[0];
@@ -105,6 +111,8 @@ int MPI_Recv_bitwise_double_np_cn(void *buf, int count, MPI_Datatype datatype, i
   }
 
   MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+
+  return ret;
 }
 
 int MPI_Send_bitwise_double_op_cn(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, int len)
@@ -124,16 +132,18 @@ int MPI_Send_bitwise_double_op_cn(const void *buf, int count, MPI_Datatype datat
   memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
   memmove(data_bits_aux+sizeof(int)+sizeof(double), data_bits, bytes);
 
-  MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
+  int ret = MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
 
   free(data_bits_aux);
 
   MPI_Send((double*)buf+len, count-len, MPI_DOUBLE, dest, tag+1, comm); 
+
+  return ret;
 }
 
 int MPI_Recv_bitwise_double_op_cn(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status, int len)
 {
-  MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+  int ret = MPI_Recv(buf, len*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
   int* recv_int = (int*)buf;
   int bytes = recv_int[0];
@@ -148,6 +158,8 @@ int MPI_Recv_bitwise_double_op_cn(void *buf, int count, MPI_Datatype datatype, i
   }
 
   MPI_Recv((double*)buf+len, count-len, MPI_DOUBLE, source, tag+1, comm, status);
+
+  return ret;
 }
 
 int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
@@ -179,7 +191,7 @@ int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int ro
     data_bits_aux = (unsigned char*) malloc(count*sizeof(double)+sizeof(int)+sizeof(double)); 
   }
 
-  MPI_Bcast(data_bits_aux, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_UNSIGNED_CHAR, root, comm);
+  int ret = MPI_Bcast(data_bits_aux, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_UNSIGNED_CHAR, root, comm);
 
   if(myrank != root)
   {
@@ -197,6 +209,8 @@ int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int ro
   }
 
   free(data_bits_aux);  
+
+  return ret;
 }
 
 int MPI_Send_bitwise_double(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
@@ -216,14 +230,16 @@ int MPI_Send_bitwise_double(const void *buf, int count, MPI_Datatype datatype, i
   memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
   memmove(data_bits_aux+sizeof(int)+sizeof(double), data_bits, bytes);
 
-  MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
+  int ret = MPI_Send(data_bits_aux, sizeof(int)+sizeof(double)+bytes, MPI_CHAR, dest, tag, comm); 
 
   free(data_bits_aux);
+
+  return ret;
 }
 
 int MPI_Recv_bitwise_double(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
-  MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+  int ret = MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
   int* recv_int = (int*)buf;
   int bytes = recv_int[0];
@@ -236,6 +252,8 @@ int MPI_Recv_bitwise_double(void *buf, int count, MPI_Datatype datatype, int sou
   {
     ((double*)buf)[i] = decompressed_data[i] + min;
   }
+
+  return ret;
 }
 
 int MPI_Send_bitwise_double_np(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
@@ -255,14 +273,16 @@ int MPI_Send_bitwise_double_np(const void *buf, int count, MPI_Datatype datatype
   memmove(data_bits_np_aux+sizeof(int), &min, sizeof(double));
   memmove(data_bits_np_aux+sizeof(int)+sizeof(double), data_bits_np, bytes_np);
 
-  MPI_Send(data_bits_np_aux, sizeof(int)+sizeof(double)+bytes_np, MPI_CHAR, dest, tag, comm); 
+  int ret = MPI_Send(data_bits_np_aux, sizeof(int)+sizeof(double)+bytes_np, MPI_CHAR, dest, tag, comm); 
 
   free(data_bits_np_aux);
+
+  return ret;
 }
 
 int MPI_Recv_bitwise_double_np(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
-  MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+  int ret = MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
   int* recv_int = (int*)buf;
   int bytes_np = recv_int[0];
@@ -275,6 +295,8 @@ int MPI_Recv_bitwise_double_np(void *buf, int count, MPI_Datatype datatype, int 
   {
     ((double*)buf)[i] = decompressed_data[i] + min;
   }
+
+  return ret;
 }
 
 int MPI_Send_bitwise_double_op(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
@@ -294,14 +316,16 @@ int MPI_Send_bitwise_double_op(const void *buf, int count, MPI_Datatype datatype
   memmove(data_bits_op_aux+sizeof(int), &min, sizeof(double));
   memmove(data_bits_op_aux+sizeof(int)+sizeof(double), data_bits_op, bytes_op);
 
-  MPI_Send(data_bits_op_aux, sizeof(int)+sizeof(double)+bytes_op, MPI_CHAR, dest, tag, comm); 
+  int ret = MPI_Send(data_bits_op_aux, sizeof(int)+sizeof(double)+bytes_op, MPI_CHAR, dest, tag, comm); 
 
   free(data_bits_op_aux);
+
+  return ret;
 }
 
 int MPI_Recv_bitwise_double_op(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
-  MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
+  int ret = MPI_Recv(buf, count*sizeof(double)+sizeof(int)+sizeof(double), MPI_CHAR, source, tag, comm, status);
 
   int* recv_int = (int*)buf;
   int bytes_op = recv_int[0];
@@ -314,6 +338,8 @@ int MPI_Recv_bitwise_double_op(void *buf, int count, MPI_Datatype datatype, int 
   {
     ((double*)buf)[i] = decompressed_data[i] + min;
   }
+
+  return ret;
 }
 
 void myCompress_bitwise_double_op(double data[], int num, unsigned char** data_bits, int* bytes, int* pos)
