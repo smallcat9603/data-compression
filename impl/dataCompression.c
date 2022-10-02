@@ -180,7 +180,7 @@ int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int ro
 
     myCompress_bitwise_double(data_small, count, &data_bits, &bytes, &pos); 
 
-    data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+bytes);
+    data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+count*sizeof(double));
 
     memmove(data_bits_aux, &bytes, sizeof(int));
     memmove(data_bits_aux+sizeof(int), &min, sizeof(double));
