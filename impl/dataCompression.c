@@ -168,6 +168,8 @@ int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int ro
   MPI_Comm_rank(comm, &myrank);
 
   unsigned char* data_bits_aux = NULL;
+
+  // double start_comp_time, end_comp_time, start_decomp_time, end_decomp_time;
   
   if(myrank == root)
   {
@@ -178,7 +180,11 @@ int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int ro
     int bytes = 0; //total bytes of compressed data
     int pos = 8; //position of filled bit in last byte --> 87654321
 
+    // start_comp_time = MPI_Wtime();
     myCompress_bitwise_double(data_small, count, &data_bits, &bytes, &pos); 
+    // end_comp_time = MPI_Wtime();
+    // printf("Compression ratio: %f\n", (count*sizeof(double)*1.0)/bytes);
+    // printf("Compression time: %f\n", end_comp_time - start_comp_time); 
 
     data_bits_aux = (unsigned char*)malloc(sizeof(int)+sizeof(double)+count*sizeof(double));
 
@@ -200,7 +206,11 @@ int MPI_Bcast_bitwise_double(void *buf, int count, MPI_Datatype datatype, int ro
     double* recv_double = (double*)(data_bits_aux + sizeof(int));
     double min = recv_double[0];
     unsigned char* data_bits = data_bits_aux + sizeof(int) + sizeof(double);
+
+    // start_decomp_time = MPI_Wtime();
     double* decompressed_data = myDecompress_bitwise_double(data_bits, bytes, count); 
+    // end_decomp_time = MPI_Wtime();
+    // printf("Decompression time: %f\n", end_decomp_time - start_decomp_time); 
 
     for(int i = 0; i < count; i++)
     {
