@@ -1,0 +1,9 @@
+includedir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/dr
+libdir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@
+
+Name: Bit_Grooming
+Description: The Bit Grooming Lossy Compressor
+Version: @Bit Grooming_VERSION@
+URL: https://github.com/disheng222/BitGroomingZ
+Cflags: -I${includedir}
+Libs: -L${libdir} -lbg
