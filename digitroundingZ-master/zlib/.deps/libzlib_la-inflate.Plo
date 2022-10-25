@@ -1,20 +1,35 @@
 libzlib_la-inflate.lo: inflate.c /usr/include/stdc-predef.h zutil.h \
- zlib.h zconf.h \
- /usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include/stddef.h \
- /usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include-fixed/limits.h \
- /usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include-fixed/syslimits.h \
- /usr/include/limits.h /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h /usr/include/sys/types.h \
- /usr/include/bits/types.h /usr/include/bits/typesizes.h \
- /usr/include/time.h \
- /usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include/stdarg.h \
- /usr/include/unistd.h /usr/include/bits/posix_opt.h \
- /usr/include/bits/confname.h /usr/include/string.h \
- /usr/include/bits/string.h /usr/include/bits/string2.h \
- /usr/include/stdlib.h /usr/include/bits/stdlib-bsearch.h \
- /usr/include/bits/stdlib-float.h inftrees.h inflate.h inffast.h \
- inffixed.h
+ zlib.h zconf.h /usr/lib/gcc/aarch64-linux-gnu/9/include/stddef.h \
+ /usr/lib/gcc/aarch64-linux-gnu/9/include/limits.h \
+ /usr/lib/gcc/aarch64-linux-gnu/9/include/syslimits.h \
+ /usr/include/limits.h \
+ /usr/include/aarch64-linux-gnu/bits/libc-header-start.h \
+ /usr/include/features.h /usr/include/aarch64-linux-gnu/sys/cdefs.h \
+ /usr/include/aarch64-linux-gnu/bits/wordsize.h \
+ /usr/include/aarch64-linux-gnu/bits/long-double.h \
+ /usr/include/aarch64-linux-gnu/gnu/stubs.h \
+ /usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h \
+ /usr/include/aarch64-linux-gnu/sys/types.h \
+ /usr/include/aarch64-linux-gnu/bits/types.h \
+ /usr/include/aarch64-linux-gnu/bits/timesize.h \
+ /usr/include/aarch64-linux-gnu/bits/typesizes.h \
+ /usr/include/aarch64-linux-gnu/bits/time64.h \
+ /usr/include/aarch64-linux-gnu/bits/types/clockid_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/time_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/timer_t.h \
+ /usr/include/aarch64-linux-gnu/bits/stdint-intn.h \
+ /usr/lib/gcc/aarch64-linux-gnu/9/include/stdarg.h /usr/include/unistd.h \
+ /usr/include/aarch64-linux-gnu/bits/posix_opt.h \
+ /usr/include/aarch64-linux-gnu/bits/confname.h \
+ /usr/include/aarch64-linux-gnu/bits/unistd.h \
+ /usr/include/aarch64-linux-gnu/bits/unistd_ext.h /usr/include/string.h \
+ /usr/include/aarch64-linux-gnu/bits/string_fortified.h \
+ /usr/include/stdlib.h /usr/include/aarch64-linux-gnu/bits/floatn.h \
+ /usr/include/aarch64-linux-gnu/bits/floatn-common.h \
+ /usr/include/aarch64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/aarch64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/aarch64-linux-gnu/bits/stdlib.h inftrees.h inflate.h \
+ inffast.h inffixed.h
 
 /usr/include/stdc-predef.h:
 
@@ -24,51 +39,73 @@ zlib.h:
 
 zconf.h:
 
-/usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include/stddef.h:
+/usr/lib/gcc/aarch64-linux-gnu/9/include/stddef.h:
 
-/usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include-fixed/limits.h:
+/usr/lib/gcc/aarch64-linux-gnu/9/include/limits.h:
 
-/usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include-fixed/syslimits.h:
+/usr/lib/gcc/aarch64-linux-gnu/9/include/syslimits.h:
 
 /usr/include/limits.h:
 
+/usr/include/aarch64-linux-gnu/bits/libc-header-start.h:
+
 /usr/include/features.h:
 
-/usr/include/sys/cdefs.h:
+/usr/include/aarch64-linux-gnu/sys/cdefs.h:
 
-/usr/include/bits/wordsize.h:
+/usr/include/aarch64-linux-gnu/bits/wordsize.h:
 
-/usr/include/gnu/stubs.h:
+/usr/include/aarch64-linux-gnu/bits/long-double.h:
 
-/usr/include/gnu/stubs-64.h:
+/usr/include/aarch64-linux-gnu/gnu/stubs.h:
 
-/usr/include/sys/types.h:
+/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h:
 
-/usr/include/bits/types.h:
+/usr/include/aarch64-linux-gnu/sys/types.h:
 
-/usr/include/bits/typesizes.h:
+/usr/include/aarch64-linux-gnu/bits/types.h:
 
-/usr/include/time.h:
+/usr/include/aarch64-linux-gnu/bits/timesize.h:
 
-/usr/local/lib/gcc/x86_64-pc-linux-gnu/7.3.0/include/stdarg.h:
+/usr/include/aarch64-linux-gnu/bits/typesizes.h:
+
+/usr/include/aarch64-linux-gnu/bits/time64.h:
+
+/usr/include/aarch64-linux-gnu/bits/types/clockid_t.h:
+
+/usr/include/aarch64-linux-gnu/bits/types/time_t.h:
+
+/usr/include/aarch64-linux-gnu/bits/types/timer_t.h:
+
+/usr/include/aarch64-linux-gnu/bits/stdint-intn.h:
+
+/usr/lib/gcc/aarch64-linux-gnu/9/include/stdarg.h:
 
 /usr/include/unistd.h:
 
-/usr/include/bits/posix_opt.h:
+/usr/include/aarch64-linux-gnu/bits/posix_opt.h:
 
-/usr/include/bits/confname.h:
+/usr/include/aarch64-linux-gnu/bits/confname.h:
+
+/usr/include/aarch64-linux-gnu/bits/unistd.h:
+
+/usr/include/aarch64-linux-gnu/bits/unistd_ext.h:
 
 /usr/include/string.h:
 
-/usr/include/bits/string.h:
-
-/usr/include/bits/string2.h:
+/usr/include/aarch64-linux-gnu/bits/string_fortified.h:
 
 /usr/include/stdlib.h:
 
-/usr/include/bits/stdlib-bsearch.h:
+/usr/include/aarch64-linux-gnu/bits/floatn.h:
 
-/usr/include/bits/stdlib-float.h:
+/usr/include/aarch64-linux-gnu/bits/floatn-common.h:
+
+/usr/include/aarch64-linux-gnu/bits/stdlib-bsearch.h:
+
+/usr/include/aarch64-linux-gnu/bits/stdlib-float.h:
+
+/usr/include/aarch64-linux-gnu/bits/stdlib.h:
 
 inftrees.h:
 
