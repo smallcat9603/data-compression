@@ -33,7 +33,11 @@ digit_CompDecomp.o: digit_CompDecomp.c /usr/include/stdc-predef.h \
  /usr/lib/gcc/aarch64-linux-gnu/9/include/stdint.h /usr/include/stdint.h \
  /usr/include/aarch64-linux-gnu/bits/wchar.h \
  /usr/include/aarch64-linux-gnu/bits/stdint-intn.h \
- /usr/include/aarch64-linux-gnu/bits/stdint-uintn.h
+ /usr/include/aarch64-linux-gnu/bits/stdint-uintn.h /usr/include/time.h \
+ /usr/include/aarch64-linux-gnu/bits/time.h \
+ /usr/include/aarch64-linux-gnu/bits/types/clock_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/time_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_tm.h
 
 /usr/include/stdc-predef.h:
 
@@ -118,3 +122,13 @@ digit_CompDecomp.o: digit_CompDecomp.c /usr/include/stdc-predef.h \
 /usr/include/aarch64-linux-gnu/bits/stdint-intn.h:
 
 /usr/include/aarch64-linux-gnu/bits/stdint-uintn.h:
+
+/usr/include/time.h:
+
+/usr/include/aarch64-linux-gnu/bits/time.h:
+
+/usr/include/aarch64-linux-gnu/bits/types/clock_t.h:
+
+/usr/include/aarch64-linux-gnu/bits/types/time_t.h:
+
+/usr/include/aarch64-linux-gnu/bits/types/struct_tm.h:
