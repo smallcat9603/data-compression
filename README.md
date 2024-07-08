@@ -47,12 +47,12 @@ $ mpirun -np 2 ./k-means [CT]
 
 ### MM
 ```shell
-$ mpirun -np 4 ./mm testdata/mat_1000_1000_a.txt testdata/mat_1000_1000_b.txt
+$ mpirun -np 4 ./mm testdata/mat_1000_1000_a.txt testdata/mat_1000_1000_b.txt [CT]
 ```
 
 ### LU
 ```shell
-$ mpirun -np 4 ./lu 16
+$ mpirun -np 4 ./lu 16 [CT]
 ```
 
 ## Source Files
@@ -60,7 +60,7 @@ $ mpirun -np 4 ./lu 16
 This file includes various floating-point data compression methods and other related functions for MPI communication.
 
 ### dataCompression.h
-This file is the head file of dataCompression.c. The most important parameter to be used is CT.
+This file is the head file of dataCompression.c.
 
 ### set-parameter.sh
 This file is used to set the parameters of **CT**, **absErrorBound** and **BER** in dataCompression.h.
