@@ -101,6 +101,10 @@ double *mat_2D_to_1D(matrix_struct *m) {
 }
 
 int main(int argc, char *argv[]) {
+	//modify CT
+	int CT = 0;
+	if(argc > 3) CT = atoi(argv[3]);
+
     /** Matrix Properties
      * [0] = Rows of Matrix A
      * [1] = Cols of Matrix A
@@ -122,7 +126,7 @@ int main(int argc, char *argv[]) {
     /** the master initializes the data **/
     if (rank == 0) {
         
-        if(argc != 3){
+        if(argc < 3){
             printf("ERROR: Please specify only 2 files.\n");
             exit(EXIT_FAILURE);
         }

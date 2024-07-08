@@ -29,6 +29,10 @@ void L_print (double *M, int dim);
 
 int main(int argc, char *argv[])
 {
+	//modify CT
+	int CT = 0;
+	if(argc > 2) CT = atoi(argv[2]);
+
    srand(time(NULL));
    const int root_p = 0;
    int mx_size = 0, p, id;
